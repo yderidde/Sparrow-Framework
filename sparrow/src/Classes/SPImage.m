@@ -13,8 +13,15 @@
 #import "SPPoint.h"
 #import "SPTexture.h"
 #import "SPGLTexture.h"
+#import "SPRenderSupport.h"
+#import "SPMacros.h"
+#import "SPVertexData.h"
 
 @implementation SPImage
+{
+    SPVertexData *mVertexDataCache;
+    BOOL mVertexDataCacheInvalid;
+}
 
 @synthesize texture = mTexture;
 
@@ -24,45 +31,47 @@
     
     SPRectangle *frame = texture.frame;    
     float width  = frame ? frame.width  : texture.width;
-    float height = frame ? frame.height : texture.height;    
+    float height = frame ? frame.height : texture.height;
+    BOOL pma = texture.premultipliedAlpha;
     
-    if ((self = [super initWithWidth:width height:height]))
+    if ((self = [super initWithWidth:width height:height color:SP_WHITE premultipliedAlpha:pma]))
     {
-        self.texture = texture;
-        mTexCoords[0] = 0.0f; mTexCoords[1] = 0.0f;
-        mTexCoords[2] = 1.0f; mTexCoords[3] = 0.0f;
-        mTexCoords[4] = 0.0f; mTexCoords[5] = 1.0f;
-        mTexCoords[6] = 1.0f; mTexCoords[7] = 1.0f;
+        mVertexData.vertices[1].texCoords.x = 1.0f;
+        mVertexData.vertices[2].texCoords.y = 1.0f;
+        mVertexData.vertices[3].texCoords.x = 1.0f;
+        mVertexData.vertices[3].texCoords.y = 1.0f;
+        
+        mTexture = texture;
+        mVertexDataCache = [[SPVertexData alloc] initWithSize:4 premultipliedAlpha:pma];
+        mVertexDataCacheInvalid = YES;
     }
     return self;
 }
 
+- (id)initWithContentsOfFile:(NSString *)path generateMipmaps:(BOOL)mipmaps
+{
+    return [self initWithTexture:[SPTexture textureWithContentsOfFile:path generateMipmaps:mipmaps]];
+}
+
 - (id)initWithContentsOfFile:(NSString*)path
 {
-    return [self initWithTexture:[SPTexture textureWithContentsOfFile:path]];
+    return [self initWithContentsOfFile:path generateMipmaps:NO];
 }
 
 - (id)initWithWidth:(float)width height:(float)height
 {
-    SPTextureProperties properties = { .width = width, .height = height };
-    return [self initWithTexture:[SPGLTexture textureWithData:NULL properties:properties]];
+    return [self initWithTexture:[SPTexture textureWithWidth:width height:height draw:NULL]];
 }
 
 - (void)setTexCoords:(SPPoint*)coords ofVertex:(int)vertexID
 {
-    if (vertexID < 0 || vertexID > 3)
-        [NSException raise:SP_EXC_INDEX_OUT_OF_BOUNDS format:@"invalid vertex id"];
-    
-    mTexCoords[2*vertexID  ] = coords.x;
-    mTexCoords[2*vertexID+1] = coords.y;    
+    [mVertexData setTexCoords:coords atIndex:vertexID];
+    [self vertexDataDidChange];
 }
 
 - (SPPoint*)texCoordsOfVertex:(int)vertexID
 {
-    if (vertexID < 0 || vertexID > 3)
-        [NSException raise:SP_EXC_INDEX_OUT_OF_BOUNDS format:@"invalid vertex id"];
-    
-    return [SPPoint pointWithX:mTexCoords[vertexID*2] y:mTexCoords[vertexID*2+1]];
+    return [mVertexData texCoordsAtIndex:vertexID];
 }
 
 - (void)readjustSize
@@ -71,26 +80,59 @@
     float width  = frame ? frame.width  : mTexture.width;
     float height = frame ? frame.height : mTexture.height;
 
-    mVertexCoords[2] = width; 
-    mVertexCoords[5] = height; 
-    mVertexCoords[6] = width;
-    mVertexCoords[7] = height;
+    mVertexData.vertices[1].position.x = width;
+    mVertexData.vertices[2].position.y = height;
+    mVertexData.vertices[3].position.x = width;
+    mVertexData.vertices[3].position.y = height;
+    
+    [self vertexDataDidChange];
 }
 
-+ (SPImage*)imageWithTexture:(SPTexture*)texture
+- (void)vertexDataDidChange
 {
-    return [[[SPImage alloc] initWithTexture:texture] autorelease];
+    mVertexDataCacheInvalid = YES;
 }
 
-+ (SPImage*)imageWithContentsOfFile:(NSString*)path
+- (void)copyVertexDataTo:(SPVertexData *)targetData atIndex:(int)targetIndex
 {
-    return [[[SPImage alloc] initWithContentsOfFile:path] autorelease];
+    if (mVertexDataCacheInvalid)
+    {
+        mVertexDataCacheInvalid = NO;
+        [mVertexData copyToVertexData:mVertexDataCache];
+        [mTexture adjustVertexData:mVertexDataCache atIndex:0 numVertices:4];
+    }
+    
+    [mVertexDataCache copyToVertexData:targetData atIndex:targetIndex];
 }
 
-- (void)dealloc
+- (void)render:(SPRenderSupport *)support
 {
-    [mTexture release];
-    [super dealloc];
+    [support batchQuad:self texture:mTexture];
+}
+
+- (void)setTexture:(SPTexture *)value
+{
+    if (value == nil)
+    {
+        [NSException raise:SP_EXC_INVALID_OPERATION format:@"texture cannot be nil!"];
+    }
+    else if (value != mTexture)
+    {
+        mTexture = value;
+        [mVertexData setPremultipliedAlpha:mTexture.premultipliedAlpha updateVertices:YES];
+        [mVertexDataCache setPremultipliedAlpha:mTexture.premultipliedAlpha updateVertices:NO];
+        [self vertexDataDidChange];
+    }
+}
+
++ (id)imageWithTexture:(SPTexture*)texture
+{
+    return [[self alloc] initWithTexture:texture];
+}
+
++ (id)imageWithContentsOfFile:(NSString*)path
+{
+    return [[self alloc] initWithContentsOfFile:path];
 }
 
 @end

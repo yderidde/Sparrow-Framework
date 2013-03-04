@@ -14,10 +14,15 @@
 #import "SPMacros.h"
 
 @implementation SPAVSoundChannel
+{
+    SPAVSound *mSound;
+    AVAudioPlayer *mPlayer;
+    BOOL mPaused;
+    float mVolume;
+}
 
 - (id)init
 {
-    [self release];
     return nil;
 }
 
@@ -26,8 +31,8 @@
     if ((self = [super init]))
     {
         mVolume = 1.0f;
-        mSound = [sound retain];
-        mPlayer = [[sound createPlayer] retain];
+        mSound = sound;
+        mPlayer = [sound createPlayer];
         mPlayer.delegate = self;                
         [mPlayer prepareToPlay];
 
@@ -42,9 +47,6 @@
 {
     [[NSNotificationCenter defaultCenter] removeObserver:self];    
     mPlayer.delegate = nil;
-    [mPlayer release];
-    [mSound release];
-    [super dealloc];
 }
 
 - (void)play
@@ -116,7 +118,7 @@
 
 - (void)audioPlayerDidFinishPlaying:(AVAudioPlayer *)player successfully:(BOOL)flag
 {    
-    [self dispatchEvent:[SPEvent eventWithType:SP_EVENT_TYPE_SOUND_COMPLETED]];
+    [self dispatchEventWithType:SP_EVENT_TYPE_COMPLETED];
 }
 
 - (void)audioPlayerDecodeErrorDidOccur:(AVAudioPlayer *)player error:(NSError *)error

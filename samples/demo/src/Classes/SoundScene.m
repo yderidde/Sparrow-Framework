@@ -11,6 +11,11 @@
 #define FONTNAME @"Helvetica-Bold"
 
 @implementation SoundScene
+{
+    SPSoundChannel *mMusicChannel;
+    SPSoundChannel *mSoundChannel;
+    SPButton *mChannelButton;
+}
 
 - (id)init
 {
@@ -23,13 +28,13 @@
         // Create music channel:
         
         SPSound *music = [SPSound soundWithContentsOfFile:@"music.aifc"];        
-        mMusicChannel = [[music createChannel] retain];
+        mMusicChannel = [music createChannel];
         mMusicChannel.loop = YES;
         
         SPSound *sound = [SPSound soundWithContentsOfFile:@"sound0.caf"];
-        mSoundChannel = [[sound createChannel] retain];
+        mSoundChannel = [sound createChannel];
         [mSoundChannel addEventListener:@selector(onSoundCompleted:) atObject:self
-                                forType:SP_EVENT_TYPE_SOUND_COMPLETED];
+                                forType:SP_EVENT_TYPE_COMPLETED];
         
         SPTexture *buttonTexture = [SPTexture textureWithContentsOfFile:@"button_square.png"];
         
@@ -216,9 +221,6 @@
     // necessary. But it's a good habit to stop any sound before releasing it (see above.)
     [mMusicChannel stop];
     
-    [mSoundChannel release];
-    [mMusicChannel release];    
-    [super dealloc];
 }
 
 @end

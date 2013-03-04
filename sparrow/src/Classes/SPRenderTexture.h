@@ -10,9 +10,6 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <OpenGLES/EAGL.h>
-#import <OpenGLES/ES1/gl.h>
-#import <OpenGLES/ES1/glext.h>
 
 #import "SPDisplayObject.h"
 #import "SPSubTexture.h"
@@ -53,12 +50,6 @@ typedef void (^SPDrawingBlock)();
 ------------------------------------------------------------------------------------------------- */
 
 @interface SPRenderTexture : SPSubTexture
-{
-  @private
-    GLuint mFramebuffer;
-    BOOL   mFramebufferIsActive;
-    SPRenderSupport *mRenderSupport;    
-}
 
 /// ------------------
 /// @name Initializers
@@ -74,10 +65,10 @@ typedef void (^SPDrawingBlock)();
 - (id)initWithWidth:(float)width height:(float)height fillColor:(uint)argb scale:(float)scale;
 
 /// Factory method.
-+ (SPRenderTexture *)textureWithWidth:(float)width height:(float)height;
++ (id)textureWithWidth:(float)width height:(float)height;
 
 /// Factory method.
-+ (SPRenderTexture *)textureWithWidth:(float)width height:(float)height fillColor:(uint)argb;
++ (id)textureWithWidth:(float)width height:(float)height fillColor:(uint)argb;
 
 /// -------------
 /// @name Methods

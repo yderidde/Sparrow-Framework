@@ -69,32 +69,13 @@
  You will need to implement the following methods when you subclass SPDisplayObject:
  
 	- (void)render:(SPRenderSupport*)support;
-	- (SPRectangle*)boundsInSpace:(SPDisplayObject*)targetCoordinateSpace;
+	- (SPRectangle*)boundsInSpace:(SPDisplayObject*)targetSpace;
  
  Have a look at SPQuad for a sample implementation of those methods. 
  
 ------------------------------------------------------------------------------------------------- */
 
-@interface SPDisplayObject : SPEventDispatcher 
-{
-  @private
-    float mX;
-    float mY;
-    float mPivotX;
-    float mPivotY;
-    float mScaleX;
-    float mScaleY;
-    float mRotationZ;
-    float mAlpha;
-    BOOL mVisible;
-    BOOL mTouchable;
-    BOOL mOrientationChanged;
-    
-    SPDisplayObjectContainer *mParent;
-    SPMatrix *mTransformationMatrix;
-    double mLastTouchTimestamp;
-    NSString *mName;
-}
+@interface SPDisplayObject : SPEventDispatcher
 
 /// -------------
 /// @name Methods
@@ -107,10 +88,10 @@
 - (void)removeFromParent;
 
 /// Creates a matrix that represents the transformation from the local coordinate system to another.
-- (SPMatrix*)transformationMatrixToSpace:(SPDisplayObject*)targetCoordinateSpace;
+- (SPMatrix*)transformationMatrixToSpace:(SPDisplayObject*)targetSpace;
 
 /// Returns a rectangle that completely encloses the object as it appears in another coordinate system.
-- (SPRectangle*)boundsInSpace:(SPDisplayObject*)targetCoordinateSpace;
+- (SPRectangle*)boundsInSpace:(SPDisplayObject*)targetSpace;
 
 /// Transforms a point from the local coordinate system to global (stage) coordinates.
 - (SPPoint*)localToGlobal:(SPPoint*)localPoint;
@@ -123,6 +104,9 @@
 
 /// Dispatches an event on all children (recursively). The event must not bubble. */
 - (void)broadcastEvent:(SPEvent *)event;
+
+/// Creates an event and dispatches it on all children (recursively). */
+- (void)broadcastEventWithType:(NSString *)type;
 
 /// ----------------
 /// @name Properties
@@ -146,6 +130,12 @@
 /// The vertical scale factor. "1" means no scale, negative values flip the object.
 @property (nonatomic, assign) float scaleY;
 
+/// The horizontal skew angle in radians.
+@property (nonatomic, assign) float skewX;
+
+/// The vertical skew angle in radians.
+@property (nonatomic, assign) float skewY;
+
 /// The width of the object in points.
 @property (nonatomic, assign) float width;
 
@@ -165,21 +155,31 @@
 @property (nonatomic, assign) BOOL touchable;
 
 /// The bounds of the object relative to the local coordinates of the parent.
-@property (nonatomic, readonly) SPRectangle *bounds;
+@property (weak, nonatomic, readonly) SPRectangle *bounds;
 
 /// The display object container that contains this display object.
-@property (nonatomic, readonly) SPDisplayObjectContainer *parent;
+@property (weak, nonatomic, readonly) SPDisplayObjectContainer *parent;
 
-/// The topmost object in the display tree the object is part of.
-@property (nonatomic, readonly) SPDisplayObject *root;
+/// The root object the display object is connected to (i.e. an instance of the class
+/// that was passed to `[SPViewController startWithRoot:]`), or nil if the object is not connected
+/// to it.
+@property (weak, nonatomic, readonly) SPDisplayObject *root;
 
 /// The stage the display object is connected to, or nil if it is not connected to a stage.
-@property (nonatomic, readonly) SPStage *stage;
+@property (weak, nonatomic, readonly) SPStage *stage;
+
+/// The topmost object in the display tree the object is part of.
+@property (weak, nonatomic, readonly) SPDisplayObject *base;
 
 /// The transformation matrix of the object relative to its parent.
-@property (nonatomic, readonly) SPMatrix *transformationMatrix;
+/// @returns CAUTION: not a copy, but the actual object!
+@property (nonatomic, copy) SPMatrix *transformationMatrix;
 
 /// The name of the display object (default: nil). Used by `childByName:` of display object containers.
 @property (nonatomic, copy) NSString *name;
+
+/// Indicates if an object occupies any visible area. (Which is the case when its `alpha`,
+/// `scaleX` and `scaleY` values are not zero, and its `visible` property is enabled.)
+@property (nonatomic, readonly) BOOL hasVisibleArea;
 
 @end

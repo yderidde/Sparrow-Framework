@@ -37,21 +37,6 @@
 ------------------------------------------------------------------------------------------------- */
 
 @interface SPButton : SPDisplayObjectContainer
-{
-  @private    
-    SPTexture *mUpState;
-    SPTexture *mDownState;
-    
-    SPSprite *mContents;
-    SPImage *mBackground;
-    SPTextField *mTextField;
-    SPRectangle *mTextBounds;
-  
-    float mScaleWhenDown;
-    float mAlphaWhenDisabled;
-    BOOL mEnabled;
-    BOOL mIsDown;
-}
 
 /// ------------------
 /// @name Initializers
@@ -67,13 +52,13 @@
 - (id)initWithUpState:(SPTexture*)upState;
 
 /// Factory method.
-+ (SPButton*)buttonWithUpState:(SPTexture*)upState downState:(SPTexture*)downState;
++ (id)buttonWithUpState:(SPTexture*)upState downState:(SPTexture*)downState;
 
 /// Factory method.
-+ (SPButton*)buttonWithUpState:(SPTexture*)upState text:(NSString*)text;
++ (id)buttonWithUpState:(SPTexture*)upState text:(NSString*)text;
 
 /// Factory method.
-+ (SPButton*)buttonWithUpState:(SPTexture*)upState;
++ (id)buttonWithUpState:(SPTexture*)upState;
 
 /// ----------------
 /// @name Properties
@@ -101,10 +86,10 @@
 @property (nonatomic, assign) uint fontColor;
 
 /// The texture that is displayed when the button is not being touched.
-@property (nonatomic, retain) SPTexture *upState;
+@property (nonatomic, strong) SPTexture *upState;
 
 /// The texture that is displayed while the button is touched.
-@property (nonatomic, retain) SPTexture *downState;
+@property (nonatomic, strong) SPTexture *downState;
 
 /// The bounds of the textfield on the button. Allows moving the text to a custom position.
 @property (nonatomic, copy)   SPRectangle *textBounds;

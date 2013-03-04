@@ -47,11 +47,9 @@
     STAssertTrue(SP_IS_FLOAT_EQUAL(y, quad.y), @"wrong y");
     STAssertTrue(SP_IS_FLOAT_EQUAL(width, quad.width), @"wrong width");
     STAssertTrue(SP_IS_FLOAT_EQUAL(height, quad.height), @"wrong height");
-    
-    [quad release];
 }
 
-- (void)testWidth
+- (void)testWidthAfterRotation
 {
     float width = 30;
     float height = 40;
@@ -61,13 +59,11 @@
 
     float expectedWidth = cosf(angle) * (width + height);
     STAssertTrue(SP_IS_FLOAT_EQUAL(expectedWidth, quad.width), @"wrong width: %f", quad.width);
-    
-    [quad release];
 }
 
 - (void)testVertexColorAndAlpha
 {
-    SPQuad *quad = [SPQuad quadWithWidth:20 height:20];
+    SPQuad *quad = [[SPQuad alloc] initWithWidth:100 height:100 color:0xffffff premultipliedAlpha:NO];
     
     [quad setColor:0xff0000 ofVertex:0];
     [quad setColor:0x00ff00 ofVertex:1];

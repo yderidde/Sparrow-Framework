@@ -19,13 +19,16 @@
 // --- class implementation ------------------------------------------------------------------------
 
 @implementation TouchSheet
+{
+    SPQuad *mQuad;
+}
 
 - (id)initWithQuad:(SPQuad*)quad
 {
     if ((self = [super init]))
     {
         // move quad to center, so that scaling works like expected
-        mQuad = [quad retain];
+        mQuad = quad;
         mQuad.x = (int)mQuad.width/-2;
         mQuad.y = (int)mQuad.height/-2;        
         [mQuad addEventListener:@selector(onTouchEvent:) atObject:self forType:SP_EVENT_TYPE_TOUCH];
@@ -37,7 +40,7 @@
 - (id)init
 {
     // the designated initializer of the base class should always be overridden -- we do that here.
-    SPQuad *quad = [[[SPQuad alloc] init] autorelease];
+    SPQuad *quad = [[SPQuad alloc] init];
     return [self initWithQuad:quad];
 }
 
@@ -48,7 +51,7 @@
     if (touches.count == 1)
     {                
         // one finger touching -> move
-        SPTouch *touch = [touches objectAtIndex:0];
+        SPTouch *touch = touches[0];
                  
         SPPoint *currentPos = [touch locationInSpace:self.parent];
         SPPoint *previousPos = [touch previousLocationInSpace:self.parent];
@@ -60,8 +63,8 @@
     else if (touches.count >= 2)
     {
         // two fingers touching -> rotate and scale
-        SPTouch *touch1 = [touches objectAtIndex:0];
-        SPTouch *touch2 = [touches objectAtIndex:1];
+        SPTouch *touch1 = touches[0];
+        SPTouch *touch2 = touches[1];
         
         SPPoint *touch1PrevPos = [touch1 previousLocationInSpace:self.parent];
         SPPoint *touch1Pos = [touch1 locationInSpace:self.parent];
@@ -91,15 +94,13 @@
     touches = [[event touchesWithTarget:self andPhase:SPTouchPhaseEnded] allObjects];
     if (touches.count == 1)
     {
-        SPTouch *touch = [touches objectAtIndex:0];
+        SPTouch *touch = touches[0];
         if (touch.tapCount == 2)
         {
             // bring self to front            
             SPDisplayObjectContainer *parent = self.parent;
-            [self retain];
             [parent removeChild:self];
             [parent addChild:self];
-            [self release];
         }
     }    
 }
@@ -108,8 +109,6 @@
 {
     // event listeners should always be removed to avoid memory leaks!
     [mQuad removeEventListenersAtObject:self forType:SP_EVENT_TYPE_TOUCH];
-    [mQuad release];
-    [super dealloc];
 }
 
 @end

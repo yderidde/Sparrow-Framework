@@ -15,6 +15,9 @@
 #import "SPEvent_Internal.h"
 
 @implementation SPTouchEvent
+{
+    NSSet *mTouches;
+}
 
 @synthesize touches = mTouches;
 
@@ -22,7 +25,7 @@
 {   
     if ((self = [super initWithType:type bubbles:bubbles]))
     {        
-        mTouches = [touches retain];
+        mTouches = touches;
     }
     return self;
 }
@@ -78,15 +81,9 @@
     return touchesFound;    
 }
 
-- (void)dealloc
++ (id)eventWithType:(NSString*)type touches:(NSSet*)touches
 {
-    [mTouches release];
-    [super dealloc];
-}
-
-+ (SPTouchEvent*)eventWithType:(NSString*)type touches:(NSSet*)touches
-{
-    return [[[SPTouchEvent alloc] initWithType:type touches:touches] autorelease];
+    return [[self alloc] initWithType:type touches:touches];
 }
 
 @end

@@ -47,8 +47,6 @@
 
     [dispatcher removeEventListener:@selector(onEvent:) atObject:self forType:EVENT_TYPE];
     STAssertFalse([dispatcher hasEventListenerForType:EVENT_TYPE], @"remove failed");    
-    
-    [dispatcher release];
 }
 
 - (void)testRemoveAllEventListenersOfObject
@@ -59,19 +57,16 @@
     
     [dispatcher removeEventListenersAtObject:self forType:EVENT_TYPE];
     STAssertFalse([dispatcher hasEventListenerForType:EVENT_TYPE], @"remove failed");
-    
-    [dispatcher release];
 }
 
 - (void)testSimpleEvent
 {
     SPEventDispatcher *dispatcher = [[SPEventDispatcher alloc] init];
     [dispatcher addEventListener:@selector(onEvent:) atObject:self forType:EVENT_TYPE];    
-    [dispatcher dispatchEvent:[SPEvent eventWithType:EVENT_TYPE]];    
+    [dispatcher dispatchEventWithType:EVENT_TYPE];
     STAssertEquals(1, mTestCounter, @"event listener not called");    
     
     [dispatcher removeEventListener:@selector(onEvent:) atObject:self forType:EVENT_TYPE];    
-    [dispatcher release];
 }
 
 - (void)testBubblingEvent
@@ -92,22 +87,18 @@
     [sprite2 addChild:sprite3];
     [sprite3 addChild:sprite4];
     
-    [sprite4 dispatchEvent:[SPEvent eventWithType:EVENT_TYPE]];
+    [sprite4 dispatchEventWithType:EVENT_TYPE];
     
     STAssertEquals(1, mTestCounter, @"event bubbled, but should not have");
     mTestCounter = 0;
     
-    [sprite4 dispatchEvent:[SPEvent eventWithType:EVENT_TYPE bubbles:YES]];
+    [sprite4 dispatchEventWithType:EVENT_TYPE bubbles:YES];
     STAssertEquals(2, mTestCounter, @"event bubbling incorrect");
     
     [sprite1 removeEventListenersAtObject:self forType:EVENT_TYPE];
     [sprite2 removeEventListenersAtObject:self forType:EVENT_TYPE];
     [sprite3 removeEventListenersAtObject:self forType:EVENT_TYPE];
     [sprite4 removeEventListenersAtObject:self forType:EVENT_TYPE];
-    [sprite1 release];
-    [sprite2 release];
-    [sprite3 release];
-    [sprite4 release];
 }
 
 - (void)testStopImmediatePropagation
@@ -122,7 +113,31 @@
     STAssertEquals(2, mTestCounter, @"stopEventImmediately did not work correctly");
     
     [sprite removeEventListenersAtObject:self forType:EVENT_TYPE];
-    [sprite release];    
+}
+
+- (void)testAddAndRemoveBlockEventHandlers
+{
+    NSString *eventType = @"eventType";
+    int __block testCounter = 0;
+    
+    SPEventBlock block = ^(SPEvent *event)
+    {
+        testCounter++;
+    };
+    
+    SPSprite *sprite = [SPSprite sprite];
+    
+    [sprite addEventListenerForType:eventType block:block];
+    [sprite dispatchEventWithType:eventType];
+    
+    STAssertTrue([sprite hasEventListenerForType:eventType], @"event handler not recognized");
+    STAssertEquals(1, testCounter, @"event block was not called");
+    
+    [sprite removeEventListenerForType:eventType block:block];
+    [sprite dispatchEventWithType:eventType];
+    
+    STAssertTrue(![sprite hasEventListenerForType:eventType], @"event handler not removed");
+    STAssertEquals(1, testCounter, @"event block was called, but shouldn't have been");
 }
 
 - (void)onEvent:(SPEvent*)event

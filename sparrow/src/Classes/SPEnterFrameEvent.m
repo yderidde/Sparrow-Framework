@@ -13,6 +13,9 @@
 
 
 @implementation SPEnterFrameEvent
+{
+    double mPassedTime;
+}
 
 @synthesize passedTime = mPassedTime;
 
@@ -35,14 +38,9 @@
     return [self initWithType:type bubbles:bubbles passedTime:0.0f];
 }
 
-+ (SPEnterFrameEvent*)eventWithType:(NSString*)type passedTime:(double)seconds
++ (id)eventWithType:(NSString*)type passedTime:(double)seconds
 {
-    return [[[SPEnterFrameEvent alloc] initWithType:type passedTime:seconds] autorelease];
-}
-
-- (void)dealloc
-{
-    [super dealloc];
+    return [[self alloc] initWithType:type passedTime:seconds];
 }
 
 @end

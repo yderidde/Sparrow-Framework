@@ -14,6 +14,7 @@
 #import "SPMacros.h"
 #import "SPUtils.h"
 #import "SPStage.h"
+#import "SparrowClass.h"
 
 @interface SPRenderTexture ()
 
@@ -24,29 +25,30 @@
 @end
 
 @implementation SPRenderTexture
+{
+    GLuint mFramebuffer;
+    BOOL   mFramebufferIsActive;
+    SPRenderSupport *mRenderSupport;
+}
 
 - (id)initWithWidth:(float)width height:(float)height fillColor:(uint)argb scale:(float)scale
 {
     int legalWidth  = [SPUtils nextPowerOfTwo:width  * scale];
     int legalHeight = [SPUtils nextPowerOfTwo:height * scale];
     
-    SPTextureProperties properties = {
-        .format = SPTextureFormatRGBA,
-        .width  = legalWidth,
-        .height = legalHeight,
-        .generateMipmaps = NO,
-        .premultipliedAlpha = NO
-    };
-    
     SPRectangle *region = [SPRectangle rectangleWithX:0 y:0 width:width height:height];
-    SPGLTexture *glTexture = [SPGLTexture textureWithData:NULL properties:properties];
-    glTexture.scale = scale;
-    
+    SPGLTexture *glTexture = [[SPGLTexture alloc] initWithData:NULL
+                                                         width:legalWidth
+                                                        height:legalHeight
+                                               generateMipmaps:NO
+                                                         scale:scale
+                                            premultipliedAlpha:NO];
+
     if ((self = [super initWithRegion:region ofTexture:glTexture]))
     {
         mRenderSupport = [[SPRenderSupport alloc] init];
         
-        [self createFramebuffer];        
+        [self createFramebuffer];
         [self clearWithColor:argb alpha:SP_COLOR_PART_ALPHA(argb)];
     }
     return self;
@@ -54,7 +56,7 @@
 
 - (id)initWithWidth:(float)width height:(float)height fillColor:(uint)argb
 {
-    return [self initWithWidth:width height:height fillColor:argb scale:[SPStage contentScaleFactor]];
+    return [self initWithWidth:width height:height fillColor:argb scale:Sparrow.contentScaleFactor];
 }
 
 - (id)initWithWidth:(float)width height:(float)height
@@ -69,9 +71,7 @@
 
 - (void)dealloc
 {
-    [mRenderSupport release];
     [self destroyFramebuffer];
-    [super dealloc];
 }
 
 - (void)createFramebuffer 
@@ -82,7 +82,7 @@
     
     // attach renderbuffer
     glFramebufferTexture2DOES(GL_FRAMEBUFFER_OES, GL_COLOR_ATTACHMENT0_OES, GL_TEXTURE_2D, 
-                              self.baseTexture.textureID, 0);
+                              self.baseTexture.name, 0);
     
     if (glCheckFramebufferStatusOES(GL_FRAMEBUFFER_OES) != GL_FRAMEBUFFER_COMPLETE_OES)
         NSLog(@"failed to create frame buffer for render texture");
@@ -110,7 +110,7 @@
     {
         mFramebufferIsActive = YES;
         
-        // remember standard frame buffer        
+        // remember standard frame buffer
         glGetIntegerv(GL_FRAMEBUFFER_BINDING_OES, &stdFramebuffer);
         
         // switch to the texture's framebuffer for rendering
@@ -123,18 +123,17 @@
         
         // prepare viewport and OpenGL matrices
         glViewport(0, 0, width * scale, height * scale);
-        [SPRenderSupport setupOrthographicRenderingWithLeft:0 right:width
-                                                     bottom:0 top:height];
-        
-        // reset texture binding
-        [mRenderSupport reset];
-    }    
-   
+        [mRenderSupport setupOrthographicProjectionWithLeft:0 right:width top:height bottom:0];
+    }
+    
     block();
     
     if (stdFramebuffer != -1)
     {
         mFramebufferIsActive = NO;
+        
+        [mRenderSupport finishQuadBatch];
+        [mRenderSupport nextFrame];
         
         // return to standard frame buffer
         glBindFramebufferOES(GL_FRAMEBUFFER_OES, stdFramebuffer);
@@ -145,12 +144,12 @@
 {
     [self renderToFramebuffer:^
      {
-         glPushMatrix();
+         [mRenderSupport pushMatrix];
          
-         [SPRenderSupport transformMatrixForObject:object];         
+         [mRenderSupport prependMatrix:object.transformationMatrix];
          [object render:mRenderSupport];
          
-         glPopMatrix();
+         [mRenderSupport popMatrix];
      }];
 }
 
@@ -167,14 +166,14 @@
      }];
 }
 
-+ (SPRenderTexture *)textureWithWidth:(float)width height:(float)height
++ (id)textureWithWidth:(float)width height:(float)height
 {
-    return [[[SPRenderTexture alloc] initWithWidth:width height:height] autorelease];    
+    return [[self alloc] initWithWidth:width height:height];    
 }
 
-+ (SPRenderTexture *)textureWithWidth:(float)width height:(float)height fillColor:(uint)argb
++ (id)textureWithWidth:(float)width height:(float)height fillColor:(uint)argb
 {
-    return [[[SPRenderTexture alloc] initWithWidth:width height:height fillColor:argb] autorelease];
+    return [[self alloc] initWithWidth:width height:height fillColor:argb];
 }
 
 @end

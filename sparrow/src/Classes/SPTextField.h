@@ -85,23 +85,6 @@ typedef enum
 ------------------------------------------------------------------------------------------------- */
 
 @interface SPTextField : SPDisplayObjectContainer
-{
-  @protected
-    float mFontSize;
-    uint mColor;
-    NSString *mText;
-    NSString *mFontName;    
-    SPHAlign mHAlign;
-    SPVAlign mVAlign;
-    BOOL mBorder;    
-    BOOL mRequiresRedraw;
-    BOOL mIsRenderedText;
-	BOOL mKerning;
-    
-    SPQuad *mHitArea;
-    SPQuad *mTextArea;
-    SPDisplayObject *mContents;
-}
 
 /// ------------------
 /// @name Initializers
@@ -118,14 +101,14 @@ typedef enum
 - (id)initWithText:(NSString *)text;
 
 /// Factory method.
-+ (SPTextField *)textFieldWithWidth:(float)width height:(float)height text:(NSString*)text 
++ (id)textFieldWithWidth:(float)width height:(float)height text:(NSString*)text
                           fontName:(NSString*)name fontSize:(float)size color:(uint)color;
 
 /// Factory method.
-+ (SPTextField *)textFieldWithWidth:(float)width height:(float)height text:(NSString*)text;
++ (id)textFieldWithWidth:(float)width height:(float)height text:(NSString*)text;
 
 /// Factory method.
-+ (SPTextField *)textFieldWithText:(NSString *)text;
++ (id)textFieldWithText:(NSString *)text;
 
 /// -------------
 /// @name Methods
@@ -184,7 +167,7 @@ typedef enum
 @property (nonatomic, assign) uint color;
 
 /// The bounds of the actual characters inside the text field.
-@property (nonatomic, readonly) SPRectangle *textBounds;
+@property (weak, nonatomic, readonly) SPRectangle *textBounds;
 
 /// Allows using kerning information with a bitmap font (where available). Default is YES.
 @property (nonatomic, assign) BOOL kerning;

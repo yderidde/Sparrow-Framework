@@ -20,6 +20,7 @@
 #import "SPPoint.h"
 #import "SPSprite.h"
 #import "SPQuad.h"
+#import "SPStage.h"
 
 #define E 0.0001f
 
@@ -35,20 +36,30 @@
 
 @implementation SPDisplayObjectTest
 
-- (void)testRoot
+- (void)testBase
 {
-    SPSprite *root = [[SPSprite alloc] init];    
+    SPSprite *base = [[SPSprite alloc] init];
     SPSprite *child = [[SPSprite alloc] init];
     SPSprite *grandChild = [[SPSprite alloc] init];
     
+    [base addChild:child];
+    [child addChild:grandChild];
+    
+    STAssertEqualObjects(base, grandChild.base, @"wrong base");
+}
+
+- (void)testRoot
+{
+    SPStage  *stage = [[SPStage alloc] init];
+    SPSprite *root = [[SPSprite alloc] init];
+    SPSprite *child = [[SPSprite alloc] init];
+    SPSprite *grandChild = [[SPSprite alloc] init];
+    
+    [stage addChild:root];
     [root addChild:child];
     [child addChild:grandChild];
     
     STAssertEqualObjects(root, grandChild.root, @"wrong root");
-    
-    [grandChild release];
-    [child release];
-    [root release];    
 }
 
 - (void)testTransformationMatrixToSpace
@@ -88,9 +99,29 @@
     [matrix translateXBy:sprite.x yBy:sprite.y];
     
     STAssertTrue([sprite.transformationMatrix isEquivalent:matrix], @"wrong matrix");
+}
+
+- (void)testSetTransformationMatrix
+{
+    float x = 50;
+    float y = 100;
+    float scaleX = 0.5f;
+    float scaleY = 1.5f;
+    float rotation = PI / 4.0f;
     
-    [sprite release];
-    [matrix release];
+    SPMatrix *matrix = [[SPMatrix alloc] init];
+    [matrix scaleXBy:scaleX yBy:scaleY];
+    [matrix rotateBy:rotation];
+    [matrix translateXBy:x yBy:y];
+    
+    SPSprite *sprite = [[SPSprite alloc] init];
+    sprite.transformationMatrix = matrix;
+    
+    STAssertEqualsWithAccuracy(x, sprite.x, E, @"wrong x coord");
+    STAssertEqualsWithAccuracy(y, sprite.y, E, @"wrong y coord");
+    STAssertEqualsWithAccuracy(scaleX, sprite.scaleX, E, @"wrong scaleX");
+    STAssertEqualsWithAccuracy(scaleY, sprite.scaleY, E, @"wrong scaleY");
+    STAssertEqualsWithAccuracy(rotation, sprite.rotation, E, @"wrong rotation");
 }
 
 - (void)testBounds
@@ -111,8 +142,6 @@
     STAssertTrue(SP_IS_FLOAT_EQUAL(0, bounds.y), @"wrong inner bounds.y: %f", bounds.y);
     STAssertTrue(SP_IS_FLOAT_EQUAL(10, bounds.width), @"wrong inner bounds.width: %f", bounds.width);
     STAssertTrue(SP_IS_FLOAT_EQUAL(20, bounds.height), @"wrong innter bounds.height: %f", bounds.height);
-    
-    [quad release];
 }
 
 - (void)testZeroSize
@@ -146,9 +175,11 @@
 
 - (void)testLocalToGlobal
 {
+    SPSprite *root = [[SPSprite alloc] init];
     SPSprite *sprite = [[SPSprite alloc] init];
     sprite.x = 10;
-    sprite.y = 20;    
+    sprite.y = 20;
+    [root addChild:sprite];
     SPSprite *sprite2 = [[SPSprite alloc] init];
     sprite2.x = 150;
     sprite2.y = 200;    
@@ -159,8 +190,11 @@
     SPPoint *expectedPoint = [SPPoint pointWithX:160 y:220];    
     STAssertTrue([globalPoint isEquivalent:expectedPoint], @"wrong global point");
     
-    [sprite release];
-    [sprite2 release];
+    // the position of the root object should be irrelevant -- we want the coordinates
+    // *within* the root coordinate system!
+    root.x = 50;
+    globalPoint = [sprite2 localToGlobal:localPoint];
+    STAssertTrue([globalPoint isEquivalent:expectedPoint], @"wrong global point");
 }
 
 - (void)testLocalToGlobalWithPivot
@@ -181,9 +215,11 @@
 
 - (void)testGlobalToLocal
 {
+    SPSprite *root = [[SPSprite alloc] init];
     SPSprite *sprite = [[SPSprite alloc] init];
     sprite.x = 10;
     sprite.y = 20;
+    [root addChild:sprite];
     SPSprite *sprite2 = [[SPSprite alloc] init];
     sprite2.x = 150;
     sprite2.y = 200;    
@@ -194,8 +230,11 @@
     SPPoint *expectedPoint = [SPPoint pointWithX:0 y:0];    
     STAssertTrue([localPoint isEquivalent:expectedPoint], @"wrong local point");
     
-    [sprite release];
-    [sprite2 release];
+    // the position of the root object should be irrelevant -- we want the coordinates
+    // *within* the root coordinate system!
+    root.x = 50;
+    localPoint = [sprite2 globalToLocal:globalPoint];
+    STAssertTrue([localPoint isEquivalent:expectedPoint], @"wrong local point");
 }
 
 - (void)testHitTestPoint
@@ -230,8 +269,6 @@
     quad.touchable = NO;
     STAssertNotNil([quad hitTestPoint:[SPPoint pointWithX:15 y:5] forTouch:NO], 
                 @"hitTest should succeed, this is no touch test");    
-    
-    [quad release];
 }
 
 - (void)testRotation

@@ -13,6 +13,12 @@
 
 
 @implementation SPDelayedInvocation
+{
+    id mTarget;
+    NSMutableSet *mInvocations;
+    double mTotalTime;
+    double mCurrentTime;
+}
 
 @synthesize totalTime = mTotalTime;
 @synthesize currentTime = mCurrentTime;
@@ -20,17 +26,12 @@
 
 - (id)initWithTarget:(id)target delay:(double)time
 {
-    if (!target)
-    {
-        [self release];
-        return nil;
-    }    
-    
-    if ((self = [super init]))
+    if (!target) return nil;
+    else if ((self = [super init]))
     {
         mTotalTime = MAX(0.0001, time); // zero is not allowed
         mCurrentTime = 0;
-        mTarget = [target retain];
+        mTarget = target;
         mInvocations = [[NSMutableSet alloc] init];
     }
     return self;
@@ -38,7 +39,6 @@
 
 - (id)init
 {
-    [self release];
     return nil;
 }
 
@@ -69,8 +69,11 @@
     double previousTime = mCurrentTime;    
     mCurrentTime = MIN(mTotalTime, currentTime);
     
-    if (previousTime < mTotalTime && mCurrentTime >= mTotalTime)    
-        [mInvocations makeObjectsPerformSelector:@selector(invoke)];        
+    if (previousTime < mTotalTime && mCurrentTime >= mTotalTime)
+    {
+        [mInvocations makeObjectsPerformSelector:@selector(invoke)];
+        [self dispatchEventWithType:SP_EVENT_TYPE_REMOVE_FROM_JUGGLER];
+    }
 }
 
 - (BOOL)isComplete
@@ -78,16 +81,9 @@
     return mCurrentTime >= mTotalTime;
 }
 
-+ (SPDelayedInvocation*)invocationWithTarget:(id)target delay:(double)time
++ (id)invocationWithTarget:(id)target delay:(double)time
 {
-    return [[[SPDelayedInvocation alloc] initWithTarget:target delay:time] autorelease];
-}
-
-- (void)dealloc
-{
-    [mTarget release];
-    [mInvocations release];
-    [super dealloc];
+    return [[self alloc] initWithTarget:target delay:time];
 }
 
 @end

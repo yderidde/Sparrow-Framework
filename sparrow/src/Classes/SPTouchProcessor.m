@@ -24,6 +24,10 @@
 #define MULTITAP_DIST 25
 
 @implementation SPTouchProcessor
+{
+    SPDisplayObjectContainer *__weak mRoot;
+    NSMutableSet *mCurrentTouches;
+}
 
 @synthesize root = mRoot;
 
@@ -47,8 +51,6 @@
 
 - (void)processTouches:(NSSet*)touches
 {
-    SP_CREATE_POOL(pool);    
-    
     NSMutableSet *processedTouches = [[NSMutableSet alloc] init];
     
     // process new touches
@@ -111,13 +113,9 @@
         SPTouchEvent *touchEvent = [[SPTouchEvent alloc] initWithType:SP_EVENT_TYPE_TOUCH 
                                                               touches:processedTouches];
         [touch.target dispatchEvent:touchEvent];
-        [touchEvent release];
     }
     
-    [mCurrentTouches release];    
-    mCurrentTouches = processedTouches;    
-    
-    SP_RELEASE_POOL(pool);
+    mCurrentTouches = processedTouches;
 }
 
 - (void)cancelCurrentTouches:(NSNotification *)notification
@@ -139,8 +137,6 @@
 - (void) dealloc
 {
     [[NSNotificationCenter defaultCenter] removeObserver:self];
-    [mCurrentTouches release];
-    [super dealloc];
 }
 
 @end

@@ -17,6 +17,13 @@
 @end
 
 @implementation AnimationScene
+{
+    SPButton *mStartButton;
+    SPButton *mDelayButton;
+    SPImage *mEgg;
+    SPTextField *mTransitionLabel;
+    NSMutableArray *mTransitions;
+}
 
 - (id)init
 {
@@ -24,10 +31,9 @@
     {
         // define some sample transitions for the animation demo. There are more available!
         mTransitions = [[NSMutableArray alloc] initWithObjects:
-                        SP_TRANSITION_LINEAR, SP_TRANSITION_EASE_OUT, 
-                        SP_TRANSITION_EASE_IN_OUT, SP_TRANSITION_EASE_OUT_BACK,
+                        SP_TRANSITION_LINEAR, SP_TRANSITION_EASE_IN_OUT, SP_TRANSITION_EASE_OUT_BACK,
                         SP_TRANSITION_EASE_OUT_BOUNCE, SP_TRANSITION_EASE_OUT_ELASTIC, nil];
-        [self setupScene];        
+        [self setupScene];
     }
     return self;
 }
@@ -81,45 +87,37 @@
     [self resetEgg];
     
     // get next transition style from array and enqueue it at the end
-    NSString *transition = [mTransitions objectAtIndex:0];
+    NSString *transition = mTransitions[0];
     [mTransitions removeObjectAtIndex:0];
     [mTransitions addObject:transition];
     
     // to animate any numeric property of an arbitrary object (not just display objects!), you
     // can create a 'Tween'. One tween object animates one target for a certain time, with
     // a certain transition function.    
-    SPTween *tween = [SPTween tweenWithTarget:mEgg time:3.5f transition:transition];
+    SPTween *tween = [SPTween tweenWithTarget:mEgg time:2.0f transition:transition];
 
     // you can animate any property as long as it's numeric (float, double, int). 
-    // it is animated from it's current value to a target value.    
-    [tween animateProperty:@"x" targetValue:305];
-    [tween animateProperty:@"y" targetValue:365];
-    [tween animateProperty:@"scaleX" targetValue:0.5];
-    [tween animateProperty:@"scaleY" targetValue:0.5];
+    // it is animated from it's current value to a target value.
+    [tween moveToX:305 y:365];
+    [tween scaleTo:0.5f];
     [tween animateProperty:@"rotation" targetValue:PI_HALF];
-    [tween addEventListener:@selector(onTweenComplete:) atObject:self 
-                    forType:SP_EVENT_TYPE_TWEEN_COMPLETED retainObject:YES];
-
+    
+    tween.onComplete = ^{ mStartButton.enabled = YES; };
+    
     // the tween alone is useless -- once in every frame, it has to be advanced, so that the 
     // animation occurs. This is done by the 'Juggler'. It receives the tween and will use it to 
     // animate the object. 
     // There is a default juggler at the stage, but you can create your own jugglers, as well.
     // That way, you can group animations into logical parts.    
-    [self.stage.juggler addObject:tween];
+    [Sparrow.juggler addObject:tween];
     
     // show which tweening function is used
     mTransitionLabel.text = transition;
     mTransitionLabel.alpha = 1.0f;
-    SPTween *hideTween = [SPTween tweenWithTarget:mTransitionLabel time:3.0f 
+    SPTween *hideTween = [SPTween tweenWithTarget:mTransitionLabel time:2.0f
                                        transition:SP_TRANSITION_EASE_IN];
     [hideTween animateProperty:@"alpha" targetValue:0.0f];
-    [self.stage.juggler addObject:hideTween];
-}
-
-- (void)onTweenComplete:(SPEvent*)event
-{    
-    mStartButton.enabled = YES;
-    [(SPTween*)event.target removeEventListenersAtObject:self forType:SP_EVENT_TYPE_TWEEN_COMPLETED];
+    [Sparrow.juggler addObject:hideTween];
 }
 
 - (void)onDelayButtonPressed:(SPEvent *)event
@@ -139,8 +137,10 @@
     // the method you would like to call on this proxy object instead of the real method target.
     // In this sample, [self colorizeEgg:] will be called after the specified delay.
     
-    [[self.stage.juggler delayInvocationAtTarget:self byTime:1.0f] colorizeEgg:YES];
-    [[self.stage.juggler delayInvocationAtTarget:self byTime:2.0f] colorizeEgg:NO];    
+    SPJuggler *juggler = Sparrow.juggler;
+    
+    [[juggler delayInvocationAtTarget:self byTime:1.0f] colorizeEgg:YES];
+    [[juggler delayInvocationAtTarget:self byTime:2.0f] colorizeEgg:NO];
 }
 
 - (void)colorizeEgg:(BOOL)colorize
@@ -157,12 +157,6 @@
 {
     [mStartButton removeEventListenersAtObject:self forType:SP_EVENT_TYPE_TRIGGERED];
     [mDelayButton removeEventListenersAtObject:self forType:SP_EVENT_TYPE_TRIGGERED];
-    [mStartButton release];
-    [mDelayButton release];    
-    [mEgg release];
-    [mTransitionLabel release];  
-    [mTransitions release];
-    [super dealloc];
 }
 
 @end

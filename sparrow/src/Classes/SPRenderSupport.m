@@ -11,72 +11,71 @@
 
 #import "SPRenderSupport.h"
 #import "SPDisplayObject.h"
+#import "SPVertexData.h"
+#import "SPQuadBatch.h"
 #import "SPTexture.h"
 #import "SPMacros.h"
+#import "SPQuad.h"
 
-#import <OpenGLES/EAGL.h>
-#import <OpenGLES/ES1/gl.h>
-#import <OpenGLES/ES1/glext.h>
+#import <GLKit/GLKit.h>
 
 @implementation SPRenderSupport
+{
+    SPMatrix *mProjectionMatrix;
+    SPMatrix *mModelviewMatrix;
+    SPMatrix *mMvpMatrix;
+    NSMutableArray *mMatrixStack;
+    int mMatrixStackSize;
+    
+    float *mAlphaStack;
+    int mAlphaStackSize;
+    
+    GLKBaseEffect *mBaseEffect;
+    uint mBoundTextureName;
+    
+    NSMutableArray *mQuadBatches;
+    int mCurrentQuadBatchID;
+}
 
 @synthesize usingPremultipliedAlpha = mPremultipliedAlpha;
+@synthesize modelviewMatrix = mModelviewMatrix;
+@synthesize projectionMatrix = mProjectionMatrix;
 
 - (id)init
 {
     if ((self = [super init]))
     {
-        [self reset];
+        mProjectionMatrix = [[SPMatrix alloc] init];
+        mModelviewMatrix  = [[SPMatrix alloc] init];
+        mMvpMatrix        = [[SPMatrix alloc] init];
+        
+        mMatrixStack = [[NSMutableArray alloc] initWithCapacity:16];
+        mMatrixStackSize = 0;
+        
+        mAlphaStack = calloc(SP_MAX_DISPLAY_TREE_DEPTH, sizeof(float));
+        mAlphaStack[0] = 1.0f;
+        mAlphaStackSize = 1;
+        
+        mBaseEffect = [[GLKBaseEffect alloc] init];
+        
+        mQuadBatches = [[NSMutableArray alloc] initWithObjects:[[SPQuadBatch alloc] init], nil];
+        mCurrentQuadBatchID = 0;
+        
+        [self loadIdentity];
+        [self setupOrthographicProjectionWithLeft:0 right:320 top:0 bottom:480];
     }
     return self;
 }
 
-- (void)reset
+- (void)dealloc
 {
-    mBoundTextureID = UINT_MAX;
-    mPremultipliedAlpha = YES;
-    [self bindTexture:nil];
+    free(mAlphaStack);
 }
 
-- (void)bindTexture:(SPTexture *)texture
+- (void)nextFrame
 {
-    uint newTextureID = texture.textureID;
-    BOOL newPMA = texture.hasPremultipliedAlpha;
-    
-    if (newTextureID != mBoundTextureID)
-        glBindTexture(GL_TEXTURE_2D, newTextureID);        
-    
-    if (newPMA != mPremultipliedAlpha || !mBoundTextureID)
-    {
-        if (newPMA) glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-        else        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    }
-    
-    mBoundTextureID = newTextureID;
-    mPremultipliedAlpha = newPMA;
-}
-
-- (uint)convertColor:(uint)color alpha:(float)alpha
-{
-    return [SPRenderSupport convertColor:color alpha:alpha premultiplyAlpha:mPremultipliedAlpha];
-}
-
-+ (uint)convertColor:(uint)color alpha:(float)alpha premultiplyAlpha:(BOOL)pma
-{
-    if (pma)
-    {
-        return (GLubyte)(SP_COLOR_PART_RED(color) * alpha) |
-               (GLubyte)(SP_COLOR_PART_GREEN(color) * alpha) << 8 |
-               (GLubyte)(SP_COLOR_PART_BLUE(color) * alpha) << 16 |
-               (GLubyte)(alpha * 255) << 24;
-    }
-    else
-    {
-        return (GLubyte)SP_COLOR_PART_RED(color) |
-               (GLubyte)SP_COLOR_PART_GREEN(color) << 8 |
-               (GLubyte)SP_COLOR_PART_BLUE(color) << 16 |
-               (GLubyte)(alpha * 255) << 24;
-    }
+    [self resetMatrix];
+    mCurrentQuadBatchID = 0;
 }
 
 + (void)clearWithColor:(uint)color alpha:(float)alpha;
@@ -89,45 +88,122 @@
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
-+ (void)transformMatrixForObject:(SPDisplayObject *)object
-{
-    float x = object.x;
-    float y = object.y;
-    float rotation = object.rotation;
-    float scaleX = object.scaleX;
-    float scaleY = object.scaleY;
-    float pivotX = object.pivotX;
-    float pivotY = object.pivotY;
-    
-    if (x != 0.0f || y != 0.0f)           glTranslatef(x, y, 0.0f);
-    if (rotation != 0.0f)                 glRotatef(SP_R2D(rotation), 0.0f, 0.0f, 1.0f);
-    if (scaleX != 1.0f || scaleY != 1.0f) glScalef(scaleX, scaleY, 1.0f);
-    if (pivotX != 0.0f || pivotY != 0.0f) glTranslatef(-pivotX, -pivotY, 0.0f);    
-}
-
-+ (void)setupOrthographicRenderingWithLeft:(float)left right:(float)right 
-                                    bottom:(float)bottom top:(float)top
-{
-    glDisable(GL_CULL_FACE);
-    glDisable(GL_LIGHTING);
-    glDisable(GL_DEPTH_TEST);
-    
-    glEnable(GL_TEXTURE_2D);
-    glEnable(GL_BLEND);
-    
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrthof(left, right, bottom, top, -1.0f, 1.0f);
-    
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();  
-}
-
 + (uint)checkForOpenGLError
 {
     GLenum error = glGetError();
-    if (error != 0) NSLog(@"Warning: There was an OpenGL error: #%d", error);
+    if (error != 0) NSLog(@"There was an OpenGL error: 0x%x", error);
     return error;
+}
+
+#pragma mark - alpha stack
+
+- (float)pushAlpha:(float)alpha
+{
+    if (mAlphaStackSize < SP_MAX_DISPLAY_TREE_DEPTH)
+    {
+        float newAlpha = mAlphaStack[mAlphaStackSize-1] * alpha;
+        mAlphaStack[mAlphaStackSize++] = newAlpha;
+        return newAlpha;
+    }
+    else
+    {
+        [NSException raise:SP_EXC_INVALID_OPERATION format:@"The display tree is too deep"];
+        return 0.0f;
+    }
+}
+
+- (float)popAlpha
+{
+    if (mAlphaStackSize > 0)
+        --mAlphaStackSize;
+    
+    return mAlphaStack[mAlphaStackSize-1];
+}
+
+- (float)alpha
+{
+    return mAlphaStack[mAlphaStackSize-1];
+}
+
+#pragma mark - matrix manipulation
+
+- (void)loadIdentity
+{
+    [mModelviewMatrix identity];
+}
+
+- (void)resetMatrix
+{
+    mMatrixStackSize = 0;
+    [self loadIdentity];
+}
+
+- (void)pushMatrix
+{
+    if (mMatrixStack.count < mMatrixStackSize + 1)
+        [mMatrixStack addObject:[SPMatrix matrixWithIdentity]];
+    
+    SPMatrix *currentMatrix = mMatrixStack[mMatrixStackSize++];
+    [currentMatrix copyFromMatrix:mModelviewMatrix];
+}
+
+- (void)popMatrix
+{
+    SPMatrix *currentMatrix = mMatrixStack[--mMatrixStackSize];
+    [mModelviewMatrix copyFromMatrix:currentMatrix];
+}
+
+- (void)setupOrthographicProjectionWithLeft:(float)left right:(float)right
+                                        top:(float)top bottom:(float)bottom;
+{
+    [mProjectionMatrix setA:2.0f/(right-left) b:0.0f c:0.0f d:2.0f/(top-bottom)
+                         tx:-(right+left) / (right-left)
+                         ty:-(top+bottom) / (top-bottom)];
+    
+    mBaseEffect.transform.projectionMatrix = [mProjectionMatrix convertToGLKMatrix4];
+}
+
+- (void)prependMatrix:(SPMatrix *)matrix
+{
+    [mModelviewMatrix prependMatrix:matrix];
+}
+
+- (SPMatrix *)mvpMatrix
+{
+    [mMvpMatrix copyFromMatrix:mModelviewMatrix];
+    [mMvpMatrix appendMatrix:mProjectionMatrix];
+    return mMvpMatrix;
+}
+
+#pragma mark - rendering
+
+- (void)batchQuad:(SPQuad *)quad texture:(SPTexture *)texture
+{
+    if ([self.currentQuadBatch isStateChangeWithQuad:quad texture:texture numQuads:1])
+        [self finishQuadBatch];
+    
+    [self.currentQuadBatch addQuad:quad texture:texture alpha:self.alpha matrix:mModelviewMatrix];
+}
+
+- (void)finishQuadBatch
+{
+    SPQuadBatch *currentBatch = self.currentQuadBatch;
+    
+    if (currentBatch.numQuads)
+    {
+        [currentBatch renderWithAlpha:1.0f matrix:mProjectionMatrix];
+        [currentBatch reset];
+        
+        ++mCurrentQuadBatchID;
+        
+        if (mQuadBatches.count <= mCurrentQuadBatchID)
+            [mQuadBatches addObject:[[SPQuadBatch alloc] init]];
+    }
+}
+
+- (SPQuadBatch *)currentQuadBatch
+{
+    return mQuadBatches[mCurrentQuadBatchID];
 }
 
 @end

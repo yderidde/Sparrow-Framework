@@ -30,13 +30,22 @@
 // --- class implementation ------------------------------------------------------------------------
 
 @implementation SPALSoundChannel
+{
+    SPALSound *mSound;
+    uint mSourceID;
+    float mVolume;
+    BOOL mLoop;
+    
+    double mStartMoment;
+    double mPauseMoment;
+    BOOL mInterrupted;
+}
 
 @synthesize volume = mVolume;
 @synthesize loop = mLoop;
 
 - (id)init
 {
-    [self release];
     return nil;
 }
 
@@ -44,7 +53,7 @@
 {
     if ((self = [super init]))
     {
-        mSound = [sound retain];
+        mSound = sound;
         mVolume = 1.0f;
         mLoop = NO;
         mInterrupted = NO;
@@ -57,7 +66,6 @@
         if (errorCode != AL_NO_ERROR)
         {
             NSLog(@"Could not create OpenAL source (%x)", errorCode);
-            [self release];
             return nil;
         }         
         
@@ -77,8 +85,6 @@
     alSourcei(mSourceID, AL_BUFFER, 0);
     alDeleteSources(1, &mSourceID);
     mSourceID = 0;
-    [mSound release];
-    [super dealloc];
 }
 
 - (void)play
@@ -171,7 +177,7 @@
         [self revokeSoundCompletedEvent];
         if (remainingTime >= 0.0)
         {        
-            [self performSelector:@selector(dispatchSoundCompletedEvent) withObject:nil
+            [self performSelector:@selector(dispatchCompletedEvent) withObject:nil
                        afterDelay:remainingTime];   
         }
     }
@@ -180,17 +186,13 @@
 - (void)revokeSoundCompletedEvent
 {
     [NSObject cancelPreviousPerformRequestsWithTarget:self 
-        selector:@selector(dispatchSoundCompletedEvent) object:nil];
+        selector:@selector(dispatchCompletedEvent) object:nil];
 }
 
-- (void)dispatchSoundCompletedEvent
+- (void)dispatchCompletedEvent
 {
     if (!mLoop)
-    {
-        SPEvent *event = [[SPEvent alloc] initWithType:SP_EVENT_TYPE_SOUND_COMPLETED];
-        [self dispatchEvent:event];
-        [event release];
-    }
+        [self dispatchEventWithType:SP_EVENT_TYPE_COMPLETED];
 }
 
 - (void)onInterruptionBegan:(NSNotification *)notification

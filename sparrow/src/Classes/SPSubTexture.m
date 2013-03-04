@@ -10,42 +10,58 @@
 //
 
 #import "SPSubTexture.h"
+#import "SPVertexData.h"
 #import "SPRectangle.h"
+#import "SPMacros.h"
 
 @implementation SPSubTexture
+{
+    SPTexture *mBaseTexture;
+    SPRectangle *mClipping;
+    SPRectangle *mRootClipping;
+    SPRectangle *mFrame;
+}
 
 @synthesize baseTexture = mBaseTexture;
 @synthesize clipping = mClipping;
+@synthesize frame = mFrame;
 
 - (id)initWithRegion:(SPRectangle*)region ofTexture:(SPTexture*)texture
 {
+    return [self initWithRegion:region frame:nil ofTexture:texture];
+}
+
+- (id)initWithRegion:(SPRectangle *)region frame:(SPRectangle *)frame ofTexture:(SPTexture *)texture
+{
     if ((self = [super init]))
     {
-        mBaseTexture = [texture retain];
+        mBaseTexture = texture;
+        mFrame = [frame copy];
         
-        // convert region to clipping rectangle (which has values between 0 and 1)        
-        self.clipping = [SPRectangle rectangleWithX:region.x/texture.width
-                                                  y:region.y/texture.height
-                                              width:region.width/texture.width
-                                             height:region.height/texture.height];               
+        // convert region to clipping rectangle (which has values between 0 and 1)
+        if (region)
+            self.clipping = [SPRectangle rectangleWithX:region.x/texture.width
+                                                      y:region.y/texture.height
+                                                  width:region.width/texture.width
+                                                 height:region.height/texture.height];
+        else
+            self.clipping = [SPRectangle rectangleWithX:0.0f y:0.0f width:1.0f height:1.0f];
     }
     return self;
 }
 
 - (id)init
 {
-    [self release];
     return nil;
 }
 
 - (void)setClipping:(SPRectangle *)clipping
 {
-    [mClipping release];
-    mClipping = [clipping copy];
+    // private method! Only called via the constructor - thus we don't need to create a copy.
+    mClipping = clipping;
     
     // if the base texture is a sub texture as well, calculate clipping 
     // in reference to the root texture         
-    [mRootClipping release];
     mRootClipping = [mClipping copy];
     SPTexture *baseTexture = mBaseTexture;
     while ([baseTexture isKindOfClass:[SPSubTexture class]])
@@ -62,18 +78,40 @@
     } 
 }
 
-- (void)adjustTextureCoordinates:(const float *)texCoords saveAtTarget:(float *)targetTexCoords 
-                     numVertices:(int)numVertices
-{    
+- (void)adjustVertexData:(SPVertexData *)vertexData atIndex:(int)index numVertices:(int)count
+{
+    if (mFrame)
+    {
+        if (count != 4)
+            [NSException raise:SP_EXC_INVALID_OPERATION
+                        format:@"Textures with a frame can only be used on quads"];
+        
+        float deltaRight  = mFrame.width  + mFrame.x - self.width;
+        float deltaBottom = mFrame.height + mFrame.y - self.height;
+        
+        vertexData.vertices[index].position.x -= mFrame.x;
+        vertexData.vertices[index].position.y -= mFrame.y;
+        
+        vertexData.vertices[index+1].position.x -= deltaRight;
+        vertexData.vertices[index+1].position.y -= mFrame.y;
+
+        vertexData.vertices[index+2].position.x -= mFrame.x;
+        vertexData.vertices[index+2].position.y -= deltaBottom;
+        
+        vertexData.vertices[index+3].position.x -= deltaRight;
+        vertexData.vertices[index+3].position.y -= deltaBottom;
+    }
+    
     float clipX = mRootClipping.x;
     float clipY = mRootClipping.y;
     float clipWidth = mRootClipping.width;
     float clipHeight = mRootClipping.height;
     
-    for (int i=0; i<numVertices; ++i)
+    for (int i=index; i<index+count; ++i)
     {
-        targetTexCoords[2*i]   = clipX + texCoords[2*i]   * clipWidth; 
-        targetTexCoords[2*i+1] = clipY + texCoords[2*i+1] * clipHeight;        
+        GLKVector2 texCoords = vertexData.vertices[i].texCoords;
+        vertexData.vertices[i].texCoords.x = clipX + texCoords.x * clipWidth;
+        vertexData.vertices[i].texCoords.y = clipY + texCoords.y * clipHeight;
     }
 }
 
@@ -87,9 +125,9 @@
     return mBaseTexture.height * mClipping.height;
 }
 
-- (uint)textureID
+- (uint)name
 {
-    return mBaseTexture.textureID;
+    return mBaseTexture.name;
 }
 
 - (void)setRepeat:(BOOL)value
@@ -102,19 +140,19 @@
     return mBaseTexture.repeat;
 }
 
-- (SPTextureFilter)filter
+- (SPTextureSmoothing)smoothing
 {    
-    return mBaseTexture.filter;
+    return mBaseTexture.smoothing;
 }
 
-- (void)setFilter:(SPTextureFilter)value
+- (void)setSmoothing:(SPTextureSmoothing)value
 {
-    mBaseTexture.filter = value;
+    mBaseTexture.smoothing = value;
 }
 
-- (BOOL)hasPremultipliedAlpha
+- (BOOL)premultipliedAlpha
 {
-    return mBaseTexture.hasPremultipliedAlpha;
+    return mBaseTexture.premultipliedAlpha;
 }
 
 - (float)scale
@@ -122,17 +160,9 @@
     return mBaseTexture.scale;
 }
 
-+ (SPSubTexture*)textureWithRegion:(SPRectangle*)region ofTexture:(SPTexture*)texture
++ (id)textureWithRegion:(SPRectangle*)region ofTexture:(SPTexture*)texture
 {
-    return [[[SPSubTexture alloc] initWithRegion:region ofTexture:texture] autorelease];
-}
-
-- (void)dealloc
-{
-    [mClipping release];
-    [mRootClipping release];
-    [mBaseTexture release];
-    [super dealloc];
+    return [[self alloc] initWithRegion:region ofTexture:texture];
 }
 
 @end

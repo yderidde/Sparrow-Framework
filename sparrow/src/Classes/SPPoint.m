@@ -18,6 +18,10 @@
 #define SQ(x) ((x)*(x))
 
 @implementation SPPoint
+{
+    float mX;
+    float mY;
+}
 
 @synthesize x = mX;
 @synthesize y = mY;
@@ -65,34 +69,29 @@
 
 - (SPPoint *)invert
 {
-    SPPoint *result = [[SPPoint alloc] initWithX:-mX y:-mY];
-    return [result autorelease];
+    return [[SPPoint alloc] initWithX:-mX y:-mY];
 }
 
 - (SPPoint*)addPoint:(SPPoint*)point
 {
-    SPPoint *result = [[SPPoint alloc] initWithX:mX+point->mX y:mY+point->mY];
-    return [result autorelease];
+    return [[SPPoint alloc] initWithX:mX+point->mX y:mY+point->mY];
 }
 
 - (SPPoint*)subtractPoint:(SPPoint*)point
 {
-    SPPoint *result = [[SPPoint alloc] initWithX:mX-point->mX y:mY-point->mY]; 
-    return [result autorelease];
+    return [[SPPoint alloc] initWithX:mX-point->mX y:mY-point->mY];
 }
 
 - (SPPoint *)scaleBy:(float)scalar
 {
-    SPPoint *result = [[SPPoint alloc] initWithX:mX * scalar y:mY * scalar];
-    return [result autorelease];
+    return [[SPPoint alloc] initWithX:mX * scalar y:mY * scalar];
 }
 
 - (SPPoint *)rotateBy:(float)angle  
 {
     float sina = sinf(angle);
     float cosa = cosf(angle);
-    SPPoint *result = [[SPPoint alloc] initWithX:(mX * cosa) - (mY * sina) y:(mX * sina) + (mY * cosa)];
-    return [result autorelease];
+    return [[SPPoint alloc] initWithX:(mX * cosa) - (mY * sina) y:(mX * sina) + (mY * cosa)];
 }
 
 - (SPPoint *)normalize
@@ -101,13 +100,23 @@
         [NSException raise:SP_EXC_INVALID_OPERATION format:@"Cannot normalize point in the origin"];
         
     float inverseLength = 1.0f / self.length;
-    SPPoint *result = [[SPPoint alloc] initWithX:mX * inverseLength y:mY * inverseLength];
-    return [result autorelease];
+    return [[SPPoint alloc] initWithX:mX * inverseLength y:mY * inverseLength];
 }
 
 - (float)dot:(SPPoint *)other
 {
     return mX * other->mX + mY * other->mY;
+}
+
+- (void)copyFromPoint:(SPPoint *)point
+{
+    mX = point->mX;
+    mY = point->mY;
+}
+
+- (GLKVector2)convertToGLKVector
+{
+    return GLKVector2Make(mX, mY);
 }
 
 - (BOOL)isEquivalent:(SPPoint *)other
@@ -123,7 +132,7 @@
 
 - (NSString *)description
 {
-    return [NSString stringWithFormat:@"(x=%f, y=%f)", mX, mY];
+    return [NSString stringWithFormat:@"[SPPoint: x=%f, y=%f]", mX, mY];
 }
 
 + (float)distanceFromPoint:(SPPoint*)p1 toPoint:(SPPoint*)p2
@@ -138,25 +147,25 @@
                              y:invRatio * p1->mY + ratio * p2->mY];
 }
 
-+ (SPPoint *)pointWithPolarLength:(float)length angle:(float)angle
-{
-    return [[[SPPoint alloc] initWithPolarLength:length angle:angle] autorelease];
-}
-
 + (float)angleBetweenPoint:(SPPoint *)p1 andPoint:(SPPoint *)p2
 {
     float cos = [p1 dot:p2] / (p1.length * p2.length);
     return cos >= 1.0f ? 0.0f : acosf(cos);
 }
 
-+ (SPPoint *)pointWithX:(float)x y:(float)y
++ (id)pointWithPolarLength:(float)length angle:(float)angle
 {
-    return [[[SPPoint alloc] initWithX:x y:y] autorelease];
+    return [[self alloc] initWithPolarLength:length angle:angle];
 }
 
-+ (SPPoint*)point
++ (id)pointWithX:(float)x y:(float)y
 {
-    return [[[SPPoint alloc] init] autorelease];
+    return [[self alloc] initWithX:x y:y];
+}
+
++ (id)point
+{
+    return [[self alloc] init];
 }
 
 #pragma mark NSCopying

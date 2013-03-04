@@ -13,6 +13,14 @@
 #import "SPTexture.h"
 
 @implementation SPBitmapChar
+{
+    SPTexture *mTexture;
+    int mCharID;
+    float mXOffset;
+    float mYOffset;
+    float mXAdvance;
+    NSMutableDictionary *mKernings;
+}
 
 @synthesize charID = mCharID;
 @synthesize xOffset = mXOffset;
@@ -25,7 +33,7 @@
 {
     if ((self = [super init]))
     {
-        mTexture = [texture retain];
+        mTexture = texture;
         mCharID = charID;
         mXOffset = xOffset;
         mYOffset = yOffset;
@@ -42,7 +50,6 @@
 
 - (id)init
 {
-    [self release];
     return nil;
 }
 
@@ -51,26 +58,18 @@
     if (!mKernings)
         mKernings = [[NSMutableDictionary alloc] init];    
 
-	[mKernings setObject:[NSNumber numberWithFloat:amount] 
-                  forKey:[NSNumber numberWithInt:charID]];
+	mKernings[@(charID)] = @(amount);
 }
 
 - (float)kerningToChar:(int)charID
 {
-	NSNumber *amount = (NSNumber *)[mKernings objectForKey:[NSNumber numberWithInt:charID]];
+	NSNumber *amount = (NSNumber *)mKernings[@(charID)];
 	return [amount floatValue];
 }
 
 - (SPImage *)createImage
 {
     return [SPImage imageWithTexture:mTexture];
-}
-
-- (void)dealloc
-{
-    [mKernings release];
-    [mTexture release];
-    [super dealloc];
 }
 
 @end

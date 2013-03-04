@@ -23,6 +23,11 @@
     return result;    
 }
 
++ (BOOL)isPowerOfTwo:(int)number
+{
+    return ((number != 0) && !(number & (number - 1)));
+}
+
 + (int)randomIntBetweenMin:(int)minValue andMax:(int)maxValue
 {
     return (int)(minValue + [self randomFloat] * (maxValue - minValue));
@@ -47,20 +52,13 @@
     // HD: <ImageName>@2x<device_modifier>.<filename_extension>
     
     NSString *originalPath = path;
- 
-    if (factor != 1.0f)
-    {
-        NSString *scaleSuffix = [NSString stringWithFormat:@"@%@x", [NSNumber numberWithFloat:factor]];
-        path = [path stringByReplacingOccurrencesOfString:scaleSuffix withString:@""];
-        path = [path stringByAppendingSuffixToFilename:scaleSuffix];
-    }
-
+    NSString *pathWithScale = [path stringByAppendingScaleSuffixToFilename:factor];
     NSString *idiomSuffix = (idiom == UIUserInterfaceIdiomPad) ? @"~ipad" : @"~iphone";
-    NSString *pathWithIdiom = [path stringByAppendingSuffixToFilename:idiomSuffix];
+    NSString *pathWithIdiom = [pathWithScale stringByAppendingSuffixToFilename:idiomSuffix];
     
     BOOL isAbsolute = [path isAbsolutePath];
     NSBundle *appBundle = [NSBundle appBundle];
-    NSString *absolutePath = isAbsolute ? path : [appBundle pathForResource:path];
+    NSString *absolutePath = isAbsolute ? pathWithScale : [appBundle pathForResource:pathWithScale];
     NSString *absolutePathWithIdiom = isAbsolute ? pathWithIdiom : [appBundle pathForResource:pathWithIdiom];
     
     if ([SPUtils fileExistsAtPath:absolutePathWithIdiom])

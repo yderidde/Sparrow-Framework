@@ -16,7 +16,7 @@
 #import "SPGLTexture.h"
 #import "SPRectangle.h"
 #import "SPUtils.h"
-#import "SPStage.h"
+#import "SparrowClass.h"
 
 // --- private interface ---------------------------------------------------------------------------
 
@@ -29,6 +29,12 @@
 // --- class implementation ------------------------------------------------------------------------
 
 @implementation SPTextureAtlas
+{
+    SPTexture *mAtlasTexture;
+    NSString *mPath;
+    NSMutableDictionary *mTextureRegions;
+    NSMutableDictionary *mTextureFrames;
+}
 
 - (id)initWithContentsOfFile:(NSString *)path texture:(SPTexture *)texture
 {
@@ -36,7 +42,7 @@
     {
         mTextureRegions = [[NSMutableDictionary alloc] init];
         mTextureFrames  = [[NSMutableDictionary alloc] init];
-        mAtlasTexture = [texture retain];
+        mAtlasTexture = texture;
         [self parseAtlasXml:path];
     }
     return self;    
@@ -61,27 +67,23 @@
 {
     if (!path) return;
 
-    float scaleFactor = [SPStage contentScaleFactor];
-    mPath = [[SPUtils absolutePathToFile:path withScaleFactor:scaleFactor] retain];    
+    float scaleFactor = Sparrow.contentScaleFactor;
+    mPath = [SPUtils absolutePathToFile:path withScaleFactor:scaleFactor];    
     if (!mPath) [NSException raise:SP_EXC_FILE_NOT_FOUND format:@"file not found: %@", path];
     
-    SP_CREATE_POOL(pool);
-    
-    NSData *xmlData = [[NSData alloc] initWithContentsOfFile:mPath];
-    NSXMLParser *xmlParser = [[NSXMLParser alloc] initWithData:xmlData];
-    [xmlData release];
-    
-    xmlParser.delegate = self;    
-    BOOL success = [xmlParser parse];
-    
-    SP_RELEASE_POOL(pool);
-    
-    if (!success)    
-        [NSException raise:SP_EXC_FILE_INVALID 
-                    format:@"could not parse texture atlas %@. Error code: %d, domain: %@", 
-                           path, xmlParser.parserError.code, xmlParser.parserError.domain];
-
-    [xmlParser release];    
+    @autoreleasepool
+    {
+        NSData *xmlData = [[NSData alloc] initWithContentsOfFile:mPath];
+        NSXMLParser *xmlParser = [[NSXMLParser alloc] initWithData:xmlData];
+        
+        xmlParser.delegate = self;    
+        BOOL success = [xmlParser parse];
+        
+        if (!success)    
+            [NSException raise:SP_EXC_FILE_INVALID 
+                        format:@"could not parse texture atlas %@. Error code: %d, domain: %@", 
+                               path, xmlParser.parserError.code, xmlParser.parserError.domain];
+    }
 }
 
 - (void)parser:(NSXMLParser *)parser didStartElement:(NSString *)elementName 
@@ -93,17 +95,17 @@
     {
         float scale = mAtlasTexture.scale;
         
-        NSString *name = [attributeDict objectForKey:@"name"];
+        NSString *name = attributeDict[@"name"];
         SPRectangle *frame = nil;
         
-        float x = [[attributeDict objectForKey:@"x"] floatValue] / scale;
-        float y = [[attributeDict objectForKey:@"y"] floatValue] / scale;
-        float width = [[attributeDict objectForKey:@"width"] floatValue] / scale;
-        float height = [[attributeDict objectForKey:@"height"] floatValue] / scale;
-        float frameX = [[attributeDict objectForKey:@"frameX"] floatValue] / scale;
-        float frameY = [[attributeDict objectForKey:@"frameY"] floatValue] / scale;
-        float frameWidth = [[attributeDict objectForKey:@"frameWidth"] floatValue] / scale;
-        float frameHeight = [[attributeDict objectForKey:@"frameHeight"] floatValue] / scale;
+        float x = [attributeDict[@"x"] floatValue] / scale;
+        float y = [attributeDict[@"y"] floatValue] / scale;
+        float width = [attributeDict[@"width"] floatValue] / scale;
+        float height = [attributeDict[@"height"] floatValue] / scale;
+        float frameX = [attributeDict[@"frameX"] floatValue] / scale;
+        float frameY = [attributeDict[@"frameY"] floatValue] / scale;
+        float frameWidth = [attributeDict[@"frameWidth"] floatValue] / scale;
+        float frameHeight = [attributeDict[@"frameHeight"] floatValue] / scale;
         
         if (frameWidth && frameHeight)
             frame = [SPRectangle rectangleWithX:frameX y:frameY width:frameWidth height:frameHeight];
@@ -128,12 +130,11 @@
 
 - (SPTexture *)textureByName:(NSString *)name
 {
-    SPRectangle *region = [mTextureRegions objectForKey:name];
-    if (!region) return nil;    
+    SPRectangle *frame  = mTextureFrames[name];
+    SPRectangle *region = mTextureRegions[name];
     
-    SPTexture *texture = [SPSubTexture textureWithRegion:region ofTexture:mAtlasTexture];
-    texture.frame = [mTextureFrames objectForKey:name];
-    return texture;
+    if (region) return [[SPTexture alloc] initWithRegion:region frame:frame ofTexture:mAtlasTexture];
+    else        return nil;
 }
 
 - (NSArray *)texturesStartingWith:(NSString *)name
@@ -151,7 +152,6 @@
     for (NSString *textureName in textureNames)
         [textures addObject:[self textureByName:textureName]];
     
-    [textureNames release];
     return textures;
 }
 
@@ -162,8 +162,8 @@
 
 - (void)addRegion:(SPRectangle *)region withName:(NSString *)name frame:(SPRectangle *)frame
 {
-    [mTextureRegions setObject:region forKey:name];    
-    if (frame) [mTextureFrames setObject:frame forKey:name];
+    mTextureRegions[name] = region;    
+    if (frame) mTextureFrames[name] = frame;
 }
 
 - (void)removeRegion:(NSString *)name
@@ -172,18 +172,9 @@
     [mTextureFrames  removeObjectForKey:name];
 }
 
-+ (SPTextureAtlas *)atlasWithContentsOfFile:(NSString *)path
++ (id)atlasWithContentsOfFile:(NSString *)path
 {
-    return [[[SPTextureAtlas alloc] initWithContentsOfFile:path] autorelease];
-}
-
-- (void)dealloc
-{
-    [mPath release];
-    [mAtlasTexture release];
-    [mTextureRegions release];
-    [mTextureFrames release];
-    [super dealloc];
+    return [[self alloc] initWithContentsOfFile:path];
 }
 
 @end

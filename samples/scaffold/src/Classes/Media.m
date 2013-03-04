@@ -21,7 +21,6 @@ static NSMutableDictionary *sounds = NULL;
 
 + (void)releaseAtlas
 {
-    [atlas release];    
     atlas = nil;
 }
 
@@ -57,15 +56,13 @@ static NSMutableDictionary *sounds = NULL;
         if ([[filename pathExtension] isEqualToString: @"caf"])
         {
             SPSound *sound = [[SPSound alloc] initWithContentsOfFile:filename];            
-            [sounds setObject:sound forKey:filename];
-            [sound release];
+            sounds[filename] = sound;
         }
     }
 }
 
 + (void)releaseSound
 {
-    [sounds release];
     sounds = nil;
     
     [SPAudioEngine stop];    
@@ -73,7 +70,7 @@ static NSMutableDictionary *sounds = NULL;
 
 + (void)playSound:(NSString *)soundName
 {
-    SPSound *sound = [sounds objectForKey:soundName];
+    SPSound *sound = sounds[soundName];
     
     if (sound)
         [sound play];
@@ -83,7 +80,7 @@ static NSMutableDictionary *sounds = NULL;
 
 + (SPSoundChannel *)soundChannel:(NSString *)soundName
 {
-    SPSound *sound = [sounds objectForKey:soundName];
+    SPSound *sound = sounds[soundName];
     
     // sound was not preloaded
     if (!sound)        

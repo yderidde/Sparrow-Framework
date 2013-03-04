@@ -8,6 +8,7 @@
 
 #import "Game.h"
 #import "TextureScene.h"
+#import "AsyncTextureScene.h"
 #import "TouchScene.h"
 #import "TextScene.h"
 #import "AnimationScene.h"
@@ -18,13 +19,18 @@
 #import "RenderTextureScene.h"
 
 @implementation Game
-
-- (id)initWithWidth:(float)width height:(float)height
 {
-    if ((self = [super initWithWidth:width height:height]))
+    Scene *mCurrentScene;
+    SPSprite *mMainMenu;
+    float mOffsetY;
+}
+
+- (id)init
+{
+    if ((self = [super init]))
     {
         // make simple adjustments for iPhone 5+ screens:
-        mOffsetY = (height - 480) / 2;
+        mOffsetY = (Sparrow.stage.height - 480) / 2;
         
         // add background image
         SPImage *background = [SPImage imageWithContentsOfFile:@"background.jpg"];
@@ -41,16 +47,16 @@
         [mMainMenu addChild:logo];
         
         // choose which scenes will be accessible
-        NSArray *scenesToCreate = [NSArray arrayWithObjects:
-                                   @"Textures", [TextureScene class],
-                                   @"Multitouch", [TouchScene class],
-                                   @"TextFields", [TextScene class],
-                                   @"Animations", [AnimationScene class],
-                                   @"Custom hit-test", [CustomHitTestScene class],
-                                   @"Movie Clip", [MovieScene class],
-                                   @"Sound", [SoundScene class],
-                                   @"RenderTexture", [RenderTextureScene class],
-                                   @"Benchmark", [BenchmarkScene class], nil];
+        NSArray *scenesToCreate = @[@"Textures", [TextureScene class],
+                                    @"Async Textures", [AsyncTextureScene class],
+                                    @"Multitouch", [TouchScene class],
+                                    @"TextFields", [TextScene class],
+                                    @"Animations", [AnimationScene class],
+                                    @"Custom hit-test", [CustomHitTestScene class],
+                                    @"Movie Clip", [MovieScene class],
+                                    @"Sound", [SoundScene class],
+                                    @"RenderTexture", [RenderTextureScene class],
+                                    @"Benchmark", [BenchmarkScene class]];
         
         SPTexture *buttonTexture = [SPTexture textureWithContentsOfFile:@"button_big.png"];
         int count = 0;
@@ -59,13 +65,17 @@
         // create buttons for each scene
         while (index < scenesToCreate.count)
         {
-            NSString *sceneTitle = [scenesToCreate objectAtIndex:index++];
-            Class sceneClass = [scenesToCreate objectAtIndex:index++];
+            NSString *sceneTitle = scenesToCreate[index++];
+            Class sceneClass = scenesToCreate[index++];
             
             SPButton *button = [SPButton buttonWithUpState:buttonTexture text:sceneTitle];
             button.x = count % 2 == 0 ? 28 : 167;
-            button.y = mOffsetY + 170 + (count / 2) * 52 + (count % 2) * 26;
+            button.y = mOffsetY + 170 + (count / 2) * 52;
             button.name = NSStringFromClass(sceneClass);
+            
+            if (scenesToCreate.count % 2 != 0 && count % 2 == 1)
+                button.y += 26;
+            
             [button addEventListener:@selector(onButtonTriggered:) atObject:self 
                              forType:SP_EVENT_TYPE_TRIGGERED];
             [mMainMenu addChild:button];
@@ -97,16 +107,8 @@
 - (void)onSceneClosing:(SPEvent *)event
 {
     [mCurrentScene removeFromParent];
-    [mCurrentScene release];
     mCurrentScene = nil;
     mMainMenu.visible = YES;
-}
-
-- (void)dealloc
-{
-    [mMainMenu release]; // automatically releases all children   
-    [mCurrentScene release];
-    [super dealloc];
 }
 
 @end

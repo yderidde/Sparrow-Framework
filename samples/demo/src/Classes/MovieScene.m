@@ -9,6 +9,9 @@
 #import "MovieScene.h"
 
 @implementation MovieScene
+{
+    SPMovieClip *mMovie;
+}
 
 - (id)init
 {
@@ -34,13 +37,11 @@
         SPSound *stepSound = [[SPSound alloc] initWithContentsOfFile:@"step.caf"];        
         [mMovie setSound:[stepSound createChannel] atIndex:1];
         [mMovie setSound:[stepSound createChannel] atIndex:7];
-        [stepSound release];
         
         // move the clip to the center and add it to the stage
         mMovie.x = CENTER_X - (int)mMovie.width / 2;
         mMovie.y = CENTER_Y - (int)mMovie.height / 2; 
         [self addChild:mMovie];                
-        [mMovie release];        
 
         // like any animation, the movie needs to be added to the juggler!
         // this is the recommended way to do that.
@@ -52,12 +53,12 @@
 
 - (void)onAddedToStage:(SPEvent *)event
 {
-    [self.stage.juggler addObject:mMovie];
+    [Sparrow.juggler addObject:mMovie];
 }
 
 - (void)onRemovedFromStage:(SPEvent *)event
 {
-    [self.stage.juggler removeObject:mMovie];
+    [Sparrow.juggler removeObject:mMovie];
 }
 
 @end

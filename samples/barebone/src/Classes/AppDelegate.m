@@ -7,59 +7,23 @@
 #import "Game.h" 
 
 @implementation AppDelegate
-
-- (id)init
 {
-    if ((self = [super init]))
-    {
-        mWindow = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
-        mSparrowView = [[SPView alloc] initWithFrame:mWindow.bounds]; 
-        [mWindow addSubview:mSparrowView];
-    }
-    return self;
+    SPViewController *mViewController;
+    UIWindow *mWindow;
 }
 
-- (void)applicationDidFinishLaunching:(UIApplication *)application 
-{   
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
+{
+    CGRect screenBounds = [UIScreen mainScreen].bounds;
+    mWindow = [[UIWindow alloc] initWithFrame:screenBounds];
     
-    [SPStage setSupportHighResolutions:YES];
-    [SPAudioEngine start];
+    mViewController = [[SPViewController alloc] init];
+    [mViewController startWithRoot:[Game class] supportHighResolutions:YES doubleOnPad:YES];
     
-    Game *game = [[Game alloc] init];        
-    mSparrowView.stage = game;
-    mSparrowView.frameRate = 30.0f;
-    [game release];
-    
+    [mWindow setRootViewController:mViewController];
     [mWindow makeKeyAndVisible];
-    [mSparrowView start];
     
-    [pool release];
-}
-
-- (void)applicationWillResignActive:(UIApplication *)application 
-{    
-    [mSparrowView stop];
-}
-
-- (void)applicationDidBecomeActive:(UIApplication *)application 
-{
-	[mSparrowView start];
-}
-
-- (void)applicationDidReceiveMemoryWarning:(UIApplication *)application
-{
-    [SPPoint purgePool];
-    [SPRectangle purgePool];
-    [SPMatrix purgePool];    
-}
-
-- (void)dealloc 
-{
-    [SPAudioEngine stop];
-    [mSparrowView release];
-    [mWindow release];    
-    [super dealloc];
+    return YES;
 }
 
 @end

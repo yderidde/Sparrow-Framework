@@ -31,6 +31,20 @@
 // --- class implementation ------------------------------------------------------------------------
 
 @implementation SPButton
+{
+    SPTexture *mUpState;
+    SPTexture *mDownState;
+    
+    SPSprite *mContents;
+    SPImage *mBackground;
+    SPTextField *mTextField;
+    SPRectangle *mTextBounds;
+    
+    float mScaleWhenDown;
+    float mAlphaWhenDisabled;
+    BOOL mEnabled;
+    BOOL mIsDown;
+}
 
 @synthesize scaleWhenDown = mScaleWhenDown;
 @synthesize alphaWhenDisabled = mAlphaWhenDisabled;
@@ -45,8 +59,8 @@
 {
     if ((self = [super init]))
     {
-        mUpState = [upState retain];
-        mDownState = [downState retain];
+        mUpState = upState;
+        mDownState = downState;
         mContents = [[SPSprite alloc] init];
         mBackground = [[SPImage alloc] initWithTexture:upState];
         mTextField = nil;
@@ -79,7 +93,7 @@
 
 - (id)init
 {
-    SPTexture *texture = [[[SPGLTexture alloc] init] autorelease];
+    SPTexture *texture = [[SPGLTexture alloc] init];
     return [self initWithUpState:texture];   
 }
 
@@ -111,7 +125,7 @@
     else if (touch.phase == SPTouchPhaseEnded && mIsDown)
     {
         [self resetContents];
-        [self dispatchEvent:[SPEvent eventWithType:SP_EVENT_TYPE_TRIGGERED]];
+        [self dispatchEventWithType:SP_EVENT_TYPE_TRIGGERED];
     }    
     else if (touch.phase == SPTouchPhaseCancelled && mIsDown)
     {
@@ -145,8 +159,7 @@
 {
     if (upState != mUpState)
     {    
-        [mUpState release];
-        mUpState = [upState retain];
+        mUpState = upState;
         if (!mIsDown) mBackground.texture = upState;
     }
 }
@@ -155,8 +168,7 @@
 {
     if (downState != mDownState)
     {    
-        [mDownState release];
-        mDownState = [downState retain];
+        mDownState = downState;
         if (mIsDown) mBackground.texture = downState;
     }
 }
@@ -192,8 +204,6 @@
 
 - (void)setTextBounds:(SPRectangle *)value
 {
-    [mTextBounds autorelease];
-    
     float scaleX = mBackground.scaleX;
     float scaleY = mBackground.scaleY;
     
@@ -273,31 +283,24 @@
     return mBackground.height;
 }
  
-+ (SPButton*)buttonWithUpState:(SPTexture*)upState downState:(SPTexture*)downState
++ (id)buttonWithUpState:(SPTexture*)upState downState:(SPTexture*)downState
 {
-    return [[[SPButton alloc] initWithUpState:upState downState:downState] autorelease];
+    return [[self alloc] initWithUpState:upState downState:downState];
 }
 
-+ (SPButton*)buttonWithUpState:(SPTexture*)upState text:(NSString*)text
++ (id)buttonWithUpState:(SPTexture*)upState text:(NSString*)text
 {
-    return [[[SPButton alloc] initWithUpState:upState text:text] autorelease];
+    return [[self alloc] initWithUpState:upState text:text];
 }
 
-+ (SPButton*)buttonWithUpState:(SPTexture*)upState
++ (id)buttonWithUpState:(SPTexture*)upState
 {
-    return [[[SPButton alloc] initWithUpState:upState] autorelease];
+    return [[self alloc] initWithUpState:upState];
 }
 
 - (void)dealloc
 {
     [self removeEventListenersAtObject:self forType:SP_EVENT_TYPE_TOUCH];
-    [mTextBounds release];
-    [mUpState release];
-    [mDownState release];
-    [mBackground release];
-    [mTextField release];
-    [mContents release];
-    [super dealloc];
 }
 
 @end

@@ -19,6 +19,18 @@
 #define WAIT_TIME 0.1f
 
 @implementation BenchmarkScene
+{
+    SPButton *mStartButton;
+    SPTextField *mResultText;
+    SPTexture *mTexture;
+    
+    SPSprite *mContainer;
+    int mFrameCount;
+    double mElapsed;
+    BOOL mStarted;
+    int mFailCount;
+    int mWaitFrames;
+}
 
 - (id)init
 {
@@ -31,7 +43,6 @@
         mContainer.touchable = NO; // we do not need touch events on the test objects -- thus, 
                                    // it is more efficient to disable them.
         [self addChild:mContainer atIndex:0];        
-        [mContainer release];
         
         SPTexture *buttonTexture = [SPTexture textureWithContentsOfFile:@"button_normal.png"];
         
@@ -43,7 +54,6 @@
         mStartButton.x = 160 - (int)(mStartButton.width / 2);
         mStartButton.y = 20;
         [self addChild:mStartButton];
-        [mStartButton release];        
         
         mStarted = NO;
         
@@ -61,7 +71,7 @@
     
     if (mFrameCount % mWaitFrames == 0)
     {
-        float targetFPS = self.stage.frameRate;
+        float targetFPS = Sparrow.currentController.framesPerSecond;
         float realFPS = mWaitFrames / mElapsed;
         
         if (ceilf(realFPS) >= targetFPS)
@@ -109,12 +119,14 @@
     mStarted = NO;
     mStartButton.visible = YES;
     
+    int frameRate = Sparrow.currentController.framesPerSecond;
+    
     NSLog(@"benchmark complete!");
-    NSLog(@"fps: %.1f", self.stage.frameRate);
+    NSLog(@"fps: %d", frameRate);
     NSLog(@"number of objects: %d", mContainer.numChildren);
     
-    NSString *resultString = [NSString stringWithFormat:@"Result:\n%d objects\nwith %.0f fps", 
-                              mContainer.numChildren, self.stage.frameRate]; 
+    NSString *resultString = [NSString stringWithFormat:@"Result:\n%d objects\nwith %d fps", 
+                              mContainer.numChildren, frameRate];
     
     mResultText = [SPTextField textFieldWithWidth:250 height:200 text:resultString];
     mResultText.fontSize = 30;
@@ -137,7 +149,6 @@
         egg.x = [SPUtils randomIntBetweenMin:border andMax:GAME_WIDTH  - border];
         egg.y = [SPUtils randomIntBetweenMin:border andMax:GAME_HEIGHT - border];
         [mContainer addChild:egg];
-        [egg release];
     }
 }
 
@@ -145,9 +156,6 @@
 {
     [self removeEventListenersAtObject:self forType:SP_EVENT_TYPE_ENTER_FRAME];
     [mStartButton removeEventListenersAtObject:self forType:SP_EVENT_TYPE_TRIGGERED];
-
-    [mTexture release];
-    [super dealloc];
 }
 
 @end

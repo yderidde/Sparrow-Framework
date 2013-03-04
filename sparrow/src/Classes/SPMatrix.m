@@ -13,11 +13,11 @@
 #import "SPPoint.h"
 #import "SPMacros.h"
 
-#define U 0
-#define V 0
-#define W 1
-
 @implementation SPMatrix
+{
+    float mA, mB, mC, mD;
+    float mTx, mTy;
+}
 
 @synthesize a=mA, b=mB, c=mC, d=mD, tx=mTx, ty=mTy;
 
@@ -61,14 +61,24 @@ static void setValues(SPMatrix *matrix, float a, float b, float c, float d, floa
     return mA * mD - mC * mB;
 }
 
-- (void)concatMatrix:(SPMatrix*)matrix
+- (void)appendMatrix:(SPMatrix*)lhs
 {
-    setValues(self, matrix->mA * mA  + matrix->mC * mB, 
-                    matrix->mB * mA  + matrix->mD * mB, 
-                    matrix->mA * mC  + matrix->mC * mD,
-                    matrix->mB * mC  + matrix->mD * mD,
-                    matrix->mA * mTx + matrix->mC * mTy + matrix->mTx * W,
-                    matrix->mB * mTx + matrix->mD * mTy + matrix->mTy * W);
+    setValues(self, lhs->mA * mA  + lhs->mC * mB, 
+                    lhs->mB * mA  + lhs->mD * mB, 
+                    lhs->mA * mC  + lhs->mC * mD,
+                    lhs->mB * mC  + lhs->mD * mD,
+                    lhs->mA * mTx + lhs->mC * mTy + lhs->mTx,
+                    lhs->mB * mTx + lhs->mD * mTy + lhs->mTy);
+}
+
+- (void)prependMatrix:(SPMatrix *)rhs
+{
+    setValues(self, mA * rhs->mA + mC * rhs->mB,
+                    mB * rhs->mA + mD * rhs->mB,
+                    mA * rhs->mC + mC * rhs->mD,
+                    mB * rhs->mC + mD * rhs->mD,
+                    mTx + mA * rhs->mTx + mC * rhs->mTy,
+                    mTy + mB * rhs->mTx + mD * rhs->mTy);
 }
 
 - (void)translateXBy:(float)dx yBy:(float)dy
@@ -102,6 +112,21 @@ static void setValues(SPMatrix *matrix, float a, float b, float c, float d, floa
                     mTx*cos - mTy * sin, mTx*sin + mTy*cos);
 }
 
+- (void)skewXBy:(float)sx yBy:(float)sy
+{
+    float sinX = sinf(sx);
+    float cosX = cosf(sx);
+    float sinY = sinf(sy);
+    float cosY = cosf(sy);
+    
+    setValues(self, mA  * cosY - mB  * sinX,
+                    mA  * sinY + mB  * cosX,
+                    mC  * cosY - mD  * sinX,
+                    mC  * sinY + mD  * cosX,
+                    mTx * cosY - mTy * sinX,
+                    mTx * sinY + mTy * cosX);
+}
+
 - (void)identity
 {
     setValues(self, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f);
@@ -113,10 +138,42 @@ static void setValues(SPMatrix *matrix, float a, float b, float c, float d, floa
                              y:mB*point.x + mD*point.y + mTy];
 }
 
+- (SPPoint *)transformPointWithX:(float)x y:(float)y
+{
+    return [SPPoint pointWithX:mA*x + mC*y + mTx
+                             y:mB*x + mD*y + mTy];
+}
+
 - (void)invert
 {
     float det = self.determinant;
     setValues(self, mD/det, -mB/det, -mC/det, mA/det, (mC*mTy-mD*mTx)/det, (mB*mTx-mA*mTy)/det);
+}
+
+- (void)copyFromMatrix:(SPMatrix *)matrix
+{
+    setValues(self, matrix->mA, matrix->mB, matrix->mC, matrix->mD, matrix->mTx, matrix->mTy);
+}
+
+- (GLKMatrix4)convertToGLKMatrix4
+{
+    GLKMatrix4 matrix = GLKMatrix4Identity;
+    
+    matrix.m00 = mA;
+    matrix.m01 = mB;
+    matrix.m10 = mC;
+    matrix.m11 = mD;
+    matrix.m30 = mTx;
+    matrix.m31 = mTy;
+    
+    return matrix;
+}
+
+- (GLKMatrix3)convertToGLKMatrix3
+{
+    return GLKMatrix3Make(mA,  mB,  0.0f,
+                          mC,  mD,  0.0f,
+                          mTx, mTy, 1.0f);
 }
 
 - (BOOL)isEquivalent:(SPMatrix *)other
@@ -134,18 +191,18 @@ static void setValues(SPMatrix *matrix, float a, float b, float c, float d, floa
 
 - (NSString *)description
 {
-    return [NSString stringWithFormat:@"(a=%f, b=%f, c=%f, d=%f, tx=%f, ty=%f)", 
+    return [NSString stringWithFormat:@"[SPMatrix: a=%f, b=%f, c=%f, d=%f, tx=%f, ty=%f]", 
             mA, mB, mC, mD, mTx, mTy];
 }
 
-+ (SPMatrix*)matrixWithA:(float)a b:(float)b c:(float)c d:(float)d tx:(float)tx ty:(float)ty
++ (id)matrixWithA:(float)a b:(float)b c:(float)c d:(float)d tx:(float)tx ty:(float)ty
 {
-    return [[[SPMatrix alloc] initWithA:a b:b c:c d:d tx:tx ty:ty] autorelease];
+    return [[self alloc] initWithA:a b:b c:c d:d tx:tx ty:ty];
 }
 
-+ (SPMatrix*)matrixWithIdentity
++ (id)matrixWithIdentity
 {
-    return [[[SPMatrix alloc] init] autorelease];
+    return [[self alloc] init];
 }
 
 #pragma mark NSCopying

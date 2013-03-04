@@ -46,11 +46,6 @@
 ------------------------------------------------------------------------------------------------- */
 
 @interface SPJuggler : NSObject <SPAnimatable>
-{
-  @private
-    NSMutableArray *mObjects;
-    double mElapsedTime;
-}
 
 /// ------------------
 /// @name Initializers
@@ -72,13 +67,12 @@
 /// Removes all objects at once.
 - (void)removeAllObjects;
 
-/// Removes all objects of type `SPTween` that have a certain target.
-/// DEPRECATED! Use `removeObjectsWithTarget` instead.
-- (void)removeTweensWithTarget:(id)object SP_DEPRECATED;
-
 /// Removes all objects with a `target` property referencing a certain object (e.g. tweens or
 /// delayed invocations).
 - (void)removeObjectsWithTarget:(id)object;
+
+/// Determines if an object has been added to the juggler.
+- (BOOL)containsObject:(id<SPAnimatable>)object;
 
 /// Delays the execution of a certain method. Returns a proxy object on which to call the method
 /// instead. Execution will be delayed until `time` has passed.

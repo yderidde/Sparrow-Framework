@@ -21,15 +21,6 @@
 ------------------------------------------------------------------------------------------------- */ 
 
 @interface SPBitmapChar : NSObject
-{
-  @private
-    SPTexture *mTexture;
-    int mCharID;
-    float mXOffset;
-    float mYOffset;
-    float mXAdvance;
-    NSMutableDictionary *mKernings;
-}
 
 /// ------------------
 /// @name Initializers
@@ -69,6 +60,6 @@
 @property (nonatomic, readonly) float xAdvance;
 
 /// The texture of the character.
-@property (nonatomic, retain) SPTexture *texture;
+@property (nonatomic, strong) SPTexture *texture;
 
 @end

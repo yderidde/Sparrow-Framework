@@ -20,7 +20,7 @@
 #import "SPTextField.h"
 #import "SPStage.h"
 #import "SPUtils.h"
-#import "SPCompiledSprite.h"
+#import "SparrowClass.h"
 
 #define CHAR_SPACE   32
 #define CHAR_TAB      9
@@ -37,6 +37,14 @@
 // --- class implementation ------------------------------------------------------------------------
 
 @implementation SPBitmapFont
+{
+    SPTexture *mFontTexture;
+    NSString *mName;
+    NSString *mPath;
+    NSMutableDictionary *mChars;
+    float mSize;
+    float mLineHeight;
+}
 
 @synthesize name = mName;
 @synthesize lineHeight = mLineHeight;
@@ -46,9 +54,9 @@
 {
     if ((self = [super init]))
     {
-        mName = [[NSString alloc] initWithString:@"unknown"];
+        mName = @"unknown";
         mLineHeight = mSize = SP_DEFAULT_FONT_SIZE;
-        mFontTexture = [texture retain];
+        mFontTexture = texture;
         mChars = [[NSMutableDictionary alloc] init];
         
         [self parseFontXml:path];
@@ -63,7 +71,6 @@
 
 - (id)init
 {
-    [self release];
     return nil;
 }
 
@@ -71,27 +78,23 @@
 {
     if (!path) return;
     
-    float scaleFactor = [SPStage contentScaleFactor];
-    mPath = [[SPUtils absolutePathToFile:path withScaleFactor:scaleFactor] retain];
+    float scaleFactor = Sparrow.contentScaleFactor;
+    mPath = [SPUtils absolutePathToFile:path withScaleFactor:scaleFactor];
     if (!mPath) [NSException raise:SP_EXC_FILE_NOT_FOUND format:@"file not found: %@", path];
     
-    SP_CREATE_POOL(pool);
-    
-    NSData *xmlData = [[NSData alloc] initWithContentsOfFile:mPath];
-    NSXMLParser *xmlParser = [[NSXMLParser alloc] initWithData:xmlData];
-    [xmlData release];
-    
-    xmlParser.delegate = self;
-    BOOL success = [xmlParser parse];
-    
-    SP_RELEASE_POOL(pool);
-    
-    if (!success)
-        [NSException raise:SP_EXC_FILE_INVALID 
-                    format:@"could not parse bitmap font xml %@. Error code: %d, domain: %@", 
-                           path, xmlParser.parserError.code, xmlParser.parserError.domain];
-    
-    [xmlParser release];    
+    @autoreleasepool
+    {
+        NSData *xmlData = [[NSData alloc] initWithContentsOfFile:mPath];
+        NSXMLParser *xmlParser = [[NSXMLParser alloc] initWithData:xmlData];
+        
+        xmlParser.delegate = self;
+        BOOL success = [xmlParser parse];
+        
+        if (!success)
+            [NSException raise:SP_EXC_FILE_INVALID 
+                        format:@"could not parse bitmap font xml %@. Error code: %d, domain: %@", 
+                               path, xmlParser.parserError.code, xmlParser.parserError.domain];
+    }
 }
 
 - (void)parser:(NSXMLParser*)parser didStartElement:(NSString*)elementName 
@@ -110,7 +113,6 @@
         region.width = [[attributeDict valueForKey:@"width"] floatValue] / scale;
         region.height = [[attributeDict valueForKey:@"height"] floatValue] / scale;
         SPSubTexture *texture = [[SPSubTexture alloc] initWithRegion:region ofTexture:mFontTexture];
-        [region release];
         
         float xOffset = [[attributeDict valueForKey:@"xoffset"] floatValue] / scale;
         float yOffset = [[attributeDict valueForKey:@"yoffset"] floatValue] / scale;
@@ -119,10 +121,8 @@
         SPBitmapChar *bitmapChar = [[SPBitmapChar alloc] initWithID:charID texture:texture
                                                             xOffset:xOffset yOffset:yOffset 
                                                            xAdvance:xAdvance];
-        [texture release];
         
-        [mChars setObject:bitmapChar forKey:[NSNumber numberWithInt:charID]];
-        [bitmapChar release];
+        mChars[@(charID)] = bitmapChar;
     }
 	else if ([elementName isEqualToString:@"kerning"])
 	{
@@ -133,7 +133,6 @@
 	}
     else if ([elementName isEqualToString:@"info"])
     {
-        [mName release];
         mName = [[attributeDict valueForKey:@"face"] copy];
         mSize = [[attributeDict valueForKey:@"size"] floatValue];
     }
@@ -162,7 +161,7 @@
 
 - (SPBitmapChar *)charByID:(int)charID
 {
-    return (SPBitmapChar *)[mChars objectForKey:[NSNumber numberWithInt:charID]];
+    return (SPBitmapChar *)mChars[@(charID)];
 }
 
 - (SPDisplayObject *)createDisplayObjectWithWidth:(float)width height:(float)height
@@ -267,7 +266,7 @@
         }
     }
     
-    SPSprite *outerContainer = [SPCompiledSprite sprite];
+    SPSprite *outerContainer = [SPSprite sprite]; // [SPCompiledSprite sprite]; // TODO: flatten
     [outerContainer addChild:lineContainer];    
     
     if (vAlign != SPVAlignTop)
@@ -296,15 +295,6 @@
     }    
     
     return outerContainer;
-}
-
-- (void)dealloc
-{
-    [mFontTexture release];
-    [mChars release];
-    [mPath release];
-    [mName release];
-    [super dealloc];
 }
 
 @end

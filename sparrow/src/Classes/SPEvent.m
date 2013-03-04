@@ -9,10 +9,19 @@
 //  it under the terms of the Simplified BSD License.
 //
 
+#import "SPEventDispatcher.h"
 #import "SPEvent.h"
 #import "SPEvent_Internal.h"
 
 @implementation SPEvent
+{
+    SPEventDispatcher *__weak mTarget;
+    SPEventDispatcher *__weak mCurrentTarget;
+    NSString *mType;
+    BOOL mStopsImmediatePropagation;
+    BOOL mStopsPropagation;
+    BOOL mBubbles;
+}
 
 @synthesize target = mTarget;
 @synthesize currentTarget = mCurrentTarget;
@@ -49,23 +58,22 @@
     mStopsPropagation = YES;
 }
 
-+ (SPEvent*)eventWithType:(NSString*)type bubbles:(BOOL)bubbles
+- (NSString *)description
 {
-    return [[[SPEvent alloc] initWithType:type bubbles:bubbles] autorelease];
+    return [NSString stringWithFormat:@"[%@: type=\"%@\", bubbles=%@]",
+            NSStringFromClass([self class]), mType, mBubbles ? @"YES" : @"NO"];
 }
 
-+ (SPEvent*)eventWithType:(NSString*)type
++ (id)eventWithType:(NSString*)type bubbles:(BOOL)bubbles
 {
-    return [[[SPEvent alloc] initWithType:type] autorelease];
+    return [[self alloc] initWithType:type bubbles:bubbles];
 }
 
-- (void)dealloc
++ (id)eventWithType:(NSString*)type
 {
-    [mType release];
-    [mTarget release];
-    [mCurrentTarget release];
-    [super dealloc];
+    return [[self alloc] initWithType:type];
 }
+
 
 @end
 
@@ -85,20 +93,14 @@
 
 - (void)setTarget:(SPEventDispatcher*)target
 {
-    if (target != mTarget)
-    {
-        [mTarget release];
-        mTarget = [target retain];
-    }        
+    if (mTarget != target)
+        mTarget = target;
 }
 
 - (void)setCurrentTarget:(SPEventDispatcher*)currentTarget
 {
-    if (currentTarget != mCurrentTarget)
-    {
-        [mCurrentTarget release];
-        mCurrentTarget = [currentTarget retain];
-    }
+    if (mCurrentTarget != currentTarget)
+        mCurrentTarget = currentTarget;
 }
 
 @end

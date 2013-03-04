@@ -17,6 +17,10 @@
 @end
 
 @implementation RenderTextureScene
+{
+    SPRenderTexture *mRenderTexture;
+    SPImage *mBrush;
+}
 
 - (id)init
 {
@@ -73,13 +77,6 @@
         // draw brush to render texture
         [mRenderTexture drawObject:mBrush];        
     } 
-}
-
-- (void)dealloc
-{
-    [mRenderTexture release];
-    [mBrush release];
-    [super dealloc];
 }
 
 @end

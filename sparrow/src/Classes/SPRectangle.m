@@ -13,6 +13,12 @@
 #import "SPMacros.h"
 
 @implementation SPRectangle
+{
+    float mX;
+    float mY;
+    float mWidth;
+    float mHeight;
+}
 
 @synthesize x = mX;
 @synthesize y = mY;
@@ -92,7 +98,7 @@
 
 - (SPRectangle*)uniteWithRectangle:(SPRectangle*)rectangle
 {
-    if (!rectangle) return [[self copy] autorelease];
+    if (!rectangle) return [self copy];
     
     float left   = MIN(mX, rectangle->mX);
     float right  = MAX(mX + mWidth, rectangle->mX + rectangle->mWidth);
@@ -104,6 +110,14 @@
 - (void)setEmpty
 {
     mX = mY = mWidth = mHeight = 0;
+}
+
+- (void)copyFromRectangle:(SPRectangle *)rectangle
+{
+    mX = rectangle->mX;
+    mY = rectangle->mY;
+    mWidth = rectangle->mWidth;
+    mHeight = rectangle->mHeight;
 }
 
 - (float)top { return mY; }
@@ -146,12 +160,13 @@
 
 - (NSString*)description
 {
-    return [NSString stringWithFormat:@"(x: %f, y: %f, width: %f, height: %f)", mX, mY, mWidth, mHeight];
+    return [NSString stringWithFormat:@"[SPRectangle: x=%f, y=%f, width=%f, height=%f]",
+            mX, mY, mWidth, mHeight];
 }
 
-+ (SPRectangle*)rectangleWithX:(float)x y:(float)y width:(float)width height:(float)height
++ (id)rectangleWithX:(float)x y:(float)y width:(float)width height:(float)height
 {
-    return [[[SPRectangle alloc] initWithX:x y:y width:width height:height] autorelease];
+    return [[self alloc] initWithX:x y:y width:width height:height];
 }
 
 #pragma mark NSCopying

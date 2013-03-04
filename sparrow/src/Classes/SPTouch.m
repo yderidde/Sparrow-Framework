@@ -15,6 +15,16 @@
 #import "SPPoint.h"
 
 @implementation SPTouch
+{
+    double mTimestamp;
+    float mGlobalX;
+    float mGlobalY;
+    float mPreviousGlobalX;
+    float mPreviousGlobalY;
+    int mTapCount;
+    SPTouchPhase mPhase;
+    SPDisplayObject *__weak mTarget;
+}
 
 @synthesize timestamp = mTimestamp;
 @synthesize globalX = mGlobalX;
@@ -32,22 +42,20 @@
 
 - (SPPoint*)locationInSpace:(SPDisplayObject*)space
 {
-    SPPoint *point = [SPPoint pointWithX:mGlobalX y:mGlobalY];
     SPMatrix *transformationMatrix = [mTarget.root transformationMatrixToSpace:space];
-    return [transformationMatrix transformPoint:point];
+    return [transformationMatrix transformPointWithX:mGlobalX y:mGlobalY];
 }
 
 - (SPPoint*)previousLocationInSpace:(SPDisplayObject*)space
 {
-    SPPoint *point = [SPPoint pointWithX:mPreviousGlobalX y:mPreviousGlobalY];
     SPMatrix *transformationMatrix = [mTarget.root transformationMatrixToSpace:space];
-    return [transformationMatrix transformPoint:point];
+    return [transformationMatrix transformPointWithX:mPreviousGlobalX y:mPreviousGlobalY];
 }
 
-- (void)dealloc
+- (NSString *)description
 {
-    [mTarget release];
-    [super dealloc];
+    return [NSString stringWithFormat:@"[SPTouch: globalX=%.1f, globalY=%.1f, phase=%d, tapCount=%d]",
+            mGlobalX, mGlobalY, mPhase, mTapCount];
 }
 
 @end
@@ -55,6 +63,8 @@
 // -------------------------------------------------------------------------------------------------
 
 @implementation SPTouch (Internal)
+
+// TODO: why not synthesize these properties?
 
 - (void)setTimestamp:(double)timestamp
 {
@@ -93,16 +103,13 @@
 
 - (void)setTarget:(SPDisplayObject*)target
 {
-    if (target != mTarget)
-    {    
-        [mTarget release];
-        mTarget = [target retain];
-    }
+    if (mTarget != target)
+        mTarget = target;
 }
 
 + (SPTouch*)touch
 {
-    return [[[SPTouch alloc] init] autorelease];
+    return [[SPTouch alloc] init];
 }
 
 @end

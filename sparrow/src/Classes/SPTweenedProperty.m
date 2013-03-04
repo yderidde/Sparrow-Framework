@@ -21,8 +21,20 @@ typedef void (*FnPtrSetterF)  (id, SEL, float);
 typedef void (*FnPtrSetterD)  (id, SEL, double);
 typedef void (*FnPtrSetterI)  (id, SEL, int);
 typedef void (*FnPtrSetterUI) (id, SEL, uint);
- 
+
 @implementation SPTweenedProperty
+{
+    id  mTarget;
+    
+    SEL mGetter;
+    IMP mGetterFunc;
+    SEL mSetter;
+    IMP mSetterFunc;
+    
+    float mStartValue;
+    float mEndValue;
+    char  mNumericType;
+}
 
 @synthesize startValue = mStartValue;
 @synthesize endValue = mEndValue;
@@ -31,7 +43,7 @@ typedef void (*FnPtrSetterUI) (id, SEL, uint);
 {
     if ((self = [super init]))
     {
-        mTarget = [target retain];        
+        mTarget = target;        
         mEndValue = endValue;
         
         mGetter = NSSelectorFromString(name);
@@ -111,12 +123,6 @@ typedef void (*FnPtrSetterUI) (id, SEL, uint);
 - (float)delta
 {
     return mEndValue - mStartValue;
-}
-
-- (void)dealloc
-{
-    [mTarget release];
-    [super dealloc];
 }
 
 @end

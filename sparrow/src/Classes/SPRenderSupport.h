@@ -11,56 +11,74 @@
 
 #import <Foundation/Foundation.h>
 
+#import "SPMatrix.h"
+
 @class SPTexture;
 @class SPDisplayObject;
+@class SPQuad;
 
 /** ------------------------------------------------------------------------------------------------
 
  A class that contains helper methods simplifying OpenGL rendering.
  
- An SPRenderSupport instance is passed to any render: method. It saves information about the currently
- bound texture, which allows it to avoid unecessary texture switches.
+ An SPRenderSupport instance is passed to any render: method. It saves information about the
+ currently bound texture, which allows it to avoid unecessary texture switches.
  
  Furthermore, several static helper methods can be used for different needs whenever some
  OpenGL processing is required.
  
 ------------------------------------------------------------------------------------------------- */
 
-@interface SPRenderSupport : NSObject 
-{
-  @private
-    uint mBoundTextureID;
-    BOOL mPremultipliedAlpha;
-}
+@interface SPRenderSupport : NSObject
 
 /// -------------
 /// @name Methods
 /// -------------
 
-/// Binds a texture if it is not already bound. Pass `nil` to unbind any texture.
-- (void)bindTexture:(SPTexture *)texture;
+/// Resets matrix stack and blend mode.
+- (void)nextFrame;
 
-/// Converts color and alpha into the format needed by OpenGL. Premultiplies alpha depending on state.
-- (uint)convertColor:(uint)color alpha:(float)alpha;
+/// Adds a quad to the current batch of unrendered quads. If there is a state change,
+/// all previous quads are rendered at once, and the batch is reset.
+- (void)batchQuad:(SPQuad *)quad texture:(SPTexture *)texture;
 
-/// Resets texture binding and alpha settings.
-- (void)reset;
+/// Renders the current quad batch and resets it.
+- (void)finishQuadBatch;
 
-/// Converts color and alpha into the format needed by OpenGL, optionally premultiplying alpha values.
-+ (uint)convertColor:(uint)color alpha:(float)alpha premultiplyAlpha:(BOOL)pma;
+/// Adds a new alpha value to the alpha stack, multiplying it with the current alpha value.
+- (float)pushAlpha:(float)alpha;
+
+/// Restores the alpha value that was last pushed to the stack.
+- (float)popAlpha;
 
 /// Clears OpenGL's color buffer.
 + (void)clearWithColor:(uint)color alpha:(float)alpha;
 
-/// Transforms OpenGL's matrix into the local coordinate system of the object.
-+ (void)transformMatrixForObject:(SPDisplayObject *)object;
-
-/// Sets up OpenGL's projection matrix for 2D rendering.
-+ (void)setupOrthographicRenderingWithLeft:(float)left right:(float)right 
-                                    bottom:(float)bottom top:(float)top;
-
 /// Checks for an OpenGL error. If there is one, it is logged an the error code is returned.
 + (uint)checkForOpenGLError;
+
+/// -------------------------
+/// @name Matrix Manipulation
+/// -------------------------
+
+/// Changes the modelview matrix to the identity matrix.
+- (void)loadIdentity;
+
+/// Empties the matrix stack, resets the modelview matrix to the identity matrix.
+- (void)resetMatrix;
+
+/// Pushes the current modelview matrix to a stack from which it can be restored later.
+- (void)pushMatrix;
+
+/// Restores the modelview matrix that was last pushed to the stack.
+- (void)popMatrix;
+
+/// Prepends a matrix to the modelview matrix by multiplying it with another matrix.
+- (void)prependMatrix:(SPMatrix *)matrix;
+
+/// Sets up the projection matrix for ortographic 2D rendering.
+- (void)setupOrthographicProjectionWithLeft:(float)left right:(float)right
+                                        top:(float)top bottom:(float)bottom;
 
 /// ----------------
 /// @name Properties
@@ -68,5 +86,20 @@
 
 /// Indicates if the bound texture has its alpha channel premultiplied.
 @property (nonatomic, readonly) BOOL usingPremultipliedAlpha;
+
+/// Calculates the product of modelview and projection matrix.
+/// CAUTION: Use with care! Each call returns the same instance.
+@property (nonatomic, readonly) SPMatrix *mvpMatrix;
+
+/// Returns the current modelview matrix.
+/// CAUTION: Use with care! Each call returns the same instance.
+@property (nonatomic, readonly) SPMatrix *modelviewMatrix;
+
+/// Returns the current projection matrix.
+/// CAUTION: Use with care! Each call returns the same instance.
+@property (nonatomic, readonly) SPMatrix *projectionMatrix;
+
+/// Returns the current (accumulated) alpha value.
+@property (nonatomic, readonly) float alpha;
 
 @end

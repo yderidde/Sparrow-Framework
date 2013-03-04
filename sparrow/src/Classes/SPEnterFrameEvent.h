@@ -26,10 +26,6 @@
 ------------------------------------------------------------------------------------------------- */
 
 @interface SPEnterFrameEvent : SPEvent
-{
-  @private 
-    double mPassedTime;
-}
 
 /// ------------------
 /// @name Initializers
@@ -42,7 +38,7 @@
 - (id)initWithType:(NSString*)type passedTime:(double)seconds;
 
 /// Factory method.
-+ (SPEnterFrameEvent*)eventWithType:(NSString*)type passedTime:(double)seconds;
++ (id)eventWithType:(NSString*)type passedTime:(double)seconds;
 
 /// ----------------
 /// @name Properties
