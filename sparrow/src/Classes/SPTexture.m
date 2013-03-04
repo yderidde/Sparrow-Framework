@@ -14,6 +14,8 @@
 #import "SPRectangle.h"
 #import "SPGLTexture.h"
 #import "SPSubTexture.h"
+#import "SPNSExtensions.h"
+#import "SPStage.h"
 
 #import <UIKit/UIKit.h>
 #import <QuartzCore/QuartzCore.h>
@@ -22,8 +24,8 @@
 
 @interface SPTexture ()
 
-+ (id)textureWithContentsOfPvrtcFile:(NSString*)path;
-+ (id)textureWithContentsOfImage:(UIImage*)image;
+- (id)initWithContentsOfPvrtcFile:(NSString *)path;
+- (id)initWithContentsOfImage:(UIImage *)image;
 
 @end
 
@@ -31,50 +33,49 @@
 
 @implementation SPTexture
 
-@synthesize hasPremultipliedAlpha = mPremultipliedAlpha;
-
 - (id)init
 {    
-    #ifdef DEBUG
-    if ([[self class] isEqual:[SPTexture class]]) 
+    if ([self isMemberOfClass:[SPTexture class]]) 
     {
-        [NSException raise:SP_EXC_ABSTRACT_CLASS 
-                    format:@"Attempting to instantiate abstract class SPTexture. " \
-                           @"Use factory methods instead."];
         [self release];
+        [NSException raise:SP_EXC_ABSTRACT_CLASS 
+                    format:@"Attempting to initialize abstract class SPTexture."];        
         return nil;
     }
-    #endif
     
     return [super init];
 }
 
-+ (SPTexture *)emptyTexture
+- (id)initWithContentsOfFile:(NSString *)path
 {
-    return [[[SPGLTexture alloc] init] autorelease];
-}
+    float contentScaleFactor = [SPStage contentScaleFactor];
+    
+    NSString *fullPath = [path isAbsolutePath] ? 
+        path : [[NSBundle mainBundle] pathForResource:path withScaleFactor:contentScaleFactor];
 
-+ (SPTexture *)textureWithContentsOfFile:(NSString*)path
-{    
-    NSString *fullPath = [[NSBundle mainBundle] pathForResource:path ofType:nil];
     if (![[NSFileManager defaultManager] fileExistsAtPath:fullPath])
+    {
+        [self release];
         [NSException raise:SP_EXC_FILE_NOT_FOUND format:@"file %@ not found", fullPath];
+    }
     
     NSString *imgType = [[path pathExtension] lowercaseString];
     if ([imgType isEqualToString:@"pvrtc"])
-        return [self textureWithContentsOfPvrtcFile:fullPath];            
+        return [self initWithContentsOfPvrtcFile:fullPath];            
     else
-        return [self textureWithContentsOfImage:[UIImage imageNamed:path]];    
+        return [self initWithContentsOfImage:[UIImage imageWithContentsOfFile:fullPath]];        
 }
 
-+ (id)textureWithContentsOfImage:(UIImage*)image
+- (id)initWithContentsOfImage:(UIImage *)image
 {  
-    float width = CGImageGetWidth(image.CGImage);
+    [self release]; // class factory - we'll return a subclass!
+    
+    float width  = CGImageGetWidth(image.CGImage);
     float height = CGImageGetHeight(image.CGImage);    
     
     // only textures with sides that are powers of 2 are allowed by OpenGL ES.
     // thus, we find the next legal size and draw the texture into a valid image.    
-    int legalWidth = 2;    while (legalWidth < width) legalWidth *= 2;
+    int legalWidth  = 2;   while (legalWidth  < width)  legalWidth *= 2;
     int legalHeight = 2;   while (legalHeight < height) legalHeight *=2;
     
     CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
@@ -87,44 +88,44 @@
     CGContextDrawImage(context, CGRectMake(0, legalHeight-height, width, height), 
                        image.CGImage);
     
-    SPGLTexture *glTexture = [SPGLTexture textureWithData:imageData 
+    SPGLTexture *glTexture = [[SPGLTexture alloc] initWithData:imageData 
         width:legalWidth height:legalHeight format:SPTextureFormatRGBA premultipliedAlpha:YES];    
+    
+    if ([image respondsToSelector:@selector(scale)])
+        glTexture.scale = [image scale];
     
     CGContextRelease(context);
     free(imageData);    
     
     if (legalWidth == width && legalHeight == height)
+    {
         return glTexture;
+    }        
     else 
     {
-        SPRectangle *region = [SPRectangle rectangleWithX:0 y:0 width:width height:height];
-        return [SPSubTexture textureWithRegion:region ofTexture:glTexture];
+        float scale = glTexture.scale;
+        SPRectangle *region = [SPRectangle rectangleWithX:0 y:0 width:width/scale height:height/scale];
+        SPSubTexture *subTexture = [[SPSubTexture alloc] initWithRegion:region ofTexture:glTexture];
+        [glTexture release];
+        return subTexture;
     }
 }
 
-+ (id)textureWithContentsOfPvrtcFile:(NSString*)path
+- (id)initWithContentsOfPvrtcFile:(NSString*)path
 {
-    [NSException raise:@"NotImplemented" format:@"PVRTC images are not yet supported"];
-    return nil;
-    
-    // todo: find out how to get width, height and compression type from pvrtc-file --
-    //       this is required to complete this method.    
-    
-    /*
-     
-     NSString *fullPath = [[NSBundle mainBundle] pathForResource:path ofType:nil];
-     NSData *texData = [[NSData alloc] initWithContentsOfFile:fullPath];
-     
-     // This assumes that source PVRTC image is 4 bits per pixel and RGB not RGBA
-     // If you use the default settings in texturetool, e.g.:
-     //
-     //      texturetool -e PVRTC -o texture.pvrtc texture.png
-     //
-     // then this code should work fine for you.
-     glCompressedTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGB_PVRTC_4BPPV1_IMG, 512, 512, 0, 
-     [texData length], [texData bytes]);
-     
-     */    
+    [self release];
+    [NSException raise:@"NotImplemented" format:@"PVRTC images are not yet supported"];    
+    return nil;   
+}
+
++ (SPTexture *)emptyTexture
+{
+    return [[[SPGLTexture alloc] init] autorelease];
+}
+
++ (SPTexture *)textureWithContentsOfFile:(NSString *)path
+{
+    return [[[SPTexture alloc] initWithContentsOfFile:path] autorelease];
 }
 
 - (void)adjustTextureCoordinates:(const float *)texCoords saveAtTarget:(float *)targetTexCoords 
@@ -149,6 +150,18 @@
 {
     [NSException raise:SP_EXC_ABSTRACT_METHOD format:@"Override this method in subclasses."];
     return 0;    
+}
+
+- (BOOL)hasPremultipliedAlpha
+{
+    [NSException raise:SP_EXC_ABSTRACT_METHOD format:@"Override this method in subclasses."];
+    return NO;
+}
+
+- (float)scale
+{
+    [NSException raise:SP_EXC_ABSTRACT_METHOD format:@"Override this method in subclasses."];
+    return 1.0f;
 }
 
 @end

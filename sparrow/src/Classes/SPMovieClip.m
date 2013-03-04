@@ -38,7 +38,7 @@
     {
         mLoop = YES;
         mPlaying = YES;
-        mDefaultDuration = (fps == 0.0 ? INT_MAX : 1.0 / fps);        
+        mDefaultFrameDuration = (fps == 0.0 ? INT_MAX : 1.0 / fps);        
         mTotalDuration = 0.0;
         mElapsedTime = 0.0;
         mCurrentFrame = 0;
@@ -63,11 +63,9 @@
     [super dealloc];
 }
 
-#pragma mark -
-
 - (int)addFrame:(SPTexture *)texture
 {
-    return [self addFrame:texture withDuration:mDefaultDuration];
+    return [self addFrame:texture withDuration:mDefaultFrameDuration];
 }
 
 - (int)addFrame:(SPTexture *)texture withDuration:(double)duration
@@ -84,8 +82,8 @@
     [self checkIndex:frameID];
     [mFrames insertObject:texture atIndex:frameID];
     [mSounds insertObject:[NSNull null] atIndex:frameID];
-    [mFrameDurations insertObject:[NSNumber numberWithDouble:mDefaultDuration] atIndex:frameID];
-    mTotalDuration += mDefaultDuration;    
+    [mFrameDurations insertObject:[NSNumber numberWithDouble:mDefaultFrameDuration] atIndex:frameID];
+    mTotalDuration += mDefaultFrameDuration;    
 }
 
 - (void)removeFrameAtIndex:(int)frameID
@@ -140,8 +138,6 @@
     return [[mFrameDurations objectAtIndex:frameID] doubleValue];
 }
 
-#pragma mark -
-
 - (int)numFrames
 {        
     return mFrames.count;
@@ -156,8 +152,6 @@
 {
     mPlaying = NO;
 }
-
-#pragma mark -
 
 - (void)updateCurrentFrame
 {
@@ -197,8 +191,9 @@
 
 - (void)advanceTime:(double)seconds
 {    
-    if (!mPlaying) return;
+    if (!mPlaying || (!mLoop && mElapsedTime == mTotalDuration)) return;
     
+    double previousElapsedTime = mElapsedTime;
     mElapsedTime += seconds;       
     
     if (mLoop)
@@ -230,7 +225,10 @@
         
         ++i;
         durationSum += fd;
-    }    
+    }
+    
+    if (!mLoop && previousElapsedTime < mTotalDuration && mElapsedTime >= mTotalDuration)
+        [self dispatchEvent:[SPEvent eventWithType:SP_EVENT_TYPE_MOVIE_COMPLETED]];
 }
 
 - (BOOL)isComplete

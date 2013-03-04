@@ -67,14 +67,13 @@
         [NSNumber numberWithBool:NO], kEAGLDrawablePropertyRetainedBacking, 
         kEAGLColorFormatRGBA8, kEAGLDrawablePropertyColorFormat, nil];    
 
-    mContext = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES1];
-    mRenderSupport = [[SPRenderSupport alloc] init];    
+    mContext = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES1];    
     
     if (!mContext || ![EAGLContext setCurrentContext:mContext])     
-        NSLog(@"Could not create render context");    
+        NSLog(@"Could not create render context");
+    
+    mRenderSupport = [[SPRenderSupport alloc] init];
 }
-
-#pragma mark -
 
 - (void)setTimer:(NSTimer *)newTimer 
 {    
@@ -180,8 +179,6 @@
     
     SP_RELEASE_POOL(pool);
 }
- 
-#pragma mark -
 
 + (Class)layerClass 
 {
@@ -232,9 +229,6 @@
     mRenderbuffer = 0;    
 }
 
-
-#pragma mark -
-
 - (void) touchesBegan:(NSSet*)touches withEvent:(UIEvent*)event 
 {   
     [self processTouchEvent:event];
@@ -246,6 +240,11 @@
 }
 
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event 
+{
+    [self processTouchEvent:event];
+}
+
+- (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event
 {
     [self processTouchEvent:event];
 }
@@ -283,8 +282,6 @@
         SP_RELEASE_POOL(pool);
     }    
 }
-
-#pragma mark -
 
 - (void)dealloc 
 {    

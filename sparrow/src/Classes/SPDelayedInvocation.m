@@ -36,6 +36,12 @@
     return self;
 }
 
+- (id)init
+{
+    [self release];
+    return nil;
+}
+
 - (NSMethodSignature*)methodSignatureForSelector:(SEL)aSelector
 {
     NSMethodSignature *sig = [[self class] instanceMethodSignatureForSelector:aSelector];
@@ -46,7 +52,11 @@
 - (void)forwardInvocation:(NSInvocation*)anInvocation
 {
     if ([mTarget respondsToSelector:[anInvocation selector]])
+    {
+        anInvocation.target = mTarget;
+        [anInvocation retainArguments];
         [mInvocations addObject:anInvocation];
+    }
 }
 
 - (void)advanceTime:(double)seconds
@@ -60,7 +70,7 @@
     mCurrentTime = MIN(mTotalTime, currentTime);
     
     if (previousTime < mTotalTime && mCurrentTime >= mTotalTime)    
-        [mInvocations makeObjectsPerformSelector:@selector(invokeWithTarget:) withObject:mTarget];        
+        [mInvocations makeObjectsPerformSelector:@selector(invoke)];        
 }
 
 - (BOOL)isComplete

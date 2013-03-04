@@ -35,16 +35,6 @@
 
 @implementation SPDisplayObjectTest
 
-- (void) setUp
-{
-}
-
-- (void) tearDown
-{
-}
-
-#pragma mark -
-
 - (void)testRoot
 {
     SPSprite *root = [[SPSprite alloc] init];    
@@ -63,7 +53,24 @@
 
 - (void)testTransformationMatrixToSpace
 {
-    // is tested indirectly via 'testBoundsInSpace' in DisplayObjectContainerTest
+    SPSprite *sprite = [SPSprite sprite];
+    SPSprite *child = [SPSprite sprite];
+    child.x = 30;
+    child.y = 20;
+    child.scaleX = 1.2f;
+    child.scaleY = 1.5f;
+    child.rotation = PI/4.0f;    
+    [sprite addChild:child];
+    
+    SPMatrix *matrix = [sprite transformationMatrixToSpace:child];    
+    SPMatrix *expectedMatrix = child.transformationMatrix;
+    [expectedMatrix invert];
+    STAssertEqualObjects(expectedMatrix, matrix, @"wrong matrix");
+
+    matrix = [child transformationMatrixToSpace:sprite];
+    STAssertEqualObjects(child.transformationMatrix, matrix, @"wrong matrix");    
+    
+    // more is tested indirectly via 'testBoundsInSpace' in DisplayObjectContainerTest
 }
 
 - (void)testTransformationMatrix

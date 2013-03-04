@@ -21,17 +21,32 @@
 
 @implementation SPSound
 
+- (id)init
+{
+    if ([self isMemberOfClass:[SPSound class]])
+    {
+        [self release];
+        [NSException raise:SP_EXC_ABSTRACT_CLASS 
+                    format:@"Attempting to initialize abstract class SPSound."];        
+        return nil;
+    } 
+    
+    return [super init];
+}
+
 - (id)initWithContentsOfFile:(NSString *)path
 {
-    if (![[self class] isEqual:[SPSound class]]) 
-        return [super init];
-    
     // SPSound is a class factory! We'll return a subclass, thus we don't need 'self' anymore.
     [self release];
     
-    NSString *fullPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:path];
+    NSString *fullPath = [path isAbsolutePath] ? 
+        path : [[NSBundle mainBundle] pathForResource:path ofType:nil];    
+    
     if (![[NSFileManager defaultManager] fileExistsAtPath:fullPath])
+    {
+        [self release];
         [NSException raise:SP_EXC_FILE_NOT_FOUND format:@"file %@ not found", fullPath];
+    }        
     
     NSString *error = nil;
     
@@ -139,7 +154,7 @@
     else
     {
         NSLog(@"Sound '%@' will be played with AVAudioPlayer [Reason: %@]", path, error);
-        self = [[SPAVSound alloc] initWithContentsOfFile:path duration:soundDuration];
+        self = [[SPAVSound alloc] initWithContentsOfFile:fullPath duration:soundDuration];
     }
     
     free(soundBuffer);    

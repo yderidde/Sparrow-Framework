@@ -30,9 +30,12 @@ void onUncaughtException(NSException *exception)
 {    
     SP_CREATE_POOL(pool);    
     
-    NSSetUncaughtExceptionHandler(&onUncaughtException); 
+    NSSetUncaughtExceptionHandler(&onUncaughtException);     
     
-    Game *game = [[Game alloc] initWithWidth:320 height:480];            
+    [SPAudioEngine start];
+    [SPStage setSupportHighResolutions:YES]; // use the provided hd textures on suitable hardware
+    
+    Game *game = [[Game alloc] initWithWidth:320 height:480];
     sparrowView.stage = game;
     sparrowView.multipleTouchEnabled = YES;
     sparrowView.frameRate = 30;    
@@ -40,8 +43,6 @@ void onUncaughtException(NSException *exception)
     [sparrowView start];     
     [window makeKeyAndVisible];
     [game release];
-    
-    [SPAudioEngine start];
     
     SP_RELEASE_POOL(pool);
 }

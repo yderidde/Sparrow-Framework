@@ -27,7 +27,7 @@
 @implementation SPStage (Rendering)
 
 - (void)render:(SPRenderSupport *)support;
-{    
+{
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     
@@ -40,12 +40,16 @@
     
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();    
-    glOrthof(-mWidth/2.0f, mWidth/2.0f, -mHeight/2.0f, mHeight/2.0f, -1.0f, 1.0f);        
+    
+    glOrthof(-mWidth/2.0f, mWidth/2.0f, -mHeight/2.0f, mHeight/2.0f, -1.0f, 1.0f);
+    
+    // use glFrustum instead of glOrtho for experiments in a perspective 3D space
+    // glFrustumf(-mWidth/2.0, mWidth/2.0f, -mHeight/2.0f, mHeight/2.0f, 250.0f, 1000.0f);
     
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();    
-    glScalef(1.0f, -1.0f, 1.0f);
-    glTranslatef(-mWidth/2.0f, -mHeight/2.0f, 0.0f);
+    glScalef(1.0f, -1.0f, 1.0f);    
+    glTranslatef(-mWidth/2.0f, -mHeight/2.0f, -ZPOS);
     
     [super render:support];
     
@@ -66,7 +70,7 @@
 {    
     float alpha = self.alpha;
     
-    for (SPDisplayObject *child in self)
+    for (SPDisplayObject *child in mChildren)
     {
         float childAlpha = child.alpha;
         if (childAlpha != 0.0f && child.visible)
@@ -79,9 +83,9 @@
             
             glPushMatrix();
             
-            if (x != 0.0f || y != 0.0f)           glTranslatef(x, y, ZPOS);
-            if (rotation != 0.0f)                 glRotatef(SP_R2D(child.rotation), 0.0f, 0.0f, 1.0f);
-            if (scaleX != 0.0f || scaleY != 0.0f) glScalef(child.scaleX, child.scaleY, 1.0f);        
+            if (x != 0.0f || y != 0.0f)           glTranslatef(x, y, 0);
+            if (rotation != 0.0f)                 glRotatef(SP_R2D(rotation), 0.0f, 0.0f, 1.0f);
+            if (scaleX != 0.0f || scaleY != 0.0f) glScalef(scaleX, scaleY, 1.0f);        
        
             child.alpha *= alpha;
             [child render:support];
@@ -103,46 +107,25 @@
     if (self->isa == [SPQuad class])
         [support bindTexture:nil];
     
-    static GLfloat vertices[8];   
-    static GLubyte colors[16];   
-    
-    vertices[2] = mWidth;
-    vertices[4] = mWidth;
-    vertices[5] = mHeight;
-    vertices[7] = mHeight;         
-    
+    static uint colors[4];
     float alpha = self.alpha;
-    GLubyte* pos = colors;
-    for (int i=0; i<4; ++i) 
-    {
-        uint color = mVertexColors[i];        
-        
-        if (support.usingPremultipliedAlpha)
-        {
-            *(pos++) = (GLubyte) (SP_COLOR_PART_RED(color) * alpha);
-            *(pos++) = (GLubyte) (SP_COLOR_PART_GREEN(color) * alpha);
-            *(pos++) = (GLubyte) (SP_COLOR_PART_BLUE(color) * alpha);        
-        }
-        else 
-        {
-            *(pos++) = (GLubyte) SP_COLOR_PART_RED(color);
-            *(pos++) = (GLubyte) SP_COLOR_PART_GREEN(color);
-            *(pos++) = (GLubyte) SP_COLOR_PART_BLUE(color);
-        }        
-        
-        *(pos++) = (GLubyte) (alpha * 255);
-    }
-        
+    
+    for (int i=0; i<4; ++i)
+        colors[i] = [support convertColor:mVertexColors[i] alpha:alpha];
+
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_COLOR_ARRAY);    
     
-    glVertexPointer(2, GL_FLOAT, 0, vertices);
+    glVertexPointer(2, GL_FLOAT, 0, mVertexCoords);
     glColorPointer(4, GL_UNSIGNED_BYTE, 0, colors);
     
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_COLOR_ARRAY);
+    
+    // Rendering was tested with vertex buffers, too -- but for simple quads like these, the
+    // overhead seems to outweigh the benefit. The "glDrawArrays"-approach is faster here.
 }
 
 @end
@@ -153,7 +136,7 @@
 {    
     static float texCoords[8];     
     [mTexture adjustTextureCoordinates:mTexCoords saveAtTarget:texCoords numVertices:4];    
-    
+       
     [support bindTexture:mTexture];
     
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -163,5 +146,5 @@
     
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 }
-
+ 
 @end
