@@ -19,7 +19,7 @@
 static void dispatchEventOnChildren(SPDisplayObject *object, SPEvent *event)
 {
     // This function is mainly used for ADDED_TO_STAGE- and REMOVED_FROM_STAGE-events.
-    // Those events are dispatched often, yet used very rarely.
+    // Those events are dispatched often, yet used rather rarely.
     // Thus we handle them in a C function, so that the overhead that they create is minimal.
     
     [object dispatchEvent:event];    
@@ -37,19 +37,20 @@ static void dispatchEventOnChildren(SPDisplayObject *object, SPEvent *event)
 
 - (id)init
 {    
+    #if DEBUG    
     if ([[self class] isEqual:[SPDisplayObjectContainer class]]) 
     { 
         [NSException raise:SP_EXC_ABSTRACT_CLASS 
                     format:@"Attempting to instantiate SPDisplayObjectContainer directly."];
         [self release]; 
         return nil; 
-    }
+    }    
+    #endif
     
     if (self = [super init]) 
     {
         mChildren = [[NSMutableArray alloc] init];
-    }
-    
+    }    
     return self;
 }
 
@@ -63,23 +64,27 @@ static void dispatchEventOnChildren(SPDisplayObject *object, SPEvent *event)
 
 - (void)addChild:(SPDisplayObject *)child atIndex:(int)index
 {
-    [child retain];
-    [child removeFromParent];
-    [mChildren insertObject:child atIndex:index];    
-    child.parent = self;
-    
-    SPEvent *addedEvent = [[SPEvent alloc] initWithType:SP_EVENT_TYPE_ADDED];    
-    [child dispatchEvent:addedEvent];
-    [addedEvent release];    
-    
-    if (self.stage)
+    if (index >= 0 && index <= [mChildren count])
     {
-        SPEvent *addedToStageEvent = [[SPEvent alloc] initWithType:SP_EVENT_TYPE_ADDED_TO_STAGE];
-        dispatchEventOnChildren(child, addedToStageEvent);
-        [addedToStageEvent release];
+        [child retain];
+        [child removeFromParent];
+        [mChildren insertObject:child atIndex:MIN(mChildren.count, index)];    
+        child.parent = self;
+        
+        SPEvent *addedEvent = [[SPEvent alloc] initWithType:SP_EVENT_TYPE_ADDED];    
+        [child dispatchEvent:addedEvent];
+        [addedEvent release];    
+        
+        if (self.stage)
+        {
+            SPEvent *addedToStageEvent = [[SPEvent alloc] initWithType:SP_EVENT_TYPE_ADDED_TO_STAGE];
+            dispatchEventOnChildren(child, addedToStageEvent);
+            [addedToStageEvent release];
+        }
+        
+        [child release];
     }
-    
-    [child release];
+    else [NSException raise:SP_EXC_INDEX_OUT_OF_BOUNDS format:@"Invalid child index"]; 
 }
 
 - (BOOL)containsChild:(SPDisplayObject *)child
@@ -116,9 +121,7 @@ static void dispatchEventOnChildren(SPDisplayObject *object, SPEvent *event)
 - (void)removeChild:(SPDisplayObject *)child
 {
     int childIndex = [self childIndex:child];
-    if (childIndex == SP_NOT_FOUND)
-        [NSException raise:SP_EXC_NOT_RELATED format:@"Object is not a child of this container"];
-    else 
+    if (childIndex != SP_NOT_FOUND)
         [self removeChildAtIndex:childIndex];
 }
 
@@ -126,10 +129,8 @@ static void dispatchEventOnChildren(SPDisplayObject *object, SPEvent *event)
 {
     if (index >= 0 && index < [mChildren count])
     {
-        SPDisplayObject *child = [[mChildren objectAtIndex:index] retain];
-        [mChildren removeObjectAtIndex:index];
-        child.parent = nil;        
-        
+        SPDisplayObject *child = [[mChildren objectAtIndex:index] retain];        
+
         SPEvent *remEvent = [[SPEvent alloc] initWithType:SP_EVENT_TYPE_REMOVED];    
         [child dispatchEvent:remEvent];
         [remEvent release];    
@@ -140,6 +141,9 @@ static void dispatchEventOnChildren(SPDisplayObject *object, SPEvent *event)
             dispatchEventOnChildren(child, remFromStageEvent);
             [remFromStageEvent release];
         }        
+        
+        [mChildren removeObjectAtIndex:index];
+        child.parent = nil; 
         
         [child release];
     }
@@ -159,6 +163,12 @@ static void dispatchEventOnChildren(SPDisplayObject *object, SPEvent *event)
     if (index1 < 0 || index1 >= numChildren || index2 < 0 || index2 >= numChildren)
         [NSException raise:SP_EXC_INVALID_OPERATION format:@"invalid child indices"];
     [mChildren exchangeObjectAtIndex:index1 withObjectAtIndex:index2];
+}
+
+- (void)removeAllChildren
+{
+    for (int i=mChildren.count-1; i>=0; --i)
+        [self removeChildAtIndex:i];
 }
 
 - (int)numChildren
@@ -213,9 +223,7 @@ static void dispatchEventOnChildren(SPDisplayObject *object, SPEvent *event)
 - (void)dealloc 
 {    
     // 'self' is becoming invalid; thus, we have to remove any references to it.    
-    for (SPDisplayObject *child in mChildren)
-        child.parent = nil;
-    
+    [mChildren makeObjectsPerformSelector:@selector(setParent:) withObject:nil];
     [mChildren release];
     [super dealloc];
 }

@@ -9,6 +9,9 @@
 //  it under the terms of the Simplified BSD License.
 //
 
+#import <Availability.h>
+#ifdef __IPHONE_3_0
+
 #import <SenTestingKit/SenTestingKit.h>
 #import <UIKit/UIKit.h>
 
@@ -28,6 +31,7 @@
     int mAddedToStage;
     int mRemoved;
     int mRemovedFromStage;
+    SPSprite *mTestSprite;
 }
 
 - (void)addQuadToSprite:(SPSprite*)sprite;
@@ -42,11 +46,13 @@
 
 - (void) setUp
 {
-    mAdded = mAddedToStage = mRemoved = mRemovedFromStage = 0;
+    mAdded = mAddedToStage = mRemoved = mRemovedFromStage = 0;    
+    mTestSprite = [[SPSprite alloc] init];
 }
 
 - (void) tearDown
 {
+    [mTestSprite release];
 }
 
 #pragma mark -
@@ -294,6 +300,46 @@
 - (void)onAddedToStage:(SPEvent*)event { mAddedToStage++; }
 - (void)onRemovedFromStage:(SPEvent*)event { mRemovedFromStage++; }
 
+- (void)testRemovedFromStage
+{
+    SPStage *stage = [[SPStage alloc] init];
+    [stage addChild:mTestSprite];    
+    [mTestSprite addEventListener:@selector(onTestSpriteRemovedFromStage:) atObject:self
+                          forType:SP_EVENT_TYPE_REMOVED_FROM_STAGE];    
+    [mTestSprite removeFromParent];
+    [mTestSprite removeEventListenersAtObject:self forType:SP_EVENT_TYPE_REMOVED_FROM_STAGE];        
+    [stage release];
+}
+
+- (void)onTestSpriteRemovedFromStage:(SPEvent *)event
+{
+    STAssertNotNil(mTestSprite.stage, @"stage not accessible in removed from stage event");
+}
+
+- (void)testAddExistingChild
+{
+    SPSprite *sprite = [SPSprite sprite];
+    SPQuad *quad = [SPQuad quadWithWidth:100 height:100];
+    [sprite addChild:quad];
+    STAssertNoThrow([sprite addChild:quad], @"Could not add child multiple times");
+}
+
+- (void)testRemoveAllChildren
+{
+    SPSprite *sprite = [SPSprite sprite];
+    
+    STAssertEquals(0, sprite.numChildren, @"wrong number of children");
+    [sprite removeAllChildren];
+    STAssertEquals(0, sprite.numChildren, @"wrong number of children");
+    
+    [sprite addChild:[SPQuad quadWithWidth:100 height:100]];
+    [sprite addChild:[SPQuad quadWithWidth:100 height:100]];    
+
+    STAssertEquals(2, sprite.numChildren, @"wrong number of children");
+    [sprite removeAllChildren];    
+    STAssertEquals(0, sprite.numChildren, @"remove all children did not work");    
+}
+
 // STAssertEquals(value, value, message, ...)
 // STAssertEqualObjects(object, object, message, ...)
 // STAssertNotNil(object, message, ...)
@@ -305,3 +351,5 @@
 // STFail(message, ...)
 
 @end
+
+#endif

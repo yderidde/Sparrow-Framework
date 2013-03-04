@@ -9,6 +9,9 @@
 //  it under the terms of the Simplified BSD License.
 //
 
+#import <Availability.h>
+#ifdef __IPHONE_3_0
+
 #import <SenTestingKit/SenTestingKit.h>
 #import <UIKit/UIKit.h>
 
@@ -147,6 +150,6 @@
     [event stopImmediatePropagation];
 }
 
-
-
 @end
+
+#endif

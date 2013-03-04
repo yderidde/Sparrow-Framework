@@ -9,15 +9,18 @@
 //  it under the terms of the Simplified BSD License.
 //
 
+#import <Availability.h>
+#ifdef __IPHONE_3_0
+
 #import <SenTestingKit/SenTestingKit.h>
 #import <UIKit/UIKit.h>
+#import <math.h>
 
 #import "SPMatrix.h"
 #import "SPMacros.h"
 #import "SPPoint.h"
 #import "SPSprite.h"
 #import "SPQuad.h"
-#import <math.h>
 
 // -------------------------------------------------------------------------------------------------
 
@@ -75,3 +78,5 @@
 }
 
 @end
+
+#endif
