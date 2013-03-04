@@ -3,7 +3,7 @@
 //  Sparrow
 //
 //  Created by Daniel Sperl on 19.06.09.
-//  Copyright 2009 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the Simplified BSD License.
@@ -18,11 +18,15 @@
 
 @synthesize texture = mTexture;
 
-- (id)initWithTexture:(SPTexture*)texture;
+- (id)initWithTexture:(SPTexture*)texture
 {
     if (!texture) [NSException raise:SP_EXC_INVALID_OPERATION format:@"texture cannot be nil!"];
     
-    if (self = [super initWithWidth:texture.width height:texture.height])
+    SPRectangle *frame = texture.frame;    
+    float width  = frame ? frame.width  : texture.width;
+    float height = frame ? frame.height : texture.height;    
+    
+    if ((self = [super initWithWidth:width height:height]))
     {
         self.texture = texture;
         mTexCoords[0] = 0.0f; mTexCoords[1] = 0.0f;

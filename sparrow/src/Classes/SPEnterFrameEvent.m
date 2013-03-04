@@ -3,7 +3,7 @@
 //  Sparrow
 //
 //  Created by Daniel Sperl on 30.04.09.
-//  Copyright 2009 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the Simplified BSD License.
@@ -18,14 +18,14 @@
 
 - (id)initWithType:(NSString*)type bubbles:(BOOL)bubbles passedTime:(double)seconds 
 {
-    if (self = [super initWithType:type bubbles:bubbles])
+    if ((self = [super initWithType:type bubbles:bubbles]))
     {
         mPassedTime = seconds;
     }
     return self;    
 }
 
-- (id)initWithType:(NSString*)type passedTime:(double)seconds;
+- (id)initWithType:(NSString*)type passedTime:(double)seconds
 {
     return [self initWithType:type bubbles:NO passedTime:seconds];
 }

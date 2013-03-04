@@ -3,7 +3,7 @@
 //  Sparrow
 //
 //  Created by Daniel Sperl on 15.03.09.
-//  Copyright 2009 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the Simplified BSD License.
@@ -46,7 +46,7 @@ static void getChildEventListeners(SPDisplayObject *object, NSString *eventType,
     }    
     #endif
     
-    if (self = [super init]) 
+    if ((self = [super init])) 
     {
         mChildren = [[NSMutableArray alloc] init];
     }    
@@ -203,7 +203,7 @@ static void getChildEventListeners(SPDisplayObject *object, NSString *eventType,
     }
 }
 
-- (SPDisplayObject*)hitTestPoint:(SPPoint*)localPoint forTouch:(BOOL)isTouch;
+- (SPDisplayObject*)hitTestPoint:(SPPoint*)localPoint forTouch:(BOOL)isTouch
 {
     if (isTouch && (!self.visible || !self.touchable)) 
         return nil;

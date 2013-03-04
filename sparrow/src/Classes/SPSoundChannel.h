@@ -3,7 +3,7 @@
 //  Sparrow
 //
 //  Created by Daniel Sperl on 14.11.09.
-//  Copyright 2009 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the Simplified BSD License.
@@ -24,6 +24,9 @@
  
  Furthermore, it will dispatch events of type `SP_EVENT_TYPE_SOUND_COMPLETED` when the sound
  is finished.
+ 
+ Before releasing a channel, it is a good habit to call `stop` or to remove any event listeners.
+ Otherwise, an event may be dispatched to an object that was already released, causing a crash.
 
 ------------------------------------------------------------------------------------------------- */
 

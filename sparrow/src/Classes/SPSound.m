@@ -3,7 +3,7 @@
 //  Sparrow
 //
 //  Created by Daniel Sperl on 14.11.09.
-//  Copyright 2009 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the Simplified BSD License.
@@ -15,6 +15,7 @@
 #import "SPEvent.h"
 #import "SPALSound.h"
 #import "SPAVSound.h"
+#import "SPUtils.h"
 
 #import <AudioToolbox/AudioToolbox.h> 
 
@@ -38,10 +39,8 @@
     // SPSound is a class factory! We'll return a subclass, thus we don't need 'self' anymore.
     [self release];
     
-    NSString *fullPath = [path isAbsolutePath] ? 
-        path : [[NSBundle mainBundle] pathForResource:path ofType:nil];    
-    
-    if (![[NSFileManager defaultManager] fileExistsAtPath:fullPath])
+    NSString *fullPath = [SPUtils absolutePathToFile:path];
+    if (!fullPath)
     {
         [self release];
         [NSException raise:SP_EXC_FILE_NOT_FOUND format:@"file %@ not found", fullPath];

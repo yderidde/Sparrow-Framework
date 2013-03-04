@@ -3,7 +3,7 @@
 //  Sparrow
 //
 //  Created by Daniel Sperl on 29.05.10.
-//  Copyright 2010 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the Simplified BSD License.
@@ -11,6 +11,7 @@
 
 #import "SPAVSound.h"
 #import "SPAVSoundChannel.h"
+#import "SPUtils.h"
 
 @implementation SPAVSound
 
@@ -24,10 +25,9 @@
 
 - (id)initWithContentsOfFile:(NSString *)path duration:(double)duration
 {
-    if (self = [super init])
+    if ((self = [super init]))
     {
-        NSString *fullPath = [path isAbsolutePath] ? 
-            path : [[NSBundle mainBundle] pathForResource:path ofType:nil];
+        NSString *fullPath = [SPUtils absolutePathToFile:path];
         mSoundData = [[NSData alloc] initWithContentsOfMappedFile:fullPath];
         mDuration = duration;
     }

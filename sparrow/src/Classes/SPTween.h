@@ -3,7 +3,7 @@
 //  Sparrow
 //
 //  Created by Daniel Sperl on 09.05.09.
-//  Copyright 2009 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the Simplified BSD License.
@@ -32,8 +32,8 @@ typedef enum
  
  The primary use of this class is to do standard animations like movement, fading, rotation, etc.
  But there are no limits on what to animate; as long as the property you want to animate is numeric
- (`int`, `float`, `double`), the tween can handle it. For a list of available Transition types,
- see `SPTransitions`. 
+ (`int`, `uint`, `float`, `double`), the tween can handle it. For a list of available Transition 
+ types, see `SPTransitions`. 
  
  Here is an example of a tween that moves an object to the right, rotates it, and fades it out:
  
@@ -49,14 +49,15 @@ typedef enum
  
  Tweens dispatch events in certain phases of their life time:
  
- * `SP_EVENT_TYPE_TWEEN_STARTED`: Dispatched once when the tween starts
- * `SP_EVENT_TYPE_TWEEN_UPDATED`: Dispatched every time it is advanced
- * `SP_EVENT_TYPE_TWEEN_COMPLETED`: Dispatched when it reaches its target value (except when it loops).
+ - `SP_EVENT_TYPE_TWEEN_STARTED`:   Dispatched once when the tween starts
+ - `SP_EVENT_TYPE_TWEEN_UPDATED`:   Dispatched every time it is advanced
+ - `SP_EVENT_TYPE_TWEEN_COMPLETED`: Dispatched when it reaches its target value (repeatedly
+                                    dispatched when looping).
  
  Tweens can loop in two ways:
  
- * `SPLoopTypeRepeat`: Starts the animation from the beginning when it's finished.
- * `SPLoopTypeReverse`: Reverses the animation when it's finished, tweening back to the start value.
+ - `SPLoopTypeRepeat`: Starts the animation from the beginning when it's finished.
+ - `SPLoopTypeReverse`: Reverses the animation when it's finished, tweening back to the start value.
  
 ------------------------------------------------------------------------------------------------- */
 
@@ -73,7 +74,7 @@ typedef enum
     double mDelay;
     
     SPLoopType mLoop;
-    BOOL mInvertTransition;
+    int mLoopCount;
 }
 
 /// ------------------
@@ -101,6 +102,12 @@ typedef enum
 /// Animates the property of an object to a target value. You can call this method multiple times
 /// on one tween.
 - (void)animateProperty:(NSString*)property targetValue:(float)value;
+
+/// Animates the `x` and `y` properties of an object simultaneously.
+- (void)moveToX:(float)x y:(float)y;
+
+/// Animates the `scaleX` and `scaleY` properties of an object simultaneously.
+- (void)scaleTo:(float)scale;
 
 /// ----------------
 /// @name Properties

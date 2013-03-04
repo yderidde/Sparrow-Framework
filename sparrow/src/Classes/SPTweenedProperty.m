@@ -3,7 +3,7 @@
 //  Sparrow
 //
 //  Created by Daniel Sperl on 17.10.09.
-//  Copyright 2009 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the Simplified BSD License.
@@ -12,22 +12,24 @@
 #import "SPTweenedProperty.h"
 #import "SPMacros.h"
 
-typedef float  (*FnPtrGetterF) (id, SEL);
-typedef double (*FnPtrGetterD) (id, SEL);
-typedef int    (*FnPtrGetterI) (id, SEL);
+typedef float  (*FnPtrGetterF)  (id, SEL);
+typedef double (*FnPtrGetterD)  (id, SEL);
+typedef int    (*FnPtrGetterI)  (id, SEL);
+typedef uint   (*FnPtrGetterUI) (id, SEL);
 
-typedef void (*FnPtrSetterF) (id, SEL, float);
-typedef void (*FnPtrSetterD) (id, SEL, double);
-typedef void (*FnPtrSetterI) (id, SEL, int);
+typedef void (*FnPtrSetterF)  (id, SEL, float);
+typedef void (*FnPtrSetterD)  (id, SEL, double);
+typedef void (*FnPtrSetterI)  (id, SEL, int);
+typedef void (*FnPtrSetterUI) (id, SEL, uint);
  
 @implementation SPTweenedProperty
 
 @synthesize startValue = mStartValue;
 @synthesize endValue = mEndValue;
 
-- (id)initWithTarget:(id)target name:(NSString *)name endValue:(float)endValue;
+- (id)initWithTarget:(id)target name:(NSString *)name endValue:(float)endValue
 {
-    if (self = [super init])
+    if ((self = [super init]))
     {
         mTarget = [target retain];        
         mEndValue = endValue;
@@ -44,7 +46,7 @@ typedef void (*FnPtrSetterI) (id, SEL, int);
         // query argument type
         NSMethodSignature *sig = [mTarget methodSignatureForSelector:mGetter];
         mNumericType = *[sig methodReturnType];    
-        if (mNumericType != 'f' && mNumericType != 'i' && mNumericType != 'd')
+        if (mNumericType != 'f' && mNumericType != 'i' && mNumericType != 'd' && mNumericType != 'I')
             [NSException raise:SP_EXC_INVALID_OPERATION format:@"property not numeric: '%@'", name];
         
         mGetterFunc = [mTarget methodForSelector:mGetter];
@@ -69,7 +71,12 @@ typedef void (*FnPtrSetterI) (id, SEL, int);
     {
         FnPtrSetterD func = (FnPtrSetterD)mSetterFunc;
         func(mTarget, mSetter, (double)value);
-    }        
+    }
+    else if (mNumericType == 'I')
+    {
+        FnPtrSetterUI func = (FnPtrSetterUI)mSetterFunc;
+        func(mTarget, mSetter, (double)value);
+    }
     else
     {
         FnPtrSetterI func = (FnPtrSetterI)mSetterFunc;
@@ -87,6 +94,11 @@ typedef void (*FnPtrSetterI) (id, SEL, int);
     else if (mNumericType == 'd')
     {
         FnPtrGetterD func = (FnPtrGetterD)mGetterFunc;
+        return func(mTarget, mGetter);
+    }
+    else if (mNumericType == 'I')
+    {
+        FnPtrGetterUI func = (FnPtrGetterUI)mGetterFunc;
         return func(mTarget, mGetter);
     }
     else 

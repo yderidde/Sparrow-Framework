@@ -3,7 +3,7 @@
 //  Sparrow
 //
 //  Created by Daniel Sperl on 15.03.09.
-//  Copyright 2009 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the Simplified BSD License.
@@ -35,6 +35,11 @@
  connected to the stage - otherwise, the method will return `nil`, and you won't have access to 
  the juggler.
  
+ As an alternative, you can also use this static method to access your stage. It will return the
+ first stage instance that was created (and normally, there is only one stage available, anyway).
+ 
+    [SPStage mainStage];
+ 
 ------------------------------------------------------------------------------------------------- */
 
 @interface SPStage : SPDisplayObjectContainer
@@ -42,6 +47,7 @@
   @private
     float mWidth;
     float mHeight;
+    uint  mColor;
  
     // helpers
     SPTouchProcessor *mTouchProcessor;
@@ -63,6 +69,13 @@
 /// Process a new set up touches. Dispatches touch events on affected children.
 - (void)processTouches:(NSSet*)touches;
 
+/// -------------
+/// @name Methods
+/// -------------
+
+/// Returns the first available stage instance. (In most cases, there is only one stage, anyway.)
++ (SPStage *)mainStage;
+
 /// ----------------
 /// @name Properties
 /// ----------------
@@ -70,6 +83,9 @@
 /// The requested number of frames per second. Must be a divisor of 60 (like 30, 20, 15, 12, 10, etc.).
 /// The actual frame rate might be lower if there is too much to process.
 @property (nonatomic, assign)   float frameRate;
+
+/// The background color of the stage. Default: black.
+@property (nonatomic, assign)   uint color;
 
 /// A juggler that is automatically advanced once per frame.
 @property (nonatomic, readonly) SPJuggler *juggler;

@@ -3,7 +3,7 @@
 //  Sparrow
 //
 //  Created by Daniel Sperl on 03.05.09.
-//  Copyright 2009 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the Simplified BSD License.
@@ -27,7 +27,7 @@
 
 - (id)initWithRoot:(SPDisplayObjectContainer*)root
 {
-    if (self = [super init])
+    if ((self = [super init]))
     {
         mRoot = root;
         mCurrentTouches = [[NSMutableSet alloc] initWithCapacity:2];
@@ -53,6 +53,9 @@
         
         for (SPTouch *existingTouch in mCurrentTouches)
         {
+            if (existingTouch.phase == SPTouchPhaseEnded || existingTouch.phase == SPTouchPhaseCancelled)
+                continue;
+            
             if ((existingTouch.globalX == touch.previousGlobalX &&
                  existingTouch.globalY == touch.previousGlobalY) ||
                 (existingTouch.globalX == touch.globalX &&

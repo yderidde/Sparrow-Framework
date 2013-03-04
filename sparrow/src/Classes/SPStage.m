@@ -3,7 +3,7 @@
 //  Sparrow
 //
 //  Created by Daniel Sperl on 15.03.09.
-//  Copyright 2009 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the Simplified BSD License.
@@ -31,12 +31,13 @@ static NSMutableArray *stages = NULL;
 
 @synthesize width = mWidth;
 @synthesize height = mHeight;
+@synthesize color = mColor;
 @synthesize juggler = mJuggler;
 @synthesize nativeView = mNativeView;
 
 - (id)initWithWidth:(float)width height:(float)height
 {    
-    if (self = [super init])
+    if ((self = [super init]))
     {
         // Save existing stages to have access to them in "SPStage setSupportHighResolutions:".
         // We use a CFArray to avoid that 'self' is retained -> that would cause a memory leak!
@@ -74,7 +75,7 @@ static NSMutableArray *stages = NULL;
     [mTouchProcessor processTouches:touches];
 }
 
-- (SPDisplayObject*)hitTestPoint:(SPPoint*)localPoint forTouch:(BOOL)isTouch;
+- (SPDisplayObject*)hitTestPoint:(SPPoint*)localPoint forTouch:(BOOL)isTouch
 {
     if (isTouch && (!self.visible || !self.touchable)) 
         return nil;
@@ -90,6 +91,11 @@ static NSMutableArray *stages = NULL;
             target = self;
     }
     return target;
+}
+
++ (SPStage *)mainStage
+{
+    return [stages objectAtIndex:0];
 }
 
 - (float)width

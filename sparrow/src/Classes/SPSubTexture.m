@@ -3,7 +3,7 @@
 //  Sparrow
 //
 //  Created by Daniel Sperl on 27.06.09.
-//  Copyright 2009 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the Simplified BSD License.
@@ -19,7 +19,7 @@
 
 - (id)initWithRegion:(SPRectangle*)region ofTexture:(SPTexture*)texture
 {
-    if (self = [super init])
+    if ((self = [super init]))
     {
         mBaseTexture = [texture retain];
         
@@ -90,6 +90,26 @@
 - (uint)textureID
 {
     return mBaseTexture.textureID;
+}
+
+- (void)setRepeat:(BOOL)value
+{
+    mBaseTexture.repeat = value;
+}
+
+- (BOOL)repeat
+{
+    return mBaseTexture.repeat;
+}
+
+- (SPTextureFilter)filter
+{    
+    return mBaseTexture.filter;
+}
+
+- (void)setFilter:(SPTextureFilter)value
+{
+    mBaseTexture.filter = value;
 }
 
 - (BOOL)hasPremultipliedAlpha

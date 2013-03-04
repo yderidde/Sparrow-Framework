@@ -3,7 +3,7 @@
 //  Sparrow
 //
 //  Created by Daniel Sperl on 15.07.10.
-//  Copyright 2010 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the Simplified BSD License.
@@ -221,10 +221,23 @@
         float *vertexCoords = (float *)buffer;
         [quad copyVertexCoords:vertexCoords colors:NULL textureCoords:NULL];            
         
+        // if texture has a frame, adjust vertices accordingly
+        float offsetX = 0.0f, offsetY = 0.0f, scaleX = 1.0f, scaleY = 1.0f;        
+        if ([object isKindOfClass:[SPImage class]])
+        {
+            SPTexture *texture = ((SPImage *)object).texture;
+            SPRectangle *frame = texture.frame;
+            if (frame)
+            {
+                offsetX = -frame.x; scaleX = texture.width  / frame.width; 
+                offsetY = -frame.y; scaleY = texture.height / frame.height;                 
+            }
+        }
+        
         for (int i=0; i<4; ++i)
         {
-            float x = vertexCoords[2*i];
-            float y = vertexCoords[2*i+1];                    
+            float x = vertexCoords[2*i]   * scaleX + offsetX;
+            float y = vertexCoords[2*i+1] * scaleY + offsetY;
             SPPoint *vertex = [currentMatrix transformPoint:[SPPoint pointWithX:x y:y]];
             vertexCoords[2*i  ] = vertex.x;
             vertexCoords[2*i+1] = vertex.y;            

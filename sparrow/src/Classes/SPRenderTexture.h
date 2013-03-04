@@ -3,7 +3,7 @@
 //  Sparrow
 //
 //  Created by Daniel Sperl on 04.12.10.
-//  Copyright 2010 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the Simplified BSD License.
@@ -38,13 +38,18 @@ typedef void (^SPDrawingBlock)();
  
 	[renderTexture bundleDrawCalls:^
 	 {
-	     for (int i=0; i&lt;numDrawings; ++i)
+	     for (int i=0; i<numDrawings; ++i)
 	     {
 	        image.rotation = (2 * PI / numDrawings) * i;
 	        [renderTexture drawObject:image];            
 	     }             
 	 }]; 
 
+ One thing you should be aware of is that calling any of this class' drawing methods from within
+ a `render:` method of an `SPDisplayObject` may lead to problems with texture bindings. To
+ circumvent this, either move your drawing code into an enter frame event listener or call the
+ `reset` method of `SPRenderSupport` after the drawing calls. 
+ 
 ------------------------------------------------------------------------------------------------- */
 
 @interface SPRenderTexture : SPTexture 

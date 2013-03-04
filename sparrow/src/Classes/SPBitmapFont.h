@@ -3,7 +3,7 @@
 //  Sparrow
 //
 //  Created by Daniel Sperl on 12.10.09.
-//  Copyright 2009 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the Simplified BSD License.
@@ -34,6 +34,9 @@
 	    <char id="32" x="60" y="29" width="1" height="1" xoffset="0" yoffset="27" xadvance="8" />
 	    <char id="33" x="155" y="144" width="9" height="21" xoffset="0" yoffset="6" xadvance="9" />
 	  </chars>
+	  <kernings> <!-- Kerning is optional -->
+	    <kerning first="83" second="83" amount="-4"/>
+	  </kernings>
 	</font>
   
  _You don't have to use this class directly in most cases. SPTextField contains methods that
@@ -49,8 +52,9 @@
 {
   @private
     SPTexture *mFontTexture;
-    NSMutableDictionary *mChars;
     NSString *mName;
+    NSString *mPath;
+    NSMutableDictionary *mChars;    
     float mSize;
     float mLineHeight;
 }
@@ -76,7 +80,7 @@
 - (SPDisplayObject *)createDisplayObjectWithWidth:(float)width height:(float)height
                                              text:(NSString *)text fontSize:(float)size color:(uint)color 
                                            hAlign:(SPHAlign)hAlign vAlign:(SPVAlign)vAlign
-                                           border:(BOOL)border;
+                                           border:(BOOL)border kerning:(BOOL)kerning;
 
 /// ----------------
 /// @name Properties

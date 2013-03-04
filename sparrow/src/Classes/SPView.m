@@ -3,7 +3,7 @@
 //  Sparrow
 //
 //  Created by Daniel Sperl on 13.03.09.
-//  Copyright 2009 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the Simplified BSD License.
@@ -141,7 +141,7 @@
     glBindFramebufferOES(GL_FRAMEBUFFER_OES, mFramebuffer);
     glViewport(0, 0, mWidth, mHeight);
     
-    [mRenderSupport bindTexture:nil]; // old textures could have become invalid
+    [mRenderSupport reset];
     [mStage render:mRenderSupport];
     
     glBindRenderbufferOES(GL_RENDERBUFFER_OES, mRenderbuffer);

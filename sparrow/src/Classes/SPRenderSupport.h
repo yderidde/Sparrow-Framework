@@ -3,7 +3,7 @@
 //  Sparrow
 //
 //  Created by Daniel Sperl on 28.09.09.
-//  Copyright 2009 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the Simplified BSD License.
@@ -42,6 +42,9 @@
 
 /// Converts color and alpha into the format needed by OpenGL. Premultiplies alpha depending on state.
 - (uint)convertColor:(uint)color alpha:(float)alpha;
+
+/// Resets texture binding and alpha settings.
+- (void)reset;
 
 /// Converts color and alpha into the format needed by OpenGL, optionally premultiplying alpha values.
 + (uint)convertColor:(uint)color alpha:(float)alpha premultiplyAlpha:(BOOL)pma;

@@ -3,11 +3,11 @@
 //  Sparrow
 //
 //  Created by Daniel Sperl on 16.03.09.
-//  Copyright 2009 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 
 #import "Game.h"
-#import "AtlasScene.h"
+#import "TextureScene.h"
 #import "TouchScene.h"
 #import "TextScene.h"
 #import "AnimationScene.h"
@@ -32,7 +32,7 @@
 
 - (id)initWithWidth:(float)width height:(float)height
 {
-    if (self = [super initWithWidth:width height:height])
+    if ((self = [super initWithWidth:width height:height]))
     {
         mNumButtons = 0;        
                 
@@ -52,10 +52,10 @@
         
         // add scene buttons
         
-        SPButton *atlasButton = [SPButton buttonWithUpState:sceneButtonTexture text:@"Texture Atlas"];
-        [atlasButton addEventListener:@selector(onAtlasButtonTriggered:) atObject:self 
-                              forType:SP_EVENT_TYPE_TRIGGERED];
-        [self addSceneButton:atlasButton];
+        SPButton *textureButton = [SPButton buttonWithUpState:sceneButtonTexture text:@"Textures"];
+        [textureButton addEventListener:@selector(onTextureButtonTriggered:) atObject:self 
+                                forType:SP_EVENT_TYPE_TRIGGERED];
+        [self addSceneButton:textureButton];
         
         SPButton *touchButton = [SPButton buttonWithUpState:sceneButtonTexture text:@"Multitouch"];
         [touchButton addEventListener:@selector(onTouchButtonTriggered:) atObject:self
@@ -96,21 +96,6 @@
         [renderTextureButton addEventListener:@selector(onRenderTextureButtonTriggered:) atObject:self
                                   forType:SP_EVENT_TYPE_TRIGGERED];
         [self addSceneButton:renderTextureButton];
-        
-        // add button that allows switching between resolutions (iPhone 4)
-        
-        UIScreen *screen = [UIScreen mainScreen];
-        if ([screen respondsToSelector:@selector(scale)] && [screen scale] != 1.0f &&
-            [UIImage instancesRespondToSelector:@selector(scale)])
-        {
-            SPTexture *screenButtonTexture = [SPTexture textureWithContentsOfFile:@"resolution.png"];
-            SPButton *screenButton = [SPButton buttonWithUpState:screenButtonTexture];
-            screenButton.x = self.width/2 - screenButton.width/2;
-            screenButton.y = self.height - screenButton.height - 5;
-            [screenButton addEventListener:@selector(onScreenButtonTriggered:)
-                                      atObject:self forType:SP_EVENT_TYPE_TRIGGERED];
-            [self addChild:screenButton];
-        }
         
         // add back-button (becomes visible when a scene is entered)
         
@@ -154,9 +139,9 @@
     mMainMenu.visible = YES;    
 }
 
-- (void)onAtlasButtonTriggered:(SPEvent *)event
+- (void)onTextureButtonTriggered:(SPEvent *)event
 {
-    SPSprite *scene = [[AtlasScene alloc] init];
+    SPSprite *scene = [[TextureScene alloc] init];
     [self showScene:scene];
     [scene release];    
 }
@@ -215,11 +200,6 @@
     SPSprite *scene = [[RenderTextureScene alloc] init];
     [self showScene:scene];
     [scene release];    
-}
-
-- (void)onScreenButtonTriggered:(SPEvent *)event
-{
-    [SPStage setSupportHighResolutions:![SPStage supportHighResolutions]];
 }
 
 #pragma mark -

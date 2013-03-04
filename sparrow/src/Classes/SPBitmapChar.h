@@ -3,7 +3,7 @@
 //  Sparrow
 //
 //  Created by Daniel Sperl on 12.10.09.
-//  Copyright 2009 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the Simplified BSD License.
@@ -21,13 +21,15 @@
  
 ------------------------------------------------------------------------------------------------- */ 
 
-@interface SPBitmapChar : SPImage <NSCopying> 
+@interface SPBitmapChar : NSObject
 {
   @private
+    SPTexture *mTexture;
     int mCharID;
     float mXOffset;
     float mYOffset;
-    float mXAdvance;    
+    float mXAdvance;
+    NSMutableDictionary *mKernings;
 }
 
 /// ------------------
@@ -37,6 +39,19 @@
 /// Initializes a char with a texture and his properties.
 - (id)initWithID:(int)charID texture:(SPTexture *)texture
          xOffset:(float)xOffset yOffset:(float)yOffset xAdvance:(float)xAdvance;
+
+/// -------------
+/// @name Methods
+/// -------------
+
+/// Adds kerning information relative to a specific other character ID.
+- (void)addKerning:(float)amount toChar:(int)charID;
+
+/// Retrieve kerning information relative to the given character ID.
+- (float)kerningToChar:(int)charID;
+
+/// Creates an image of the char
+- (SPImage *)createImage;
 
 /// ----------------
 /// @name Properties
@@ -53,5 +68,8 @@
 
 /// The number of pixels the cursor has to be moved to the right for the next char.
 @property (nonatomic, readonly) float xAdvance;
+
+/// The texture of the character.
+@property (nonatomic, retain) SPTexture *texture;
 
 @end

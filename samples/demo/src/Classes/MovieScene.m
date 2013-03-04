@@ -3,7 +3,7 @@
 //  Demo
 //
 //  Created by Daniel Sperl on 14.05.10.
-//  Copyright 2010 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 
 #import "MovieScene.h"
@@ -12,7 +12,7 @@
 
 - (id)init
 {
-    if (self = [super init]) 
+    if ((self = [super init])) 
     {
         NSString *description = @"[Animation provided by angryanimator.com]";        
         SPTextField *infoText = [SPTextField textFieldWithWidth:300 height:30 

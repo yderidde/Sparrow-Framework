@@ -3,7 +3,7 @@
 //  Sparrow
 //
 //  Created by Daniel Sperl on 14.11.09.
-//  Copyright 2009 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the Simplified BSD License.
@@ -31,8 +31,8 @@
  is disrupted (e.g. by a phone call), and will continue playback where they stopped.
  
  Behind the scenes, the SPSound class will choose the appropriate technology for playback: 
- uncompressed files will use OpenAL, compressed sound will be handled by Apple’s AVAudioPlayer. 
- You don’t have to care. 
+ uncompressed files will use OpenAL, compressed sound will be handled by Apple's AVAudioPlayer. 
+ You don't have to care. 
  
 ------------------------------------------------------------------------------------------------- */
 

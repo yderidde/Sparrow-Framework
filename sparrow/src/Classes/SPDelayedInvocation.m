@@ -3,7 +3,7 @@
 //  Sparrow
 //
 //  Created by Daniel Sperl on 11.07.09.
-//  Copyright 2009 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the Simplified BSD License.
@@ -26,7 +26,7 @@
         return nil;
     }    
     
-    if (self = [super init])
+    if ((self = [super init]))
     {
         mTotalTime = MAX(0.0001, time); // zero is not allowed
         mCurrentTime = 0;

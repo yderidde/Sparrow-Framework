@@ -3,7 +3,7 @@
 //  Sparrow
 //
 //  Created by Daniel Sperl on 19.06.09.
-//  Copyright 2009 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the Simplified BSD License.
@@ -18,7 +18,11 @@
 #import "SPNSExtensions.h"
 #import "SPStage.h"
 
-// --- PVRTC structs & enums -----------------------------------------------------------------------
+#import <zlib.h>
+
+// --- PVR structs & enums -------------------------------------------------------------------------
+
+#define PVRTEX_IDENTIFIER 0x21525650 // = the characters 'P', 'V', 'R'
 
 typedef struct
 {
@@ -55,13 +59,16 @@ enum PVRPixelType
 
 @interface SPTexture ()
 
-- (id)initWithContentsOfPvrFile:(NSString *)path;
+- (id)initWithContentsOfPvrFile:(NSString *)path gzCompressed:(BOOL)gzCompressed;
++ (NSData *)decompressPvrFile:(NSString *)path; // uncompress gzip-compressed PVR file
 
 @end
 
 // --- class implementation ------------------------------------------------------------------------
 
 @implementation SPTexture
+
+@synthesize frame = mFrame;
 
 - (id)init
 {    
@@ -79,19 +86,18 @@ enum PVRPixelType
 - (id)initWithContentsOfFile:(NSString *)path
 {
     float contentScaleFactor = [SPStage contentScaleFactor];
+    NSString *fullPath = [SPUtils absolutePathToFile:path withScaleFactor:contentScaleFactor];
     
-    NSString *fullPath = [path isAbsolutePath] ? 
-        path : [[NSBundle mainBundle] pathForResource:path withScaleFactor:contentScaleFactor];
-
-    if (![[NSFileManager defaultManager] fileExistsAtPath:fullPath])
+    if (!fullPath)
     {
         [self release];
         [NSException raise:SP_EXC_FILE_NOT_FOUND format:@"file '%@' not found", path];
     }
     
-    NSString *imgType = [[path pathExtension] lowercaseString];
-    if ([imgType rangeOfString:@"pvr"].location == 0)
-        return [self initWithContentsOfPvrFile:fullPath];            
+    if ([[path lowercaseString] hasSuffix:@".pvr"])
+        return [self initWithContentsOfPvrFile:fullPath gzCompressed:NO];
+    else if ([[path lowercaseString] hasSuffix:@".pvr.gz"])
+        return [self initWithContentsOfPvrFile:fullPath gzCompressed:YES];
     else
         return [self initWithContentsOfImage:[UIImage imageWithContentsOfFile:fullPath]];        
 }
@@ -182,11 +188,15 @@ enum PVRPixelType
             }];
 }
 
-- (id)initWithContentsOfPvrFile:(NSString*)path
+- (id)initWithContentsOfPvrFile:(NSString *)path gzCompressed:(BOOL)gzCompressed
 {
     [self release]; // class factory - we'll return a subclass!
+    
+    SP_CREATE_POOL(pool);
 
-    NSData *fileData = [[NSData alloc] initWithContentsOfFile:path];
+    NSData *fileData = gzCompressed ? [SPTexture decompressPvrFile:path] :
+                                      [NSData dataWithContentsOfFile:path];
+
     PVRTextureHeader *header = (PVRTextureHeader *)[fileData bytes];    
     bool hasAlpha = header->alphaBitMask ? YES : NO;
     
@@ -207,7 +217,10 @@ enum PVRPixelType
             break;
         case OGL_RGBA_4444:
             properties.format = SPTextureFormat4444;
-            break;            
+            break;
+        case OGL_RGBA_8888:
+            properties.format = SPTextureFormatRGBA;
+            break;
         case OGL_PVRTC2:
             properties.format = hasAlpha ? SPTextureFormatPvrtcRGBA2 : SPTextureFormatPvrtcRGB2;
             break;
@@ -215,19 +228,18 @@ enum PVRPixelType
             properties.format = hasAlpha ? SPTextureFormatPvrtcRGBA4 : SPTextureFormatPvrtcRGB4;
             break;
         default: 
-            [fileData release];
-            [NSException raise:SP_EXC_INVALID_OPERATION format:@"Unsupported PRV image format"];
+            [NSException raise:SP_EXC_FILE_INVALID format:@"Unsupported PVR image format"];
             return nil;
     }
-    
-    void *imageData = (unsigned char *)header + header->headerSize;
 
+    void *imageData = (unsigned char *)header + header->headerSize;
     SPGLTexture *glTexture = [[SPGLTexture alloc] initWithData:imageData properties:properties];
-    [fileData release];
     
-    NSString *baseFilename = [[path lastPathComponent] stringByDeletingPathExtension];
+    NSString *baseFilename = [[path lastPathComponent] stringByDeletingFullPathExtension];
     if ([baseFilename rangeOfString:@"@2x"].location == baseFilename.length - 3)
         glTexture.scale = 2.0f;
+    
+    SP_RELEASE_POOL(pool);
     
     return glTexture;
 }
@@ -244,6 +256,52 @@ enum PVRPixelType
     else
     {
         return [[SPSubTexture alloc] initWithRegion:region ofTexture:texture];
+    }
+}
+
+- (void)dealloc
+{
+    [mFrame release];
+    [super dealloc];
+}
+
++ (NSData *)decompressPvrFile:(NSString *)path
+{ 
+    gzFile file = gzopen([path UTF8String], "rb");
+    if (!file) return nil;
+    
+    PVRTextureHeader header;
+    int headerSize = sizeof(header);
+    
+    if (gzread(file, &header, headerSize) != headerSize)
+    {
+        gzclose(file);
+        [NSException raise:SP_EXC_FILE_INVALID format:@"Failed to read PVR header"];
+    }
+    
+    if (header.pvr != PVRTEX_IDENTIFIER)
+    {
+        gzclose(file);
+        [NSException raise:SP_EXC_FILE_INVALID format:@"File does not contain PVR data"];
+    }
+    
+    void *buffer = malloc(headerSize + header.textureDataSize);
+    
+    // copy header
+    memcpy(buffer, &header, headerSize);
+    
+    // uncompress rest of file
+    if (gzread(file, buffer + headerSize, header.textureDataSize) != header.textureDataSize)
+    {
+        free(buffer);
+        gzclose(file);
+        [NSException raise:SP_EXC_FILE_INVALID format:@"PVR data invalid"];
+        return nil;
+    }
+    else
+    {
+        gzclose(file); // (buffer will be released by NSData)
+        return [NSData dataWithBytesNoCopy:buffer length:headerSize + header.textureDataSize];
     }
 }
 
@@ -289,6 +347,28 @@ enum PVRPixelType
 {
     [NSException raise:SP_EXC_ABSTRACT_METHOD format:@"Override this method in subclasses."];
     return 0;    
+}
+
+- (void)setRepeat:(BOOL)value
+{
+    [NSException raise:SP_EXC_ABSTRACT_METHOD format:@"Override this method in subclasses."];    
+}
+
+- (BOOL)repeat
+{
+    [NSException raise:SP_EXC_ABSTRACT_METHOD format:@"Override this method in subclasses."];
+    return NO;
+}
+
+- (SPTextureFilter)filter
+{
+    [NSException raise:SP_EXC_ABSTRACT_METHOD format:@"Override this method in subclasses."];
+    return SPTextureFilterBilinear;
+}
+
+- (void)setFilter:(SPTextureFilter)filter
+{
+    [NSException raise:SP_EXC_ABSTRACT_METHOD format:@"Override this method in subclasses."];
 }
 
 - (BOOL)hasPremultipliedAlpha

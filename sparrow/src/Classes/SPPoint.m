@@ -3,7 +3,7 @@
 //  Sparrow
 //
 //  Created by Daniel Sperl on 23.03.09.
-//  Copyright 2009 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the Simplified BSD License.
@@ -25,7 +25,7 @@
 // designated initializer
 - (id)initWithX:(float)x y:(float)y
 {
-    if (self = [super init])
+    if ((self = [super init]))
     {
         mX = x;
         mY = y;        
@@ -126,7 +126,7 @@
 
 #pragma mark NSCopying
 
-- (id)copyWithZone:(NSZone*)zone;
+- (id)copyWithZone:(NSZone*)zone
 {
     return [[[self class] allocWithZone:zone] initWithX:mX y:mY];
 }

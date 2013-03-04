@@ -3,7 +3,7 @@
 //  Sparrow
 //
 //  Created by Daniel Sperl on 21.03.09.
-//  Copyright 2009 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the Simplified BSD License.
@@ -13,8 +13,8 @@
 #import "SPPoolObject.h"
 #import "SPPoint.h"
 
-/** The SPRectangle class describes a rectangle by its top-left corner point (x, y) and by 
-    its width and height. */
+/// The SPRectangle class describes a rectangle by its top-left corner point (x, y) and by 
+/// its width and height.
 
 @interface SPRectangle : SPPoolObject <NSCopying>
 {

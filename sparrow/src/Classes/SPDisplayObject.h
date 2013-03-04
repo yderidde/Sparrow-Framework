@@ -3,7 +3,7 @@
 //  Sparrow
 //
 //  Created by Daniel Sperl on 15.03.09.
-//  Copyright 2009 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the Simplified BSD License.
@@ -80,6 +80,8 @@
   @private
     float mX;
     float mY;
+    float mPivotX;
+    float mPivotY;
     float mScaleX;
     float mScaleY;
     float mRotationZ;
@@ -121,11 +123,17 @@
 /// @name Properties
 /// ----------------
 
-/// The x coordinates of the object relative to the local coordinates of the parent.
+/// The x coordinate of the object relative to the local coordinates of the parent.
 @property (nonatomic, assign) float x;
 
-/// The y coordinates of the object relative to the local coordinates of the parent.
+/// The y coordinate of the object relative to the local coordinates of the parent.
 @property (nonatomic, assign) float y;
+
+/// The x coordinate of the object's origin in its own coordinate space (default: 0).
+@property (nonatomic, assign) float pivotX;
+
+/// The y coordinate of the object's origin in its own coordinate space (default: 0).
+@property (nonatomic, assign) float pivotY;
 
 /// The horizontal scale factor. "1" means no scale, negative values flip the object.
 @property (nonatomic, assign) float scaleX;

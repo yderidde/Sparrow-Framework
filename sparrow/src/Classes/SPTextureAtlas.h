@@ -3,7 +3,7 @@
 //  Sparrow
 //
 //  Created by Daniel Sperl on 27.06.09.
-//  Copyright 2009 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the Simplified BSD License.
@@ -17,13 +17,13 @@
 /** ------------------------------------------------------------------------------------------------
 
  A texture atlas is a collection of many smaller textures in one big image. The class
- `SPTextureAtlas` is used to access textures from such an atlas.
+ SPTextureAtlas is used to access textures from such an atlas.
  
  Using a texture atlas for your textures has two main advantages:
  
- * In OpenGL, there’s always one texture active at a given moment. Whenever you change the active 
+ - In OpenGL, there's always one texture active at a given moment. Whenever you change the active 
    texture, a "texture-switch" has to be executed, and that switch takes time.
- * To use a texture in OpenGL, its height and width must each be a power of 2. Sparrow hides this 
+ - To use a texture in OpenGL, its height and width must each be a power of 2. Sparrow hides this 
    limitation from you, but you will nevertheless use more memory if you do not follow that rule.
  
  By using a texture atlas, you avoid both texture switches and the power-of-two limitation. All 
@@ -38,14 +38,21 @@
  
  The atlas generator can be found in the 'utils' directory in the Sparrow package. A README file
  shows you how to install and use it. If you want to have more control over your atlas, you will
- find great alternative tools on the Internet (e.g. "Texture Packer").
+ find great alternative tools on the Internet, like [Texture Packer](http://www.texturepacker.com).
  
  Whatever tool you use, Sparrow expects the following file format:
 
 	<TextureAtlas imagePath='atlas.png'>
-	  <SubTexture name='texture_1' x='0'  y='0' height='50' width='50'/>
-	  <SubTexture name='texture_2' x='50' y='0' height='30' width='20'/> 
+	  <SubTexture name='texture_1' x='0'  y='0' width='50' height='50'/>
+	  <SubTexture name='texture_2' x='50' y='0' width='20' height='30'/> 
 	</TextureAtlas>
+ 
+ If your images have transparent areas at their edges, you can make use of the `frame` property
+ of `SPTexture`. Trim the texture by removing the transparent edges and specify the original 
+ texture size like this:
+
+	<SubTexture name='trimmed' x='0' y='0' height='10' width='10'
+	            frameX='-10' frameY='-10' frameWidth='30' frameHeight='30'/>
  
 ------------------------------------------------------------------------------------------------- */
 
@@ -57,7 +64,9 @@
 {
   @private
     SPTexture *mAtlasTexture;
+    NSString *mPath;
     NSMutableDictionary *mTextureRegions;
+    NSMutableDictionary *mTextureFrames;
 }
 
 /// ------------------
@@ -89,6 +98,9 @@
 
 /// Creates a region for a subtexture and gives it a name.
 - (void)addRegion:(SPRectangle *)region withName:(NSString *)name;
+
+/// Creates a region for a subtexture with a frame and gives it a name.
+- (void)addRegion:(SPRectangle *)region withName:(NSString *)name frame:(SPRectangle *)frame;
 
 /// Removes a region with a certain name.
 - (void)removeRegion:(NSString *)name;

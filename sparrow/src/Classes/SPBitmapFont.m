@@ -3,7 +3,7 @@
 //  Sparrow
 //
 //  Created by Daniel Sperl on 12.10.09.
-//  Copyright 2009 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the Simplified BSD License.
@@ -19,7 +19,7 @@
 #import "SPImage.h"
 #import "SPTextField.h"
 #import "SPStage.h"
-#import "SPNSExtensions.h"
+#import "SPUtils.h"
 #import "SPCompiledSprite.h"
 
 #define CHAR_SPACE   32
@@ -44,11 +44,12 @@
 
 - (id)initWithContentsOfFile:(NSString *)path texture:(SPTexture *)texture
 {
-    if (self = [super init])
+    if ((self = [super init]))
     {
         mName = [[NSString alloc] initWithString:@"unknown"];
         mLineHeight = mSize = SP_DEFAULT_FONT_SIZE;
         mFontTexture = [texture retain];
+        mChars = [[NSMutableDictionary alloc] init];
         
         [self parseFontXml:path];
     }
@@ -68,17 +69,18 @@
 
 - (void)parseFontXml:(NSString*)path
 {
-    SP_CREATE_POOL(pool);
-    
-    [mChars release];    
-    mChars = [[NSMutableDictionary alloc] init];
-    
     if (!path) return;
     
-    float scale = [SPStage contentScaleFactor];
-    NSString *fullPath = [[NSBundle mainBundle] pathForResource:path withScaleFactor:scale];
-    NSURL *xmlUrl = [NSURL fileURLWithPath:fullPath];
-    NSXMLParser *xmlParser = [[NSXMLParser alloc] initWithContentsOfURL:xmlUrl];
+    float scaleFactor = [SPStage contentScaleFactor];
+    mPath = [[SPUtils absolutePathToFile:path withScaleFactor:scaleFactor] retain];
+    if (!mPath) [NSException raise:SP_EXC_FILE_NOT_FOUND format:@"file not found: %@", path];
+    
+    SP_CREATE_POOL(pool);
+    
+    NSData *xmlData = [[NSData alloc] initWithContentsOfFile:mPath];
+    NSXMLParser *xmlParser = [[NSXMLParser alloc] initWithData:xmlData];
+    [xmlData release];
+    
     xmlParser.delegate = self;
     BOOL success = [xmlParser parse];
     
@@ -122,6 +124,13 @@
         [mChars setObject:bitmapChar forKey:[NSNumber numberWithInt:charID]];
         [bitmapChar release];
     }
+	else if ([elementName isEqualToString:@"kerning"])
+	{
+		int first  = [[attributeDict valueForKey:@"first"] intValue];
+        int second = [[attributeDict valueForKey:@"second"] intValue];
+        float amount = [[attributeDict valueForKey:@"amount"] floatValue] / mFontTexture.scale;
+		[[self charByID:second] addKerning:amount toChar:first];
+	}
     else if ([elementName isEqualToString:@"info"])
     {
         [mName release];
@@ -140,25 +149,26 @@
         if (!mFontTexture)
         {
             NSString *filename = [attributeDict valueForKey:@"file"];
-            mFontTexture = [[SPTexture alloc] initWithContentsOfFile:filename]; 
-            
-            // update sizes, now that we know the scale setting
-            mSize /= mFontTexture.scale;
-            mLineHeight /= mFontTexture.scale;            
+            NSString *folder = [mPath stringByDeletingLastPathComponent];
+            NSString *absolutePath = [folder stringByAppendingPathComponent:filename];
+            mFontTexture = [[SPTexture alloc] initWithContentsOfFile:absolutePath];             
         }
+        
+        // update sizes, now that we know the scale setting
+        mSize /= mFontTexture.scale;
+        mLineHeight /= mFontTexture.scale;
     }
 }
 
 - (SPBitmapChar *)charByID:(int)charID
 {
-    SPBitmapChar *bitmapChar = (SPBitmapChar *)[mChars objectForKey:[NSNumber numberWithInt:charID]];
-    return [[bitmapChar copy] autorelease];
+    return (SPBitmapChar *)[mChars objectForKey:[NSNumber numberWithInt:charID]];
 }
 
 - (SPDisplayObject *)createDisplayObjectWithWidth:(float)width height:(float)height
                                              text:(NSString *)text fontSize:(float)size color:(uint)color 
                                            hAlign:(SPHAlign)hAlign vAlign:(SPVAlign)vAlign
-                                           border:(BOOL)border
+                                           border:(BOOL)border kerning:(BOOL)kerning
 {    
     SPSprite *lineContainer = [SPSprite sprite];
     
@@ -169,6 +179,7 @@
     float containerHeight = height / scale;    
     
     int lastWhiteSpace = -1;
+    int lastCharID = -1;
     float currentX = 0;
     SPSprite *currentLine = [SPSprite sprite];
     
@@ -188,13 +199,19 @@
             
             SPBitmapChar *bitmapChar = [self charByID:charID];
             if (!bitmapChar) bitmapChar = [self charByID:CHAR_SPACE];
+            SPImage *charImage = [bitmapChar createImage];
             
-            bitmapChar.x = currentX + bitmapChar.xOffset;
-            bitmapChar.y = bitmapChar.yOffset;
-            bitmapChar.color = color;
-            [currentLine addChild:bitmapChar];
+            if (kerning) 
+                currentX += [bitmapChar kerningToChar:lastCharID];
+            
+            charImage.x = currentX + bitmapChar.xOffset;
+            charImage.y = bitmapChar.yOffset;
+
+            charImage.color = color;
+            [currentLine addChild:charImage];
             
             currentX += bitmapChar.xAdvance;
+			lastCharID = charID;
             
             if (currentX > containerWidth)        
             {
@@ -212,7 +229,7 @@
                 currentX = lastChar.x + lastChar.width;
                 
                 i -= numCharsToRemove;
-                lineFull = YES;                
+                lineFull = YES;
             }
         }
         
@@ -225,8 +242,9 @@
             {
                 currentLine = [SPSprite sprite];
                 currentLine.y = nextLineY;            
-                lastWhiteSpace = -1;
                 currentX = 0;
+                lastWhiteSpace = -1;
+                lastCharID = -1;
             }
             else
             {
@@ -282,6 +300,7 @@
 {
     [mFontTexture release];
     [mChars release];
+    [mPath release];
     [mName release];
     [super dealloc];
 }

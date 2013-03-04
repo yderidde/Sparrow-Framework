@@ -3,7 +3,7 @@
 //  Sparrow
 //
 //  Created by Daniel Sperl on 09.05.09.
-//  Copyright 2009 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the Simplified BSD License.
@@ -27,7 +27,7 @@ typedef float (*FnPtrTransition) (id, SEL, float);
 
 - (id)initWithTarget:(id)target time:(double)time transition:(NSString*)transition
 {
-    if (self = [super init])
+    if ((self = [super init]))
     {
         mTarget = [target retain];
         mTotalTime = MAX(0.0001, time); // zero is not allowed
@@ -35,7 +35,7 @@ typedef float (*FnPtrTransition) (id, SEL, float);
         mDelay = 0;
         mProperties = [[NSMutableArray alloc] init];        
         mLoop = SPLoopTypeNone;
-        mInvertTransition = NO;
+        mLoopCount = 0;
         
         // create function pointer for transition
         NSString *transMethod = [transition stringByAppendingString:TRANS_SUFFIX];
@@ -63,16 +63,37 @@ typedef float (*FnPtrTransition) (id, SEL, float);
     [tweenedProp release];
 }
 
+- (void)moveToX:(float)x y:(float)y
+{
+    [self animateProperty:@"x" targetValue:x];
+    [self animateProperty:@"y" targetValue:y];
+}
+
+- (void)scaleTo:(float)scale
+{
+    [self animateProperty:@"scaleX" targetValue:scale];
+    [self animateProperty:@"scaleY" targetValue:scale];
+}
+
 - (void)advanceTime:(double)seconds
 {
-    if (seconds == 0.0) return; // nothing to do
+    if (seconds == 0.0 || (mLoop == SPLoopTypeNone && mCurrentTime == mTotalTime))
+        return; // nothing to do
     
-    double previousTime = mCurrentTime;    
+    if (mCurrentTime == mTotalTime)
+    {
+        mCurrentTime = 0.0;    
+        mLoopCount++;
+    }
+    
+    double previousTime = mCurrentTime;
+    double restTime = mTotalTime - mCurrentTime;
+    double carryOverTime = seconds > restTime ? seconds - restTime : 0.0;    
     mCurrentTime = MIN(mTotalTime, mCurrentTime + seconds);
 
-    if (mCurrentTime < 0 || previousTime >= mTotalTime) return;
+    if (mCurrentTime <= 0) return; // the delay is not over yet
 
-    if (previousTime <= 0 && mCurrentTime >= 0 &&
+    if (previousTime <= 0 && mCurrentTime > 0 && mLoopCount == 0 &&
         [self hasEventListenerForType:SP_EVENT_TYPE_TWEEN_STARTED])
     {
         SPEvent *event = [[SPEvent alloc] initWithType:SP_EVENT_TYPE_TWEEN_STARTED];        
@@ -83,10 +104,11 @@ typedef float (*FnPtrTransition) (id, SEL, float);
     float ratio = mCurrentTime / mTotalTime;
     FnPtrTransition transFunc = (FnPtrTransition) mTransitionFunc;
     Class transClass = [SPTransitions class];
+    BOOL mInvertTransition = (mLoop == SPLoopTypeReverse && mLoopCount % 2 == 1);
     
     for (SPTweenedProperty *prop in mProperties)
     {        
-        if (previousTime <= 0 && mCurrentTime >= 0) 
+        if (previousTime <= 0 && mCurrentTime > 0) 
             prop.startValue = prop.currentValue;
 
         float transitionValue = mInvertTransition ? 
@@ -103,14 +125,12 @@ typedef float (*FnPtrTransition) (id, SEL, float);
         [event release];
     }
     
-    if (previousTime < mTotalTime && mCurrentTime >= mTotalTime)
+    if (previousTime < mTotalTime && mCurrentTime == mTotalTime)
     {
 		if (mLoop == SPLoopTypeRepeat)
 		{
 			for (SPTweenedProperty *prop in mProperties)
 				prop.currentValue = prop.startValue;
-
-			mCurrentTime = 0;
 		}
 		else if (mLoop == SPLoopTypeReverse)
 		{
@@ -120,16 +140,17 @@ typedef float (*FnPtrTransition) (id, SEL, float);
                 prop.endValue = prop.startValue;
                 mInvertTransition = !mInvertTransition;
             }
-
-			mCurrentTime = 0;
-		}        
-        else if ([self hasEventListenerForType:SP_EVENT_TYPE_TWEEN_COMPLETED])
+		}
+        
+        if ([self hasEventListenerForType:SP_EVENT_TYPE_TWEEN_COMPLETED])
         {
             SPEvent *event = [[SPEvent alloc] initWithType:SP_EVENT_TYPE_TWEEN_COMPLETED];
             [self dispatchEvent:event];
             [event release];
         }
     }
+    
+    [self advanceTime:carryOverTime];
 }
 
 - (NSString*)transition

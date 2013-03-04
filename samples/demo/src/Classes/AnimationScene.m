@@ -3,7 +3,7 @@
 //  Demo
 //
 //  Created by Daniel Sperl on 23.08.09.
-//  Copyright 2009 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 
 #import "AnimationScene.h"
@@ -20,7 +20,7 @@
 
 - (id)init
 {
-    if (self = [super init])
+    if ((self = [super init]))
     {
         // define some sample transitions for the animation demo. There are more available!
         mTransitions = [[NSMutableArray alloc] initWithObjects:

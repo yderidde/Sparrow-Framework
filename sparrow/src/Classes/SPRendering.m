@@ -3,7 +3,7 @@
 //  Sparrow
 //
 //  Created by Daniel Sperl on 16.03.09.
-//  Copyright 2009 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the Simplified BSD License.
@@ -24,9 +24,9 @@
 
 @implementation SPStage (Rendering)
 
-- (void)render:(SPRenderSupport *)support;
+- (void)render:(SPRenderSupport *)support
 {
-    [SPRenderSupport clearWithColor:0x0 alpha:1.0f];
+    [SPRenderSupport clearWithColor:mColor alpha:1.0f];
     [SPRenderSupport setupOrthographicRenderingWithLeft:0 right:mWidth bottom:mHeight top:0];    
     
     [super render:support];
@@ -40,7 +40,7 @@
 
 @implementation SPDisplayObjectContainer (Rendering)
 
-- (void)render:(SPRenderSupport *)support;
+- (void)render:(SPRenderSupport *)support
 {    
     float alpha = self.alpha;
     
@@ -92,7 +92,7 @@
 
 @implementation SPImage (Rendering)
 
-- (void)render:(SPRenderSupport *)support;
+- (void)render:(SPRenderSupport *)support
 {    
     static float texCoords[8];     
     static uint colors[4];
@@ -103,6 +103,13 @@
     
     for (int i=0; i<4; ++i)
         colors[i] = [support convertColor:mVertexColors[i] alpha:alpha];    
+    
+    SPRectangle *frame = mTexture.frame;
+    if (frame)
+    {               
+        glTranslatef(-frame.x, -frame.y, 0.0f);
+        glScalef(mTexture.width / frame.width, mTexture.height / frame.height, 1.0f);        
+    }
     
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);    
     glEnableClientState(GL_VERTEX_ARRAY);

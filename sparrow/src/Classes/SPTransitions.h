@@ -3,7 +3,7 @@
 //  Sparrow
 //
 //  Created by Daniel Sperl on 11.05.09.
-//  Copyright 2009 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the Simplified BSD License.
@@ -39,9 +39,9 @@
  The SPTransitions class contains static methods that define easing functions. Those functions
  will be used by SPTween to execute animations.
  
- Find a visual representation of the transitions at this URL: <br/>  
- http://www.sparrow-framework.org/wp-content/uploads/2010/06/transitions.png
-  
+ Find a visual representation of the transitions at this 
+ [link](http://www.sparrow-framework.org/wp-content/uploads/2010/06/transitions.png).
+
  You can define your own transitions by extending this class. The name of the method you declare 
  acts as the key that is used to identify the transition when you create the tween.
  

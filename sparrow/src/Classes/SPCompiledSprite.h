@@ -3,7 +3,7 @@
 //  Sparrow
 //
 //  Created by Daniel Sperl on 15.07.10.
-//  Copyright 2010 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the Simplified BSD License.
@@ -17,18 +17,18 @@
  An SPCompiledSprite allows you to optimize the rendering of static parts of your display list.
  
  It analyzes the tree of children attached to it and optimizes the OpenGL rendering calls in a 
- way that makes rendering them extremely fast. The downside is that you will no longe see any 
- changes in the properties of the childs (position, rotation, alpha, etc.). To update the object
+ way that makes rendering them extremely fast. The downside is that you will no longer see any 
+ changes in the properties of the children (position, rotation, alpha, etc.). To update the object
  after changes have happened, simply call `compile` again.
  
  With the exception of this peculiarity, a compiled sprite can be use just like any other sprite.
+
+    SPCompiledSprite *sprite = [SPCompiledSprite sprite];
+    [sprite addChild:object1];
+    [sprite addChild:object2];
+    
+    [sprite compile]; // this call is optional, it will be done on rendering automatically.
  
-	SPCompiledSprite *sprite = [SPCompiledSprite sprite];
-	[sprite addChild:object1];
-	[sprite addChild:object2];
-	
-	[sprite compile]; // this call is optional, it will be done on rendering automatically.
-  
 ------------------------------------------------------------------------------------------------- */
 
 @interface SPCompiledSprite : SPSprite

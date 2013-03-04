@@ -2,9 +2,6 @@
 //  Game.m
 //  AppScaffold
 //
-//  Created by Daniel Sperl on 14.01.10.
-//  Copyright 2010 Incognitek. All rights reserved.
-//
 
 #import "Game.h" 
 
@@ -12,7 +9,7 @@
 
 - (id)initWithWidth:(float)width height:(float)height
 {
-    if (self = [super initWithWidth:width height:height])
+    if ((self = [super initWithWidth:width height:height]))
     {
         // this is where the code of your game will start. 
         // in this sample, we add just a simple quad to see if it works.

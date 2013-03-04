@@ -3,7 +3,7 @@
 //  Sparrow
 //
 //  Created by Daniel Sperl on 04.12.10.
-//  Copyright 2010 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the Simplified BSD License.
@@ -27,7 +27,7 @@
 
 - (id)initWithWidth:(float)width height:(float)height fillColor:(uint)argb scale:(float)scale
 {
-    if (self = [super init])
+    if ((self = [super init]))
     {
         int legalWidth  = [SPUtils nextPowerOfTwo:width  * scale];
         int legalHeight = [SPUtils nextPowerOfTwo:height * scale];
@@ -126,7 +126,7 @@
                                                      bottom:0 top:mTexture.height];
         
         // reset texture binding
-        [mRenderSupport bindTexture:nil];
+        [mRenderSupport reset];
     }    
    
     block();
@@ -180,6 +180,26 @@
 - (float)height
 {
     return mTexture.height;
+}
+
+- (void)setRepeat:(BOOL)value
+{
+    mTexture.repeat = value;
+}
+
+- (BOOL)repeat
+{
+    return mTexture.repeat;
+}
+
+- (SPTextureFilter)filter
+{
+    return mTexture.filter;
+}
+
+- (void)setFilter:(SPTextureFilter)value
+{
+    mTexture.filter = value;
 }
 
 - (uint)textureID

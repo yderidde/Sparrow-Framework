@@ -3,7 +3,7 @@
 //  Demo
 //
 //  Created by Daniel Sperl on 26.07.09.
-//  Copyright 2009 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 
 #import "TextScene.h"
@@ -18,7 +18,7 @@
 
 - (id)init
 {
-    if (self = [super init])
+    if ((self = [super init]))
     {
         [self setupScene];        
     }
@@ -78,16 +78,17 @@
     //
     // Then, you just have to call the following method:    
     // (the returned font name is the one that is defined in the font XML.)
-    NSString *bmpFontName = [SPTextField registerBitmapFontFromFile:@"branching_mouse.fnt"];
+    NSString *bmpFontName = [SPTextField registerBitmapFontFromFile:@"desyrel.fnt"];
 
     // That's it! If you use this font now, the textField will be rendered with the bitmap font.
-    SPTextField *bmpFontTF = [SPTextField textFieldWithWidth:300 height:120 
-        text:@"It is very easy to use them with Bitmap fonts, as well!"];
+    SPTextField *bmpFontTF = [SPTextField textFieldWithWidth:300 height:150 
+        text:@"It is very easy to use Bitmap fonts, as well!"];
     bmpFontTF.fontSize = SP_NATIVE_FONT_SIZE; // use the native bitmap font size, no scaling
     bmpFontTF.fontName = bmpFontName;
-    bmpFontTF.color = 0x993399;
+    bmpFontTF.color = SP_WHITE; // use white if you want to use the texture as it is
     bmpFontTF.hAlign = SPHAlignCenter;
     bmpFontTF.vAlign = SPVAlignCenter;
+    bmpFontTF.kerning = YES;
     bmpFontTF.x = offset;
     bmpFontTF.y = fontTF.y + fontTF.height + offset;
     [self addChild:bmpFontTF];
@@ -100,7 +101,7 @@
 {
     // when you are done with it, you should unregister your bitmap font. 
     // (Only if you no longer need it!)
-    [SPTextField unregisterBitmapFont:@"BranchingMouse"];
+    [SPTextField unregisterBitmapFont:@"Desyrel"];
     [super dealloc];
 }
 

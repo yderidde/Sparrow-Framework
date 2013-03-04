@@ -3,7 +3,7 @@
 //  Demo
 //
 //  Created by Daniel Sperl on 18.09.09.
-//  Copyright 2009 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 
 #import "BenchmarkScene.h"
@@ -22,7 +22,7 @@
 
 - (id)init
 {
-    if (self = [super init])
+    if ((self = [super init]))
     {
         mAtlas = [[SPTextureAtlas alloc] initWithContentsOfFile:@"atlas.xml"];   
         
@@ -135,8 +135,8 @@
 {
     SPSprite *sprite = [[SPSprite alloc] init];
     int border = 15;
-    sprite.x = [SPUtils randomIntBetween:border and:320-border];
-    sprite.y = [SPUtils randomIntBetween:border and:480-border];
+    sprite.x = [SPUtils randomIntBetweenMin:border andMax:320-border];
+    sprite.y = [SPUtils randomIntBetweenMin:border andMax:480-border];
     
     SPImage *egg = [[SPImage alloc] initWithTexture:[mAtlas textureByName:@"benchmark_object"]];        
     egg.x = -egg.width/2 + 25;

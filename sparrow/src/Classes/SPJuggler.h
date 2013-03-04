@@ -3,7 +3,7 @@
 //  Sparrow
 //
 //  Created by Daniel Sperl on 09.05.09.
-//  Copyright 2009 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the Simplified BSD License.
@@ -38,9 +38,9 @@
  
  The Sparrow blog contains three extensive articles about the juggler:
  
- * http://www.sparrow-framework.org/2010/08/tweens-jugglers-animating-your-stage/
- * http://www.sparrow-framework.org/2010/09/tweens-jugglers-an-in-depth-look-at-the-juggler/
- * http://www.sparrow-framework.org/2010/10/tweens-jugglers-unleashed/
+ - http://www.sparrow-framework.org/2010/08/tweens-jugglers-animating-your-stage/
+ - http://www.sparrow-framework.org/2010/09/tweens-jugglers-an-in-depth-look-at-the-juggler/
+ - http://www.sparrow-framework.org/2010/10/tweens-jugglers-unleashed/
  
 ------------------------------------------------------------------------------------------------- */
 

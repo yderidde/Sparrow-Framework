@@ -3,7 +3,7 @@
 //  Sparrow
 //
 //  Created by Daniel Sperl on 08.05.09.
-//  Copyright 2009 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 
 #import "TouchSheet.h"
@@ -22,7 +22,7 @@
 
 - (id)initWithQuad:(SPQuad*)quad
 {
-    if (self = [super init])
+    if ((self = [super init]))
     {
         // move quad to center, so that scaling works like expected
         mQuad = [quad retain];

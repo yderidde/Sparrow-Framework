@@ -3,7 +3,7 @@
 //  Sparrow
 //
 //  Created by Daniel Sperl on 27.06.09.
-//  Copyright 2009 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the Simplified BSD License.
@@ -56,7 +56,9 @@ typedef struct
     float mHeight;
     float mScale;
     BOOL mRepeat;
-    BOOL mPremultipliedAlpha;    
+    BOOL mPremultipliedAlpha;
+    BOOL mMipmaps;
+    SPTextureFilter mFilter;
 }
 
 /// ------------------
@@ -73,8 +75,9 @@ typedef struct
 /// @name Properties
 /// ----------------
 
-/// Indicates if the texture should repeat like a wallpaper or stretch the outermost pixels.
-@property (nonatomic, assign) BOOL repeat;
+/// The filter type influences how the texture appears when it is scaled up or down. 
+/// Default: `SPTextureFilterLinear`.
+@property (nonatomic, assign) SPTextureFilter filter;
 
 /// The scale factor, which influences `width` and `height` properties.
 @property (nonatomic, assign) float scale;

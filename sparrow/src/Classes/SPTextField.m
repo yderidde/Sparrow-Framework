@@ -3,7 +3,7 @@
 //  Sparrow
 //
 //  Created by Daniel Sperl on 29.06.09.
-//  Copyright 2009 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the Simplified BSD License.
@@ -44,11 +44,12 @@ static NSMutableDictionary *bitmapFonts = nil;
 @synthesize vAlign = mVAlign;
 @synthesize border = mBorder;
 @synthesize color = mColor;
+@synthesize kerning = mKerning;
 
 - (id)initWithWidth:(float)width height:(float)height text:(NSString*)text fontName:(NSString*)name 
           fontSize:(float)size color:(uint)color 
 {
-    if (self = [super init])
+    if ((self = [super init]))
     {        
         mText = [text copy];
         mFontSize = size;
@@ -56,6 +57,7 @@ static NSMutableDictionary *bitmapFonts = nil;
         mHAlign = SPHAlignCenter;
         mVAlign = SPVAlignCenter;
         mBorder = NO;        
+		mKerning = YES;
         self.fontName = name;
         
         mHitArea = [[SPQuad alloc] initWithWidth:width height:height];
@@ -73,7 +75,7 @@ static NSMutableDictionary *bitmapFonts = nil;
     return self;
 } 
 
-- (id)initWithWidth:(float)width height:(float)height text:(NSString*)text;
+- (id)initWithWidth:(float)width height:(float)height text:(NSString*)text
 {
     return [self initWithWidth:width height:height text:text fontName:SP_DEFAULT_FONT_NAME
                      fontSize:SP_DEFAULT_FONT_SIZE color:SP_DEFAULT_FONT_COLOR];   
@@ -169,7 +171,7 @@ static NSMutableDictionary *bitmapFonts = nil;
  
     SPDisplayObject *contents = [bitmapFont createDisplayObjectWithWidth:mHitArea.width 
         height:mHitArea.height text:mText fontSize:mFontSize color:mColor
-        hAlign:mHAlign vAlign:mVAlign border:mBorder];    
+        hAlign:mHAlign vAlign:mVAlign border:mBorder kerning:mKerning];    
     
     SPRectangle *textBounds = [(SPDisplayObjectContainer *)contents childAtIndex:0].bounds;
     mTextArea.x = textBounds.x; mTextArea.y = textBounds.y;
@@ -272,6 +274,15 @@ static NSMutableDictionary *bitmapFonts = nil;
         else 
             mRequiresRedraw = YES;
     }
+}
+
+- (void)setKerning:(BOOL)kerning
+{
+	if (kerning != mKerning)
+	{
+		mKerning = kerning;
+		mRequiresRedraw = YES;
+	}
 }
 
 + (SPTextField*)textFieldWithWidth:(float)width height:(float)height text:(NSString*)text 

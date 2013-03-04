@@ -3,7 +3,7 @@
 //  Sparrow
 //
 //  Created by Daniel Sperl on 28.09.09.
-//  Copyright 2009 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the Simplified BSD License.
@@ -24,13 +24,18 @@
 
 - (id)init
 {
-    if (self = [super init])
+    if ((self = [super init]))
     {
-        mBoundTextureID = UINT_MAX;
-        mPremultipliedAlpha = YES;
-        [self bindTexture:nil];        
+        [self reset];
     }
     return self;
+}
+
+- (void)reset
+{
+    mBoundTextureID = UINT_MAX;
+    mPremultipliedAlpha = YES;
+    [self bindTexture:nil];
 }
 
 - (void)bindTexture:(SPTexture *)texture
@@ -76,12 +81,12 @@
 
 + (void)clearWithColor:(uint)color alpha:(float)alpha;
 {
-    float red = SP_COLOR_PART_RED(color);
-    float green = SP_COLOR_PART_GREEN(color);
-    float blue = SP_COLOR_PART_BLUE(color);
+    float red   = SP_COLOR_PART_RED(color)   / 255.0f;
+    float green = SP_COLOR_PART_GREEN(color) / 255.0f;
+    float blue  = SP_COLOR_PART_BLUE(color)  / 255.0f;
     
     glClearColor(red, green, blue, alpha);
-    glClear(GL_COLOR_BUFFER_BIT);  
+    glClear(GL_COLOR_BUFFER_BIT);
 }
 
 + (void)transformMatrixForObject:(SPDisplayObject *)object
@@ -91,10 +96,13 @@
     float rotation = object.rotation;
     float scaleX = object.scaleX;
     float scaleY = object.scaleY;
+    float pivotX = object.pivotX;
+    float pivotY = object.pivotY;
     
-    if (x != 0.0f || y != 0.0f)           glTranslatef(x, y, 0);
+    if (x != 0.0f || y != 0.0f)           glTranslatef(x, y, 0.0f);
     if (rotation != 0.0f)                 glRotatef(SP_R2D(rotation), 0.0f, 0.0f, 1.0f);
-    if (scaleX != 0.0f || scaleY != 0.0f) glScalef(scaleX, scaleY, 1.0f); 
+    if (scaleX != 1.0f || scaleY != 1.0f) glScalef(scaleX, scaleY, 1.0f);
+    if (pivotX != 0.0f || pivotY != 0.0f) glTranslatef(-pivotX, -pivotY, 0.0f);    
 }
 
 + (void)setupOrthographicRenderingWithLeft:(float)left right:(float)right 

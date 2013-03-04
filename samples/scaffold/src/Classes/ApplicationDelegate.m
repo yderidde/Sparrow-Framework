@@ -2,9 +2,6 @@
 //  AppScaffoldAppDelegate.m
 //  AppScaffold
 //
-//  Created by Daniel Sperl on 14.01.10.
-//  Copyright Incognitek 2010. All rights reserved.
-//
 
 #import "ApplicationDelegate.h"
 #import "Game.h" 
@@ -13,7 +10,7 @@
 
 - (id)init
 {
-    if (self = [super init])
+    if ((self = [super init]))
     {
         mWindow = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
         mSparrowView = [[SPView alloc] initWithFrame:mWindow.bounds]; 

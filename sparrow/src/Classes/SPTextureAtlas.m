@@ -3,7 +3,7 @@
 //  Sparrow
 //
 //  Created by Daniel Sperl on 27.06.09.
-//  Copyright 2009 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the Simplified BSD License.
@@ -15,7 +15,7 @@
 #import "SPSubTexture.h"
 #import "SPGLTexture.h"
 #import "SPRectangle.h"
-#import "SPNSExtensions.h"
+#import "SPUtils.h"
 #import "SPStage.h"
 
 // --- private interface ---------------------------------------------------------------------------
@@ -32,9 +32,10 @@
 
 - (id)initWithContentsOfFile:(NSString *)path texture:(SPTexture *)texture
 {
-    if (self = [super init])
+    if ((self = [super init]))
     {
         mTextureRegions = [[NSMutableDictionary alloc] init];
+        mTextureFrames  = [[NSMutableDictionary alloc] init];
         mAtlasTexture = [texture retain];
         [self parseAtlasXml:path];
     }
@@ -58,14 +59,18 @@
 
 - (void)parseAtlasXml:(NSString *)path
 {
+    if (!path) return;
+
+    float scaleFactor = [SPStage contentScaleFactor];
+    mPath = [[SPUtils absolutePathToFile:path withScaleFactor:scaleFactor] retain];    
+    if (!mPath) [NSException raise:SP_EXC_FILE_NOT_FOUND format:@"file not found: %@", path];
+    
     SP_CREATE_POOL(pool);
     
-    if (!path) return;
+    NSData *xmlData = [[NSData alloc] initWithContentsOfFile:mPath];
+    NSXMLParser *xmlParser = [[NSXMLParser alloc] initWithData:xmlData];
+    [xmlData release];
     
-    float scale = [SPStage contentScaleFactor];
-    NSString *fullPath = [[NSBundle mainBundle] pathForResource:path withScaleFactor:scale];
-    NSURL *xmlUrl = [NSURL fileURLWithPath:fullPath];
-    NSXMLParser *xmlParser = [[NSXMLParser alloc] initWithContentsOfURL:xmlUrl];
     xmlParser.delegate = self;    
     BOOL success = [xmlParser parse];
     
@@ -88,19 +93,31 @@
     {
         float scale = mAtlasTexture.scale;
         
-        NSString *name = [attributeDict valueForKey:@"name"];
-        float x = [[attributeDict valueForKey:@"x"] floatValue] / scale;
-        float y = [[attributeDict valueForKey:@"y"] floatValue] / scale;
-        float width = [[attributeDict valueForKey:@"width"] floatValue] / scale;
-        float height = [[attributeDict valueForKey:@"height"] floatValue] / scale;
+        NSString *name = [attributeDict objectForKey:@"name"];
+        SPRectangle *frame = nil;
         
-        [self addRegion:[SPRectangle rectangleWithX:x y:y width:width height:height] withName:name];
+        float x = [[attributeDict objectForKey:@"x"] floatValue] / scale;
+        float y = [[attributeDict objectForKey:@"y"] floatValue] / scale;
+        float width = [[attributeDict objectForKey:@"width"] floatValue] / scale;
+        float height = [[attributeDict objectForKey:@"height"] floatValue] / scale;
+        float frameX = [[attributeDict objectForKey:@"frameX"] floatValue] / scale;
+        float frameY = [[attributeDict objectForKey:@"frameY"] floatValue] / scale;
+        float frameWidth = [[attributeDict objectForKey:@"frameWidth"] floatValue] / scale;
+        float frameHeight = [[attributeDict objectForKey:@"frameHeight"] floatValue] / scale;
+        
+        if (frameWidth && frameHeight)
+            frame = [SPRectangle rectangleWithX:frameX y:frameY width:frameWidth height:frameHeight];
+        
+        [self addRegion:[SPRectangle rectangleWithX:x y:y width:width height:height] 
+               withName:name frame:frame];
     }
     else if ([elementName isEqualToString:@"TextureAtlas"] && !mAtlasTexture)
     {
         // load atlas texture
-        NSString *imagePath = [attributeDict valueForKey:@"imagePath"];        
-        mAtlasTexture = [[SPTexture alloc] initWithContentsOfFile:imagePath];
+        NSString *filename = [attributeDict valueForKey:@"imagePath"];        
+        NSString *folder = [mPath stringByDeletingLastPathComponent];
+        NSString *absolutePath = [folder stringByAppendingPathComponent:filename];
+        mAtlasTexture = [[SPTexture alloc] initWithContentsOfFile:absolutePath];
     }
 }
 
@@ -113,7 +130,10 @@
 {
     SPRectangle *region = [mTextureRegions objectForKey:name];
     if (!region) return nil;    
-    return [SPSubTexture textureWithRegion:region ofTexture:mAtlasTexture];    
+    
+    SPTexture *texture = [SPSubTexture textureWithRegion:region ofTexture:mAtlasTexture];
+    texture.frame = [mTextureFrames objectForKey:name];
+    return texture;
 }
 
 - (NSArray *)texturesStartingWith:(NSString *)name
@@ -137,12 +157,19 @@
 
 - (void)addRegion:(SPRectangle *)region withName:(NSString *)name
 {
-    [mTextureRegions setObject:region forKey:name];
+    [self addRegion:region withName:name frame:nil];
+}
+
+- (void)addRegion:(SPRectangle *)region withName:(NSString *)name frame:(SPRectangle *)frame
+{
+    [mTextureRegions setObject:region forKey:name];    
+    if (frame) [mTextureFrames setObject:frame forKey:name];
 }
 
 - (void)removeRegion:(NSString *)name
 {
     [mTextureRegions removeObjectForKey:name];
+    [mTextureFrames  removeObjectForKey:name];
 }
 
 + (SPTextureAtlas *)atlasWithContentsOfFile:(NSString *)path
@@ -152,8 +179,10 @@
 
 - (void)dealloc
 {
+    [mPath release];
     [mAtlasTexture release];
     [mTextureRegions release];
+    [mTextureFrames release];
     [super dealloc];
 }
 

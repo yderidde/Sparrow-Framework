@@ -3,7 +3,7 @@
 //  Sparrow
 //
 //  Created by Daniel Sperl on 26.03.09.
-//  Copyright 2009 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the Simplified BSD License.
@@ -37,7 +37,7 @@ static void setValues(SPMatrix *matrix, float a, float b, float c, float d, floa
 
 - (id)initWithA:(float)a b:(float)b c:(float)c d:(float)d tx:(float)tx ty:(float)ty
 {
-    if (self = [super init])
+    if ((self = [super init]))
     {
         mA = a; mB = b; mC = c; mD = d;
         mTx = tx; mTy = ty;
@@ -148,7 +148,7 @@ static void setValues(SPMatrix *matrix, float a, float b, float c, float d, floa
 
 #pragma mark NSCopying
 
-- (id)copyWithZone:(NSZone*)zone;
+- (id)copyWithZone:(NSZone*)zone
 {
     return [[[self class] allocWithZone:zone] initWithA:mA b:mB c:mC d:mD 
                                                      tx:mTx ty:mTy];

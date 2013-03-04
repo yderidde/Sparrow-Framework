@@ -3,7 +3,7 @@
 //  Demo
 //
 //  Created by Daniel Sperl on 22.08.09.
-//  Copyright 2009 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 
 #import "CustomHitTestScene.h"
@@ -21,7 +21,7 @@
 
 - (id)init
 {
-    if (self = [super init])
+    if ((self = [super init]))
     {
         [self setupScene];        
     }

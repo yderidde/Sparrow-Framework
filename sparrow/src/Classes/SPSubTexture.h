@@ -3,7 +3,7 @@
 //  Sparrow
 //
 //  Created by Daniel Sperl on 27.06.09.
-//  Copyright 2009 Incognitek. All rights reserved.
+//  Copyright 2011 Gamua. All rights reserved.
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the Simplified BSD License.
@@ -15,9 +15,9 @@
 /** ------------------------------------------------------------------------------------------------
  
  An SPSubTexture represents a section of another texture. This is achived solely by 
-    manipulation of texture coordinates, making the class very efficient. 
+ manipulation of texture coordinates, making the class very efficient. 
  
-    It is allowed to create subtextures of subtextures.
+ Note that it is OK to create subtextures of subtextures.
  
 ------------------------------------------------------------------------------------------------- */
 
