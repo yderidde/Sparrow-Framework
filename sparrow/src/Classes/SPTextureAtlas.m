@@ -12,8 +12,8 @@
 #import "SPTextureAtlas.h"
 #import "SPMacros.h"
 #import "SPTexture.h"
-#import "SPGLTexture.h"
 #import "SPSubTexture.h"
+#import "SPGLTexture.h"
 #import "SPRectangle.h"
 #import "SPNSExtensions.h"
 #import "SPStage.h"
@@ -30,29 +30,35 @@
 
 @implementation SPTextureAtlas
 
-- (id)initWithContentsOfFile:(NSString*)path
+- (id)initWithContentsOfFile:(NSString *)path texture:(SPTexture *)texture
 {
     if (self = [super init])
     {
+        mTextureRegions = [[NSMutableDictionary alloc] init];
+        mAtlasTexture = [texture retain];
         [self parseAtlasXml:path];
-    }  
-    return self;
+    }
+    return self;    
+}
+
+- (id)initWithContentsOfFile:(NSString *)path
+{
+    return [self initWithContentsOfFile:path texture:nil];
+}
+
+- (id)initWithTexture:(SPTexture *)texture
+{
+    return [self initWithContentsOfFile:nil texture:(SPTexture *)texture];
 }
 
 - (id)init
 {
-    return [self initWithContentsOfFile:nil];
+    return [self initWithContentsOfFile:nil texture:nil];
 }
 
-- (void)parseAtlasXml:(NSString*)path
+- (void)parseAtlasXml:(NSString *)path
 {
     SP_CREATE_POOL(pool);
-    
-    [mTextureRegions release];
-    [mAtlasTexture release];
-    
-    mTextureRegions = [[NSMutableDictionary alloc] init];
-    mAtlasTexture = nil;
     
     if (!path) return;
     
@@ -73,10 +79,10 @@
     [xmlParser release];    
 }
 
-- (void)parser:(NSXMLParser*)parser didStartElement:(NSString*)elementName 
-                                       namespaceURI:(NSString*)namespaceURI 
-                                      qualifiedName:(NSString*)qName 
-                                         attributes:(NSDictionary*)attributeDict 
+- (void)parser:(NSXMLParser *)parser didStartElement:(NSString *)elementName 
+                                        namespaceURI:(NSString *)namespaceURI 
+                                       qualifiedName:(NSString *)qName 
+                                          attributes:(NSDictionary *)attributeDict 
 {
     if ([elementName isEqualToString:@"SubTexture"])
     {
@@ -88,10 +94,9 @@
         float width = [[attributeDict valueForKey:@"width"] floatValue] / scale;
         float height = [[attributeDict valueForKey:@"height"] floatValue] / scale;
         
-        [mTextureRegions setObject:[SPRectangle rectangleWithX:x y:y width:width height:height]
-                            forKey:name];        
+        [self addRegion:[SPRectangle rectangleWithX:x y:y width:width height:height] withName:name];
     }
-    else if ([elementName isEqualToString:@"TextureAtlas"])
+    else if ([elementName isEqualToString:@"TextureAtlas"] && !mAtlasTexture)
     {
         // load atlas texture
         NSString *imagePath = [attributeDict valueForKey:@"imagePath"];        
@@ -104,7 +109,7 @@
     return [mTextureRegions count];
 }
 
-- (SPTexture*)textureByName:(NSString*)name
+- (SPTexture *)textureByName:(NSString *)name
 {
     SPRectangle *region = [mTextureRegions objectForKey:name];
     if (!region) return nil;    
@@ -130,7 +135,17 @@
     return textures;
 }
 
-+ (SPTextureAtlas*)atlasWithContentsOfFile:(NSString*)path
+- (void)addRegion:(SPRectangle *)region withName:(NSString *)name
+{
+    [mTextureRegions setObject:region forKey:name];
+}
+
+- (void)removeRegion:(NSString *)name
+{
+    [mTextureRegions removeObjectForKey:name];
+}
+
++ (SPTextureAtlas *)atlasWithContentsOfFile:(NSString *)path
 {
     return [[[SPTextureAtlas alloc] initWithContentsOfFile:path] autorelease];
 }

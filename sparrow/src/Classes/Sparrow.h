@@ -9,7 +9,7 @@
 //  it under the terms of the Simplified BSD License.
 //
 
-#define SPARROW_VERSION @"1.0"
+#define SPARROW_VERSION @"1.1.0"
 
 #import "SPNSExtensions.h"
 #import "SPEventDispatcher.h"
@@ -18,12 +18,14 @@
 #import "SPQuad.h"
 #import "SPImage.h"
 #import "SPTextField.h"
+#import "SPBitmapFont.h"
 #import "SPButton.h"
 #import "SPStage.h"
 #import "SPSprite.h"
 #import "SPMovieClip.h"
 #import "SPTexture.h"
 #import "SPSubTexture.h"
+#import "SPRenderTexture.h"
 #import "SPGLTexture.h"
 #import "SPTextureAtlas.h"
 #import "SPEvent.h"
@@ -35,6 +37,7 @@
 #import "SPDelayedInvocation.h"
 #import "SPRectangle.h"
 #import "SPMacros.h"
+#import "SPUtils.h"
 #import "SPView.h"
 #import "SPRenderSupport.h"
 #import "SPAudioEngine.h"

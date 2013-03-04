@@ -9,7 +9,8 @@
 //  it under the terms of the Simplified BSD License.
 //
 
-#include <math.h>
+#import <Foundation/Foundation.h>
+#import <math.h>
 
 // constants
 
@@ -43,6 +44,7 @@
 #define SP_R2D(rad)                 ((rad) / PI * 180.0f)
 #define SP_D2R(deg)                 ((deg) / 180.0f * PI)
 
+#define SP_COLOR_PART_ALPHA(color)  (((color) >> 24) & 0xff)
 #define SP_COLOR_PART_RED(color)    (((color) >> 16) & 0xff)
 #define SP_COLOR_PART_GREEN(color)  (((color) >>  8) & 0xff)
 #define SP_COLOR_PART_BLUE(color)   ( (color)        & 0xff)

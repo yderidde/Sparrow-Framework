@@ -36,9 +36,9 @@
 {
     if (self = [super initWithTexture:texture])
     {
+        self.fps = fps;
         mLoop = YES;
         mPlaying = YES;
-        mDefaultFrameDuration = (fps == 0.0 ? INT_MAX : 1.0 / fps);        
         mTotalDuration = 0.0;
         mElapsedTime = 0.0;
         mCurrentFrame = 0;
@@ -152,6 +152,22 @@
     return [[mFrameDurations objectAtIndex:frameID] doubleValue];
 }
 
+- (void)setFps:(float)fps
+{
+    float newFrameDuration = (fps == 0.0f ? INT_MAX : 1.0 / fps);
+	float acceleration = newFrameDuration / mDefaultFrameDuration;
+    mElapsedTime *= acceleration;
+    mDefaultFrameDuration = newFrameDuration;
+    
+	for (int i=0; i<self.numFrames; ++i)
+		[self setDuration:[self durationAtIndex:i] * acceleration atIndex:i];
+}
+
+- (float)fps
+{
+	return (float)(1.0 / mDefaultFrameDuration);
+}
+
 - (int)numFrames
 {        
     return mFrames.count;
@@ -199,6 +215,11 @@
 + (SPMovieClip *)movieWithFrame:(SPTexture *)texture fps:(float)fps
 {
     return [[[SPMovieClip alloc] initWithFrame:texture fps:fps] autorelease];
+}
+
++ (SPMovieClip *)movieWithFrames:(NSArray *)textures fps:(float)fps
+{
+    return [[[SPMovieClip alloc] initWithFrames:textures fps:fps] autorelease];
 }
 
 #pragma mark SPAnimatable

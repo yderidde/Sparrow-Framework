@@ -19,23 +19,13 @@
 
 #import <UIKit/UIKit.h>
 
-// --- static members, c functions -----------------------------------------------------------------
+// --- static members ------------------------------------------------------------------------------
 
 static BOOL supportHighResolutions = NO;
+static float contentScaleFactor = -1;
 static NSMutableArray *stages = NULL;
 
-static void dispatchEnterFrameEvent(SPDisplayObject *object, SPEnterFrameEvent *event)
-{
-    // EnterFrameEvents are dispatched in every frame and they traverse the entire display tree --
-    // thus, it pays off handling them in their own c function.
-
-    [object dispatchEvent:event];    
-    if ([object isKindOfClass:[SPDisplayObjectContainer class]])
-        for (SPDisplayObject *child in (SPDisplayObjectContainer *)object)        
-            dispatchEnterFrameEvent(child, event);
-}
-
-// -------------------------------------------------------------------------------------------------
+// --- class implementation ------------------------------------------------------------------------
 
 @implementation SPStage
 
@@ -68,14 +58,14 @@ static void dispatchEnterFrameEvent(SPDisplayObject *object, SPEnterFrameEvent *
 }
 
 - (void)advanceTime:(double)seconds
-{
+{    
     // advance juggler
     [mJuggler advanceTime:seconds];
     
     // dispatch EnterFrameEvent
     SPEnterFrameEvent *enterFrameEvent = [[SPEnterFrameEvent alloc] 
-        initWithType:SP_EVENT_TYPE_ENTER_FRAME passedTime:seconds];        
-    dispatchEnterFrameEvent(self, enterFrameEvent);
+        initWithType:SP_EVENT_TYPE_ENTER_FRAME passedTime:seconds];
+    [self dispatchEventOnChildren:enterFrameEvent];
     [enterFrameEvent release];
 }
 
@@ -157,39 +147,6 @@ static void dispatchEnterFrameEvent(SPDisplayObject *object, SPEnterFrameEvent *
     return [mNativeView frameRate];
 }
 
-+ (void)setSupportHighResolutions:(BOOL)support
-{
-    supportHighResolutions = support;
-
-    for (SPStage *stage in stages)
-    {
-        if ([stage.nativeView respondsToSelector:@selector(contentScaleFactor)])
-        {
-            [stage.nativeView setContentScaleFactor:[SPStage contentScaleFactor]];
-            [stage.nativeView layoutSubviews];
-        }            
-    }
-}
-
-+ (BOOL)supportHighResolutions
-{
-    return supportHighResolutions;
-}
-
-+ (float)contentScaleFactor
-{
-    if (supportHighResolutions &&
-        [UIScreen instancesRespondToSelector:@selector(scale)] &&
-        [UIImage  instancesRespondToSelector:@selector(scale)])
-    {
-        return [[UIScreen mainScreen] scale];        
-    }
-    else
-    {
-        return 1.0f;
-    }        
-}
-
 - (void)dealloc 
 {    
     [SPPoint purgePool];
@@ -203,6 +160,61 @@ static void dispatchEnterFrameEvent(SPDisplayObject *object, SPEnterFrameEvent *
     if (stages.count == 0) { [stages release]; stages = NULL; }    
     
     [super dealloc];
+}
+
+@end
+
+// -------------------------------------------------------------------------------------------------
+
+@implementation SPStage (HDSupport)
+
++ (void)updateNativeViews
+{
+    for (SPStage *stage in stages)
+    {
+        if ([stage.nativeView respondsToSelector:@selector(contentScaleFactor)])
+        {
+            [stage.nativeView setContentScaleFactor:[SPStage contentScaleFactor]];
+            [stage.nativeView layoutSubviews];
+        }
+    }
+}
+
++ (void)setSupportHighResolutions:(BOOL)value
+{
+    if (value != supportHighResolutions)
+    {
+        supportHighResolutions = value;
+        [SPStage updateNativeViews];
+    }
+}
+
++ (BOOL)supportHighResolutions
+{
+    return supportHighResolutions;
+}
+
++ (void)setContentScaleFactor:(float)value
+{
+    if (value != contentScaleFactor)
+    {
+        contentScaleFactor = value;
+        [SPStage updateNativeViews];
+    }    
+}
+
++ (float)contentScaleFactor
+{
+    if (supportHighResolutions &&
+        [UIScreen instancesRespondToSelector:@selector(scale)] &&
+        [UIImage  instancesRespondToSelector:@selector(scale)])
+    {
+        return contentScaleFactor == -1 ? [[UIScreen mainScreen] scale] : contentScaleFactor;
+    }
+    else
+    {
+        return 1.0f;
+    }        
 }
 
 @end
