@@ -31,11 +31,11 @@
     // calculate distance of localPoint to center. 
     // we keep it squared, since we want to avoid the 'sqrt()'-call.
     float sqDist = (localPoint.x - centerX) * (localPoint.x - centerX) + 
-                   (localPoint.y - centerY) * (localPoint.y - centerX);
+                   (localPoint.y - centerY) * (localPoint.y - centerY);
 
     // when the squared distance is smaller than the squared radius, the point is inside
     // the circle
-    float radius = bounds.width / 2; 
+    float radius = bounds.width / 2 * 0.9; 
     if (sqDist < radius * radius) return self;
     else return nil;
 }

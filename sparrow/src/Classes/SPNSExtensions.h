@@ -1,5 +1,5 @@
 //
-//  SPNSAdditions.h
+//  SPNSExtensions.h
 //  Sparrow
 //
 //  Created by Daniel Sperl on 13.05.09.
@@ -19,6 +19,7 @@
 
 @end
 
+
 /** Sparrow extensions for the NSString class. */
 @interface NSString (SPNSExtensions)
 
@@ -32,7 +33,11 @@
 /// Creates a string by appending a suffix to a filename in front of its extension.
 - (NSString *)stringByAppendingSuffixToFilename:(NSString *)suffix;
 
+/// Expects the string to be a filename/path and returns the scale factor ('@<factor>x').
+- (float)contentScaleFactor;
+
 @end
+
 
 /** Sparrow extensions for the NSBundle class. */
 @interface NSBundle (SPNSExtensions)

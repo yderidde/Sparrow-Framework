@@ -20,7 +20,7 @@
 
 /** ------------------------------------------------------------------------------------------------
 
- An SPMovieClip is a simple way to display an animation depicted by a number of textures.
+ An SPMovieClip is a simple way to display an animation depicted by a list of textures.
 
  You can add the frames one by one or pass them all at once (in an array) at initialization time.
  The movie clip will have the width and height of the first frame.
@@ -111,6 +111,9 @@
 
 /// Pause playback.
 - (void)pause;
+
+/// Stop playback. Resets currentFrame to beginning.
+- (void)stop;
 
 /// ----------------
 /// @name Properties

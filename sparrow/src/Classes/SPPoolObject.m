@@ -12,14 +12,19 @@
 #import "SPPoolObject.h"
 #import <malloc/malloc.h>
 
-#ifndef DISABLE_MEMORY_POOLING
-
 #define COMPLAIN_MISSING_IMP @"Class %@ needs this code:\n\
 + (SPPoolInfo *) poolInfo\n\
 {\n\
-  static SPPoolInfo poolInfo;\n\
-  return &poolInfo;\n\
+  static SPPoolInfo *poolInfo = nil;\n\
+  if (!poolInfo) poolInfo = [[SPPoolInfo alloc] init];\n\
+  return poolInfo;\n\
 }"
+
+@implementation SPPoolInfo
+// empty
+@end
+
+#ifndef DISABLE_MEMORY_POOLING
 
 @implementation SPPoolObject
 
@@ -40,7 +45,9 @@
     if (!poolInfo->lastElement) 
     {
         // pool is empty -> allocate
-        return NSAllocateObject(self, 0, NULL);
+        SPPoolObject *object = NSAllocateObject(self, 0, NULL);
+        object->mRetainCount = 1;
+        return object;
     }
     else 
     {
@@ -51,23 +58,39 @@
         // zero out memory. (do not overwrite isa & mPoolPredecessor, thus the offset)
         unsigned int sizeOfFields = sizeof(Class) + sizeof(SPPoolObject *);
         memset((char*)(id)object + sizeOfFields, 0, malloc_size(object) - sizeOfFields);
-        
+        object->mRetainCount = 1;
         return object;
     }
 }
 
-- (void)dealloc
+- (uint)retainCount
 {
-    SPPoolInfo *poolInfo = [isa poolInfo];
-    self->mPoolPredecessor = poolInfo->lastElement;
-    poolInfo->lastElement = self;
+    return mRetainCount;
+}
+
+- (id)retain
+{
+    ++mRetainCount;
+    return self;
+}
+
+- (oneway void)release
+{
+    --mRetainCount;
     
-    if (0) [super dealloc]; // just to shut down a compiler warning ...
+    if (!mRetainCount)
+    {
+        SPPoolInfo *poolInfo = [isa poolInfo];
+        self->mPoolPredecessor = poolInfo->lastElement;
+        poolInfo->lastElement = self;
+    }
 }
 
 - (void)purge
 {
-    [super dealloc];
+    // will call 'dealloc' internally --
+    // which should not be called directly.
+    [super release];
 }
 
 + (int)purgePool
@@ -96,7 +119,7 @@
 
 #else
 
-@implementation NSObject (SPPoolObjectExtensions)
+@implementation SPPoolObject
 
 + (SPPoolInfo *)poolInfo 
 {

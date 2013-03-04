@@ -11,7 +11,7 @@
 
 @interface BenchmarkScene ()
 
-- (void)addTestObject;
+- (void)addTestObjects;
 - (void)benchmarkComplete;
 
 @end
@@ -24,7 +24,7 @@
 {
     if ((self = [super init]))
     {
-        mAtlas = [[SPTextureAtlas alloc] initWithContentsOfFile:@"atlas.xml"];   
+        mTexture = [[SPTexture alloc] initWithContentsOfFile:@"benchmark_object.png"];
         
         // the container will hold all test objects
         mContainer = [[SPSprite alloc] init];
@@ -45,7 +45,6 @@
         [self addChild:mStartButton];
         [mStartButton release];        
         
-        mJuggler = [[SPJuggler alloc] init];
         mStarted = NO;
         
         [self addEventListener:@selector(onEnterFrame:) atObject:self forType:SP_EVENT_TYPE_ENTER_FRAME];
@@ -55,35 +54,34 @@
 
 - (void)onEnterFrame:(SPEnterFrameEvent *)event
 {    
-    [mJuggler advanceTime:event.passedTime];    
+    if (!mStarted) return;
     
-    if (mStarted)
+    mElapsed += event.passedTime;
+    ++mFrameCount;
+    
+    if (mFrameCount % mWaitFrames == 0)
     {
-        mElapsed += event.passedTime;
-        ++mFrameCount;
-
-        if (mFrameCount % mWaitFrames == 0)
+        float targetFPS = self.stage.frameRate;
+        float realFPS = mWaitFrames / mElapsed;
+        
+        if (ceilf(realFPS) >= targetFPS)
         {
-            float targetFPS = self.stage.frameRate;
-            float realFPS = mWaitFrames / mElapsed;
-            
-            if (ceilf(realFPS) >= targetFPS)
-            {
-                mFailCount = 0;
-                [self addTestObject];            
-            }
-            else 
-            {
-                ++mFailCount;                
-                
-                if (mFailCount > 10)
-                    mWaitFrames = 15; // slow down creation process to be more exact               
-                if (mFailCount == 14)
-                    [self benchmarkComplete]; // target fps not reached for a while
-            }
-
-            mElapsed = mFrameCount = 0;
+            mFailCount = 0;
+            [self addTestObjects];
         }
+        else
+        {
+            ++mFailCount;
+            
+            if (mFailCount > 15)
+                mWaitFrames = 5; // slow down creation process to be more exact
+            if (mFailCount > 20)
+                mWaitFrames = 10;
+            if (mFailCount == 25)
+                [self benchmarkComplete]; // target fps not reached for a while
+        }
+        
+        mElapsed = mFrameCount = 0;
     }
     
     for (SPDisplayObject *child in mContainer)    
@@ -103,14 +101,13 @@
     mResultText = nil;
     
     mFrameCount = 0;
-    [self addTestObject];
+    [self addTestObjects];
 }
 
 - (void)benchmarkComplete
 {
     mStarted = NO;
     mStartButton.visible = YES;
-    [mJuggler removeAllObjects];
     
     NSLog(@"benchmark complete!");
     NSLog(@"fps: %.1f", self.stage.frameRate);
@@ -126,33 +123,22 @@
     mResultText.y = (480 - mResultText.height) / 2;
     
     [self addChild:mResultText];
-    
-    while (mContainer.numChildren > 0)
-        [mContainer removeChildAtIndex:0];    
+    [mContainer removeAllChildren];
 }
 
-- (void)addTestObject
+- (void)addTestObjects
 {
-    SPSprite *sprite = [[SPSprite alloc] init];
     int border = 15;
-    sprite.x = [SPUtils randomIntBetweenMin:border andMax:320-border];
-    sprite.y = [SPUtils randomIntBetweenMin:border andMax:480-border];
+    int numObjects = mFailCount > 20 ? 2 : 5;
     
-    SPImage *egg = [[SPImage alloc] initWithTexture:[mAtlas textureByName:@"benchmark_object"]];        
-    egg.x = -egg.width/2 + 25;
-    egg.y = -egg.height / 2;
-    
-    [sprite addChild:egg];
-    [egg release];
-    
-    sprite.alpha = 0.0f;
-    SPTween *fadeIn = [[SPTween alloc] initWithTarget:sprite time:0.25];
-    [fadeIn animateProperty:@"alpha" targetValue:1.0f];
-    [mJuggler addObject:fadeIn];
-    [fadeIn release];
-    
-    [mContainer addChild:sprite];
-    [sprite release];
+    for (int i=0; i<numObjects; ++i)
+    {   
+        SPImage *egg = [[SPImage alloc] initWithTexture:mTexture];
+        egg.x = [SPUtils randomIntBetweenMin:border andMax:GAME_WIDTH  - border];
+        egg.y = [SPUtils randomIntBetweenMin:border andMax:GAME_HEIGHT - border];
+        [mContainer addChild:egg];
+        [egg release];
+    }
 }
 
 - (void)dealloc
@@ -160,8 +146,7 @@
     [self removeEventListenersAtObject:self forType:SP_EVENT_TYPE_ENTER_FRAME];
     [mStartButton removeEventListenersAtObject:self forType:SP_EVENT_TYPE_TRIGGERED];
 
-    [mJuggler release];
-    [mAtlas release];
+    [mTexture release];
     [super dealloc];
 }
 

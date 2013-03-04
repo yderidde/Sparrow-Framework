@@ -21,12 +21,12 @@
 
  When one or more fingers touch the screen, move around or are raised, an SPTouchEvent is triggered.
  
- The event contains a list of all touches that are currently present. Since you are normally only
- interested in those touches that occurred on top of certain objects, you can query the event for
- touches with certain targets.
- 
- In this context, the target of a touch is not only the object that was touched (e.g. an SPImage), 
- but also each of its parents - e.g. the container that holds that image.
+ The event contains a list of all touches that are currently present. Each individual touch is 
+ stored in an object of type "Touch". Since you are normally only interested in the touches 
+ that occurred on top of certain objects, you can query the event for touches with a 
+ specific target through the `touchesWithTarget:` method. In this context, the target of a 
+ touch is not only the object that was touched (e.g. an SPImage), but also each of its parents - 
+ e.g. the container that holds that image.
  
  Here is an example of how to react on touch events at 'self', which could be a subclass of SPSprite:
 
@@ -66,10 +66,10 @@
 /// @name Initializers
 /// ------------------
 
-/// Creates a touch with a set of touches. _Designated Initializer_.
+/// Creates a touch event with a set of touches. _Designated Initializer_.
 - (id)initWithType:(NSString*)type bubbles:(BOOL)bubbles touches:(NSSet*)touches;
 
-/// Creates a touch with a set of touches.
+/// Creates a touch event with a set of touches.
 - (id)initWithType:(NSString*)type touches:(NSSet*)touches;
 
 /// Factory method.
@@ -89,7 +89,7 @@
 /// @name Properties
 /// ----------------
 
-/// All touches that are currently happening.
+/// All touches that are currently available.
 @property (nonatomic, readonly) NSSet *touches;
 
 /// The time the event occurred (in seconds since application launch).

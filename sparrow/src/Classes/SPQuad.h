@@ -14,8 +14,7 @@
 
 /** ------------------------------------------------------------------------------------------------
 
- An SPQuad displays a single, colored rectangle.
- It renders a rectangular area with a single color or a color gradient. 
+ An SPQuad represents a rectangle with a uniform color or a color gradient. 
  
  You can set one color per vertex. The colors will smoothly fade into each other over the area
  of the quad. To display a simple linear color gradient, assign one color to vertices 0 and 1 and 
@@ -27,7 +26,7 @@
 	| / |
 	2 - 3
  
- *Colors*
+ **Colors**
  
  Colors in Sparrow are defined as unsigned integers, that's exactly 8 bit per color. The easiest
  way to define a color is by writing it as a hexadecimal number. A color has the following
@@ -86,6 +85,9 @@
 
 /// Factory method.
 + (SPQuad*)quadWithWidth:(float)width height:(float)height color:(uint)color;
+
+/// Factory method. Creates a 32x32 quad.
++ (SPQuad*)quad;
 
 /// ----------------
 /// @name Properties

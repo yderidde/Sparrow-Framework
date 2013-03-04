@@ -52,14 +52,13 @@
     SPTexture *frame2 = [SPTexture emptyTexture];
     SPTexture *frame3 = [SPTexture emptyTexture];
     
-    SPMovieClip *movie = [SPMovieClip movieWithFrame:frame0 fps:4.0f];    
+    SPMovieClip *movie = [SPMovieClip movieWithFrame:frame0 fps:fps];    
     
     STAssertEqualsWithAccuracy(frame0.width, movie.width, E, @"wrong size");
     STAssertEqualsWithAccuracy(frame0.height, movie.height, E, @"wrong size");
 
     STAssertEquals(1, movie.numFrames, @"wrong number of frames");
     STAssertEquals(0, movie.currentFrame, @"wrong start value");
-    STAssertEquals(frameDuration, movie.duration, @"wrong duration");
     STAssertEquals(YES, movie.loop, @"wrong default value");
     STAssertEquals(YES, movie.isPlaying, @"wrong default value");
     STAssertEqualsWithAccuracy(frameDuration, movie.duration, E, @"wrong duration");
@@ -152,11 +151,16 @@
     movie.loop = NO;
     [movie advanceTime:movie.duration + frameDuration];
     STAssertEquals(3, movie.currentFrame, @"movie looped");
+    STAssertFalse(movie.isPlaying, @"movie returned true for 'isPlaying' after reaching end");
     
     movie.currentFrame = 0;
     STAssertEquals(0, movie.currentFrame, @"wrong current frame");
     [movie advanceTime:frameDuration * 1.1];
     STAssertEquals(1, movie.currentFrame, @"wrong current frame");
+    
+    [movie stop];
+    STAssertFalse(movie.isPlaying, @"movie returned true for 'isPlaying' after reaching end");
+    STAssertEquals(0, movie.currentFrame, @"movie did not reset playhead on stop");
 }
 
 - (void)testChangeFps

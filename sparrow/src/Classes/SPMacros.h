@@ -20,8 +20,22 @@
 
 #define SP_FLOAT_EPSILON 0.0001f
 
-#define SP_WHITE 0xFFFFFF
-#define SP_BLACK 0x000000
+#define SP_WHITE     0xffffff
+#define SP_SILVER    0xc0c0c0
+#define SP_GRAY      0x808080
+#define SP_BLACK     0x000000
+#define SP_RED       0xff0000
+#define SP_MAROON    0x800000
+#define SP_YELLOW    0xffff00
+#define SP_OLIVE     0x808000
+#define SP_LIME      0x00ff00
+#define SP_GREEN     0x008000
+#define SP_AQUA      0x00ffff
+#define SP_TEAL      0x008080
+#define SP_BLUE      0x0000ff
+#define SP_NAVY      0x000080
+#define SP_FUCHSIA   0xff00ff
+#define SP_PURPLE    0x800080
 
 #define SP_NOT_FOUND -1
 #define SP_MAX_DISPLAY_TREE_DEPTH 16
@@ -49,8 +63,12 @@
 #define SP_COLOR_PART_GREEN(color)  (((color) >>  8) & 0xff)
 #define SP_COLOR_PART_BLUE(color)   ( (color)        & 0xff)
 
-#define SP_COLOR(r, g, b)			(((r) << 16) | ((g) << 8) | (b))
+#define SP_COLOR(r, g, b)			(((int)(r) << 16) | ((int)(g) << 8) | (int)(b))
 
 #define SP_IS_FLOAT_EQUAL(f1, f2)   (fabsf((f1)-(f2)) < SP_FLOAT_EPSILON)
 
+#define SP_CLAMP(value, min, max)   MIN((max), MAX((value), (min)))
 
+#define SP_SWAP(x, y, T)            do { T temp##x##y = x; x = y; y = temp##x##y; } while (0)
+
+#define SP_DEPRECATED               __attribute__((deprecated))

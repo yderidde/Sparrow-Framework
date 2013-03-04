@@ -98,7 +98,7 @@
     }
     else if (touch.phase == SPTouchPhaseMoved && mIsDown)
     {
-        // reset button when user dragged to far away after pushing
+        // reset button when user dragged too far away after pushing
         SPRectangle *buttonRect = [self boundsInSpace:self.stage];
         if (touch.globalX < buttonRect.x - MAX_DRAG_DIST ||
             touch.globalY < buttonRect.y - MAX_DRAG_DIST ||
@@ -172,11 +172,10 @@
         [mContents addChild:mTextField];
     }
 
-    SPRectangle *textBounds = self.textBounds;
-    mTextField.width  = textBounds.width;
-    mTextField.height = textBounds.height;
-    mTextField.x = textBounds.x;
-    mTextField.y = textBounds.y;
+    mTextField.width  = mTextBounds.width;
+    mTextField.height = mTextBounds.height;
+    mTextField.x = mTextBounds.x;
+    mTextField.y = mTextBounds.y;
 }
 
 - (NSString*)text
@@ -194,10 +193,10 @@
 - (void)setTextBounds:(SPRectangle *)value
 {
     [mTextBounds autorelease];
-
+    
     float scaleX = mBackground.scaleX;
     float scaleY = mBackground.scaleY;
-            
+    
     mTextBounds = [[SPRectangle alloc] initWithX:value.x/scaleX y:value.y/scaleY 
                                            width:value.width/scaleX height:value.height/scaleY];
     

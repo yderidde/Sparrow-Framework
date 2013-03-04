@@ -11,13 +11,14 @@
 
 #import <Foundation/Foundation.h>
 #import "SPAnimatable.h"
+#import "SPMacros.h"
 
 /** ------------------------------------------------------------------------------------------------
 
  The SPJuggler takes objects that implement SPAnimatable (e.g. `SPTween`s) and executes them.
  
  A juggler is a simple object. It does no more than saving a list of objects implementing 
- `SPAnimatable` and advancing their time if he is told to do so (by calling its own `advanceTime:`
+ `SPAnimatable` and advancing their time if it is told to do so (by calling its own `advanceTime:`
  method). When an animation is completed, it throws it away.
  
  There is a default juggler in every stage. You can access it by calling
@@ -47,7 +48,7 @@
 @interface SPJuggler : NSObject <SPAnimatable>
 {
   @private
-    NSMutableSet *mObjects;
+    NSMutableArray *mObjects;
     double mElapsedTime;
 }
 
@@ -72,7 +73,12 @@
 - (void)removeAllObjects;
 
 /// Removes all objects of type `SPTween` that have a certain target.
-- (void)removeTweensWithTarget:(id)object;
+/// DEPRECATED! Use `removeObjectsWithTarget` instead.
+- (void)removeTweensWithTarget:(id)object SP_DEPRECATED;
+
+/// Removes all objects with a `target` property referencing a certain object (e.g. tweens or
+/// delayed invocations).
+- (void)removeObjectsWithTarget:(id)object;
 
 /// Delays the execution of a certain method. Returns a proxy object on which to call the method
 /// instead. Execution will be delayed until `time` has passed.

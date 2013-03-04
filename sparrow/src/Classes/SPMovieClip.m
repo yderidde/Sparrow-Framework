@@ -36,7 +36,7 @@
 {
     if ((self = [super initWithTexture:texture]))
     {
-        self.fps = fps;
+        mDefaultFrameDuration = 1.0f / fps;
         mLoop = YES;
         mPlaying = YES;
         mTotalDuration = 0.0;
@@ -55,9 +55,9 @@
     if (textures.count == 0)
         [NSException raise:SP_EXC_INVALID_OPERATION format:@"empty texture array"];
         
-    [self initWithFrame:[textures objectAtIndex:0] fps:fps];
-    
-    if (textures.count > 1)
+    self = [self initWithFrame:[textures objectAtIndex:0] fps:fps];
+        
+    if (self && textures.count > 1)
         for (int i=1; i<textures.count; ++i)
             [self addFrame:[textures objectAtIndex:i]];
     
@@ -183,6 +183,12 @@
     mPlaying = NO;
 }
 
+- (void)stop
+{
+    mPlaying = NO;
+    self.currentFrame = 0;
+}
+
 - (void)updateCurrentFrame
 {
     self.texture = [mFrames objectAtIndex:mCurrentFrame];
@@ -204,6 +210,14 @@
         mCurrentTime += [[mFrameDurations objectAtIndex:i] doubleValue];
     
     [self updateCurrentFrame];
+}
+
+- (BOOL)isPlaying
+{
+    if (mPlaying)
+        return mLoop || mCurrentTime < mTotalDuration;
+    else
+        return NO;
 }
 
 - (void)checkIndex:(int)frameID

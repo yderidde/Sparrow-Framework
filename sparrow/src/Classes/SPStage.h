@@ -11,6 +11,7 @@
 
 #import <Foundation/Foundation.h>
 #import "SPDisplayObjectContainer.h"
+#import "SPMacros.h"
 
 @class SPTouchProcessor;
 @class SPJuggler;
@@ -26,20 +27,15 @@
  this is always an SPView). Furthermore, you can change the framerate in which the contents is 
  rendered.
  
+ You can access the stage from anywhere in your code with the following static method:
+
+    [SPStage mainStage];
+ 
  A stage also contains a default juggler which you can use for your animations. It is advanced 
  automatically once per frame. You can access this juggler from any display object by calling
  
-	self.stage.juggler
- 
- You have to take care, however, that the display object you are making this call from is already
- connected to the stage - otherwise, the method will return `nil`, and you won't have access to 
- the juggler.
- 
- As an alternative, you can also use this static method to access your stage. It will return the
- first stage instance that was created (and normally, there is only one stage available, anyway).
- 
-    [SPStage mainStage];
- 
+	[SPStage mainStage].juggler
+  
 ------------------------------------------------------------------------------------------------- */
 
 @interface SPStage : SPDisplayObjectContainer
@@ -99,13 +95,21 @@
 @interface SPStage (HDSupport)
 
 /// Enables support for high resolutions (aka retina displays).
-+ (void)setSupportHighResolutions:(BOOL)value;
++ (void)setSupportHighResolutions:(BOOL)hd;
+
+/// Enables support for high resolutions (aka retina displays). If 'doubleOnPad' is true, 
+/// pad devices will use twice the resolution ('@2x' on iPad 1+2, '@4x' on iPad 3+).
++ (void)setSupportHighResolutions:(BOOL)hd doubleOnPad:(BOOL)pad;
 
 /// Determines if high resolution support is activated.
 + (BOOL)supportHighResolutions;
 
+/// Determines if pad devices use twice the resolution.
++ (BOOL)doubleResolutionsOnPad;
+
 /// Sets the content scale factor, which determines the relationship between points and pixels.
-+ (void)setContentScaleFactor:(float)value;
+/// DEPRECATED! Use `doubleResolutionsOnPad` instead.
++ (void)setContentScaleFactor:(float)value SP_DEPRECATED; 
 
 /// The current content scale factor.
 + (float)contentScaleFactor;
