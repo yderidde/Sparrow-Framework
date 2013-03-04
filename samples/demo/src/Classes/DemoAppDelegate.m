@@ -34,8 +34,8 @@ void onUncaughtException(NSException *exception)
     
     [SPAudioEngine start];
     [SPStage setSupportHighResolutions:YES]; // use the provided hd textures on suitable hardware
-    
-    Game *game = [[Game alloc] initWithWidth:320 height:480];
+
+    Game *game = [[Game alloc] init];
     sparrowView.stage = game;
     sparrowView.multipleTouchEnabled = YES;
     sparrowView.frameRate = 30;    
@@ -49,12 +49,12 @@ void onUncaughtException(NSException *exception)
 
 - (void)applicationWillResignActive:(UIApplication *)application 
 {    
-    sparrowView.frameRate = 5;
+    [sparrowView stop];
 }
 
 - (void)applicationDidBecomeActive:(UIApplication *)application 
 {
-	sparrowView.frameRate = 30;
+	[sparrowView start];
 }
 
 - (void)dealloc 

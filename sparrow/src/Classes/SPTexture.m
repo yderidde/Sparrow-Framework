@@ -18,8 +18,40 @@
 #import "SPStage.h"
 
 #import <UIKit/UIKit.h>
-#import <QuartzCore/QuartzCore.h>
 
+// --- PVRTC structs & enums -----------------------------------------------------------------------
+
+typedef struct
+{
+	uint headerSize;          // size of the structure
+	uint height;              // height of surface to be created
+	uint width;               // width of input surface 
+	uint numMipmaps;          // number of mip-map levels requested
+	uint pfFlags;             // pixel format flags
+	uint textureDataSize;     // total size in bytes
+	uint bitCount;            // number of bits per pixel 
+	uint rBitMask;            // mask for red bit
+	uint gBitMask;            // mask for green bits
+	uint bBitMask;            // mask for blue bits
+	uint alphaBitMask;        // mask for alpha channel
+	uint pvr;                 // magic number identifying pvr file
+	uint numSurfs;            // number of surfaces present in the pvr
+} PVRTextureHeader;
+
+enum PVRPixelType
+{
+	OGL_RGBA_4444 = 0x10,
+	OGL_RGBA_5551,
+	OGL_RGBA_8888,
+	OGL_RGB_565,
+	OGL_RGB_555,
+	OGL_RGB_888,
+	OGL_I_8,
+	OGL_AI_88,
+	OGL_PVRTC2,
+	OGL_PVRTC4
+};
+    
 // --- private interface ---------------------------------------------------------------------------
 
 @interface SPTexture ()
@@ -60,39 +92,78 @@
     }
     
     NSString *imgType = [[path pathExtension] lowercaseString];
-    if ([imgType isEqualToString:@"pvrtc"])
+    if ([imgType rangeOfString:@"pvr"].location == 0)
         return [self initWithContentsOfPvrtcFile:fullPath];            
     else
         return [self initWithContentsOfImage:[UIImage imageWithContentsOfFile:fullPath]];        
 }
 
-- (id)initWithContentsOfImage:(UIImage *)image
-{  
+- (id)initWithWidth:(int)width height:(int)height draw:(SPTextureDrawingBlock)drawingBlock
+{
+    return [self initWithWidth:width height:height scale:[SPStage contentScaleFactor]
+                    colorSpace:SPColorSpaceRGBA draw:drawingBlock];
+}
+
+- (id)initWithWidth:(int)width height:(int)height scale:(float)scale 
+         colorSpace:(SPColorSpace)colorSpace draw:(SPTextureDrawingBlock)drawingBlock
+{
     [self release]; // class factory - we'll return a subclass!
     
-    float width  = CGImageGetWidth(image.CGImage);
-    float height = CGImageGetHeight(image.CGImage);    
+    width *= scale;
+    height *= scale;
     
     // only textures with sides that are powers of 2 are allowed by OpenGL ES.
-    // thus, we find the next legal size and draw the texture into a valid image.    
+    // thus, we find the next legal size    
     int legalWidth  = 2;   while (legalWidth  < width)  legalWidth *= 2;
     int legalHeight = 2;   while (legalHeight < height) legalHeight *=2;
     
-    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-    void *imageData = malloc(legalWidth * legalHeight * 4);
-    CGContextRef context = CGBitmapContextCreate(imageData, legalWidth, legalHeight,
-                                                 8, 4 * legalWidth, colorSpace, 
-                                                 kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
-    CGColorSpaceRelease(colorSpace);
+    SPTextureFormat textureFormat;
+    CGColorSpaceRef cgColorSpace;
+    CGBitmapInfo bitmapInfo;
+    BOOL premultipliedAlpha;
+    int bytesPerPixel;
+    
+    if (colorSpace == SPColorSpaceRGBA)
+    {
+        textureFormat = SPTextureFormatRGBA;
+        cgColorSpace = CGColorSpaceCreateDeviceRGB();
+        bitmapInfo = kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big;
+        premultipliedAlpha = YES;
+        bytesPerPixel = 4;
+    }
+    else
+    {
+        textureFormat = SPTextureFormatAlpha;
+        cgColorSpace = CGColorSpaceCreateDeviceGray();
+        bitmapInfo = kCGImageAlphaNone;
+        premultipliedAlpha = NO;
+        bytesPerPixel = 1;
+    }
+     
+    void *imageData = malloc(legalWidth * legalHeight * bytesPerPixel);
+    CGContextRef context = CGBitmapContextCreate(imageData, legalWidth, legalHeight, 8, 
+                                                 bytesPerPixel * legalWidth, cgColorSpace, 
+                                                 bitmapInfo);
+    CGColorSpaceRelease(cgColorSpace);
     CGContextClearRect(context, CGRectMake(0, 0, legalWidth, legalHeight));
-    CGContextDrawImage(context, CGRectMake(0, legalHeight-height, width, height), 
-                       image.CGImage);
     
-    SPGLTexture *glTexture = [[SPGLTexture alloc] initWithData:imageData 
-        width:legalWidth height:legalHeight format:SPTextureFormatRGBA premultipliedAlpha:YES];    
+    // UIKit referential is upside down - we flip it and apply the scale factor
+    CGContextTranslateCTM(context, 0.0f, legalHeight);
+	CGContextScaleCTM(context, scale, -scale);
+   
+    UIGraphicsPushContext(context);
+    drawingBlock(context);
+    UIGraphicsPopContext();
     
-    if ([image respondsToSelector:@selector(scale)])
-        glTexture.scale = [image scale];
+    SPTextureProperties properties = {    
+        .format = textureFormat,
+        .width = legalWidth,
+        .height = legalHeight,
+        .premultipliedAlpha = premultipliedAlpha
+    };
+    
+    SPGLTexture *glTexture = [[SPGLTexture alloc] initWithData:imageData properties:properties];    
+    glTexture.scale = scale;
     
     CGContextRelease(context);
     free(imageData);    
@@ -102,8 +173,7 @@
         return glTexture;
     }        
     else 
-    {
-        float scale = glTexture.scale;
+    {        
         SPRectangle *region = [SPRectangle rectangleWithX:0 y:0 width:width/scale height:height/scale];
         SPSubTexture *subTexture = [[SPSubTexture alloc] initWithRegion:region ofTexture:glTexture];
         [glTexture release];
@@ -111,11 +181,56 @@
     }
 }
 
+- (id)initWithContentsOfImage:(UIImage *)image
+{  
+    float scale = [image respondsToSelector:@selector(scale)] ? [image scale] : 1.0f;
+    
+    return [self initWithWidth:image.size.width height:image.size.height
+                         scale:scale colorSpace:SPColorSpaceRGBA draw:^(CGContextRef context)
+            {
+                [image drawAtPoint:CGPointMake(0, 0)];
+            }];
+}
+
 - (id)initWithContentsOfPvrtcFile:(NSString*)path
 {
-    [self release];
-    [NSException raise:@"NotImplemented" format:@"PVRTC images are not yet supported"];    
-    return nil;   
+    [self release]; // class factory - we'll return a subclass!
+
+    NSData *fileData = [[NSData alloc] initWithContentsOfFile:path];
+    PVRTextureHeader *header = (PVRTextureHeader *)[fileData bytes];    
+    bool hasAlpha = header->alphaBitMask ? YES : NO;
+    
+    SPTextureProperties properties = {
+        .width = header->width,
+        .height = header->height,
+        .numMipmaps = header->numMipmaps,
+        .premultipliedAlpha = NO
+    };
+    
+    switch (header->pfFlags & 0xff)
+    {
+        case OGL_PVRTC2:
+            properties.format = hasAlpha ? SPTextureFormatPvrtcRGBA2 : SPTextureFormatPvrtcRGB2;
+            break;
+        case OGL_PVRTC4:
+            properties.format = hasAlpha ? SPTextureFormatPvrtcRGBA4 : SPTextureFormatPvrtcRGB4;
+            break;
+        default: 
+            [fileData release];
+            [NSException raise:SP_EXC_INVALID_OPERATION format:@"Unsupported PRV image format"];
+            return nil;
+    }
+    
+    void *imageData = (unsigned char *)header + header->headerSize;
+
+    SPGLTexture *glTexture = [[SPGLTexture alloc] initWithData:imageData properties:properties];
+    [fileData release];
+    
+    NSString *baseFilename = [[path lastPathComponent] stringByDeletingPathExtension];
+    if ([baseFilename rangeOfString:@"@2x"].location == baseFilename.length - 3)
+        glTexture.scale = 2.0f;
+    
+    return glTexture;
 }
 
 + (SPTexture *)emptyTexture

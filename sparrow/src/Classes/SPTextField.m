@@ -63,8 +63,12 @@ static NSMutableDictionary *bitmapFonts = nil;
         [self addChild:mHitArea];
         [mHitArea release];
         
+        mTextArea = [[SPQuad alloc] initWithWidth:width height:height];
+        mTextArea.visible = NO;        
+        [self addChild:mTextArea];
+        [mTextArea release];
+        
         mRequiresRedraw = YES;
-        [self addEventListener:@selector(onEnterFrame:) atObject:self forType:SP_EVENT_TYPE_ENTER_FRAME];
     }
     return self;
 } 
@@ -90,13 +94,10 @@ static NSMutableDictionary *bitmapFonts = nil;
     return [self initWithText:@""];
 }
 
-- (void)onEnterFrame:(SPEnterFrameEvent*)event
+- (void)render:(SPRenderSupport *)support
 {
-    if (mRequiresRedraw)
-    {
-        [self redrawContents];
-        mRequiresRedraw = NO;
-    }    
+    if (mRequiresRedraw) [self redrawContents];    
+    [super render:support];
 }
 
 - (void)redrawContents
@@ -105,77 +106,58 @@ static NSMutableDictionary *bitmapFonts = nil;
     
     mContents = mIsRenderedText ? [self createRenderedContents] : [self createComposedContents];
     mContents.touchable = NO;    
+    mRequiresRedraw = NO;
     
     [self addChild:mContents];
 }
 
 - (SPDisplayObject *)createRenderedContents
 {
-    float scale = [SPStage contentScaleFactor];
-    float width = mHitArea.width * scale;
-    float height = mHitArea.height * scale;
-    
-    int legalWidth  = 2;   while (legalWidth  < width)  legalWidth  *= 2;
-    int legalHeight = 2;   while (legalHeight < height) legalHeight *= 2;
-
-    // SP_NATIVE_FONT_SIZE is for bitmap fonts only; if somebody uses it for a rendered font,
-    // we default to a standard font size.
+    float width = mHitArea.width;
+    float height = mHitArea.height;    
     float fontSize = mFontSize == SP_NATIVE_FONT_SIZE ? SP_DEFAULT_FONT_SIZE : mFontSize;
-    fontSize *= scale;
     
-    CGSize textSize = [mText sizeWithFont:[UIFont fontWithName:mFontName size:fontSize] 
-                        constrainedToSize:CGSizeMake(width, height) 
-                            lineBreakMode:UILineBreakModeHeadTruncation];
-    
-    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceGray();
-    void *imageData = malloc(legalWidth * legalHeight);
-    CGContextRef context = CGBitmapContextCreate(imageData, legalWidth, legalHeight,
-                                                 8, legalWidth, colorSpace, kCGImageAlphaNone);
-    CGColorSpaceRelease(colorSpace);
-    CGContextClearRect(context, CGRectMake(0, 0, legalWidth, legalHeight));
-    
-    // NSString draws in UIKit referential -> that's upside-down compared to CGBitmapContext!
-    // thus, we flip it.
-    CGContextTranslateCTM(context, 0.0f, legalHeight);
-	CGContextScaleCTM(context, 1.0f, -1.0f); 
-    
-    UIGraphicsPushContext(context);    
-    
-    if (mBorder)
-    {
-        CGContextSetGrayStrokeColor(context, 1.0f, 1.0f);
-        CGContextSetLineWidth(context, 1.0f);
-        CGContextStrokeRect(context, CGRectMake(0.5f, 0.5f, width-1, height-1));
-    }
-        
-    CGContextSetGrayFillColor(context, 1.0f, 1.0f);
     UILineBreakMode lbm = UILineBreakModeTailTruncation;
- 
+    CGSize textSize = [mText sizeWithFont:[UIFont fontWithName:mFontName size:fontSize] 
+                        constrainedToSize:CGSizeMake(width, height) lineBreakMode:lbm];
+    
+    float xOffset = 0;
+    if (mHAlign == SPHAlignCenter)      xOffset = (width - textSize.width) / 2.0f;
+    else if (mHAlign == SPHAlignRight)  xOffset =  width - textSize.width;
+    
     float yOffset = 0;
     if (mVAlign == SPVAlignCenter)      yOffset = (height - textSize.height) / 2.0f;
-    else if (mVAlign == SPVAlignBottom) yOffset =  height - textSize.height;    
+    else if (mVAlign == SPVAlignBottom) yOffset =  height - textSize.height;
     
-    [mText drawInRect:CGRectMake(0, yOffset, width, height)
-             withFont:[UIFont fontWithName:mFontName size:fontSize] 
-        lineBreakMode:lbm alignment:mHAlign];
+    mTextArea.x = xOffset; 
+    mTextArea.y = yOffset;
+    mTextArea.width = textSize.width; 
+    mTextArea.height = textSize.height;
     
-    UIGraphicsPopContext();
+    SPTexture *texture = [[SPTexture alloc] initWithWidth:width height:height
+                                                    scale:[SPStage contentScaleFactor]
+                                               colorSpace:SPColorSpaceAlpha
+                                                     draw:^(CGContextRef context)
+    {
+        if (mBorder)
+        {
+            CGContextSetGrayStrokeColor(context, 1.0f, 1.0f);
+            CGContextSetLineWidth(context, 1.0f);
+            CGContextStrokeRect(context, CGRectMake(0.5f, 0.5f, width-1, height-1));
+        }
+        
+        CGContextSetGrayFillColor(context, 1.0f, 1.0f);        
+        
+        [mText drawInRect:CGRectMake(0, yOffset, width, height)
+                 withFont:[UIFont fontWithName:mFontName size:fontSize] 
+            lineBreakMode:lbm alignment:mHAlign];
+    }];
     
-    SPGLTexture* texture = [[SPGLTexture alloc] initWithData:imageData 
-        width:legalWidth height:legalHeight format:SPTextureFormatAlpha premultipliedAlpha:NO];
-    SPTexture *subTexture = [[SPSubTexture alloc] initWithRegion:
-        [SPRectangle rectangleWithX:0 y:0 width:width height:height] ofTexture:texture];    
-    
-    CGContextRelease(context);
-    free(imageData);
-    
-    texture.scale = scale;
-    SPImage *image = [[SPImage alloc] initWithTexture:subTexture];
+    SPImage *image = [SPImage imageWithTexture:texture];
     image.color = mColor;
     [texture release];
-    [subTexture release];
-
-    return [image autorelease];
+    
+    return image;
 }
 
 - (SPDisplayObject *)createComposedContents
@@ -185,14 +167,26 @@ static NSMutableDictionary *bitmapFonts = nil;
         [NSException raise:SP_EXC_INVALID_OPERATION 
                     format:@"bitmap font %@ not registered!", mFontName];       
  
-    return [bitmapFont createDisplayObjectWithWidth:mHitArea.width height:mHitArea.height
-                                               text:mText fontSize:mFontSize color:mColor
-                                             hAlign:mHAlign vAlign:mVAlign border:mBorder];    
+    SPDisplayObject *contents = [bitmapFont createDisplayObjectWithWidth:mHitArea.width 
+        height:mHitArea.height text:mText fontSize:mFontSize color:mColor
+        hAlign:mHAlign vAlign:mVAlign border:mBorder];    
+    
+    SPRectangle *textBounds = [(SPDisplayObjectContainer *)contents childAtIndex:0].bounds;
+    mTextArea.x = textBounds.x; mTextArea.y = textBounds.y;
+    mTextArea.width = textBounds.width; mTextArea.height = textBounds.height;    
+    
+    return contents;    
 }
 
-- (float)width
-{    
-    return [mHitArea boundsInSpace:self.parent].width;
+- (SPRectangle *)textBounds
+{
+    if (mRequiresRedraw) [self redrawContents];    
+    return [mTextArea boundsInSpace:self.parent];
+}
+
+- (SPRectangle*)boundsInSpace:(SPDisplayObject*)targetCoordinateSpace
+{
+    return [mHitArea boundsInSpace:targetCoordinateSpace];
 }
 
 - (void)setWidth:(float)width
@@ -201,18 +195,13 @@ static NSMutableDictionary *bitmapFonts = nil;
     // changing the size should just make the texture bigger/smaller, 
     // keeping the size of the text/font unchanged. (this applies to setHeight:, as well.)
     
-    mHitArea.width = (mHitArea.width / self.width) * width;
+    mHitArea.width = width;
     mRequiresRedraw = YES;
-}
-
-- (float)height
-{    
-    return [mHitArea boundsInSpace:self.parent].height;
 }
 
 - (void)setHeight:(float)height
 {
-    mHitArea.height = (mHitArea.height / self.height) * height;
+    mHitArea.height = height;
     mRequiresRedraw = YES;
 }
 
@@ -332,7 +321,6 @@ static NSMutableDictionary *bitmapFonts = nil;
 
 - (void)dealloc
 {
-    [self removeEventListenersAtObject:self forType:SP_EVENT_TYPE_ENTER_FRAME];
     [mText release];
     [mFontName release];
     [super dealloc];

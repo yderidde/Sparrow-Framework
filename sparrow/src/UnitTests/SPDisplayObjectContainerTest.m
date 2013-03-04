@@ -241,7 +241,8 @@
     SPQuad *quad = [[SPQuad alloc] initWithWidth:100 height:100];
     quad.alpha = 0.2f;
     [sprite addChild:quad];
-    return [quad release];
+    [quad release];
+    return;
 }
 
 - (void)testDisplayListEvents
@@ -336,6 +337,25 @@
     STAssertEquals(2, sprite.numChildren, @"wrong number of children");
     [sprite removeAllChildren];    
     STAssertEquals(0, sprite.numChildren, @"remove all children did not work");    
+}
+
+- (void)testChildByName
+{
+    SPSprite *parent = [SPSprite sprite];
+    SPSprite *child1 = [SPSprite sprite];
+    SPSprite *child2 = [SPSprite sprite];
+    SPSprite *child3 = [SPSprite sprite];
+    
+    [parent addChild:child1];
+    [parent addChild:child2];
+    [parent addChild:child3];
+    
+    child1.name = @"CHILD";
+    child3.name = @"child";
+    
+    STAssertEqualObjects(child1, [parent childByName:@"CHILD"], @"wrong child returned");
+    STAssertEqualObjects(child3, [parent childByName:@"child"], @"wrong child returned");
+    STAssertNil([parent childByName:@"ChIlD"], @"return child on wrong name");
 }
 
 // STAssertEquals(value, value, message, ...)
