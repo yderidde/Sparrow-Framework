@@ -86,18 +86,10 @@ static void getChildEventListeners(SPDisplayObject *object, NSString *eventType,
 
 - (BOOL)containsChild:(SPDisplayObject *)child
 {
-    if ([self isEqual:child]) return YES; 
-    
-    for (SPDisplayObject *currentChild in mChildren)
+    while (child)
     {
-        if ([currentChild isKindOfClass:[SPDisplayObjectContainer class]])
-        {
-            if ([(SPDisplayObjectContainer *)currentChild containsChild:child]) return YES;
-        }
-        else
-        {
-            if (currentChild == child) return YES;
-        }
+        if (child == self) return YES;
+        else child = child.parent;
     }
     
     return NO;
@@ -148,7 +140,7 @@ static void getChildEventListeners(SPDisplayObject *object, NSString *eventType,
 {
     if (index >= 0 && index < [mChildren count])
     {
-        SPDisplayObject *child = [[mChildren objectAtIndex:index] retain];        
+        SPDisplayObject *child = [mChildren objectAtIndex:index];
 
         SPEvent *remEvent = [[SPEvent alloc] initWithType:SP_EVENT_TYPE_REMOVED];    
         [child dispatchEvent:remEvent];
@@ -161,10 +153,9 @@ static void getChildEventListeners(SPDisplayObject *object, NSString *eventType,
             [remFromStageEvent release];
         }        
         
-        [mChildren removeObjectAtIndex:index];
         child.parent = nil; 
-        
-        [child release];
+        index = [mChildren indexOfObject:child]; // index might have changed in event handler
+        if (index != NSNotFound) [mChildren removeObjectAtIndex:index];
     }
     else [NSException raise:SP_EXC_INDEX_OUT_OF_BOUNDS format:@"Invalid child index"];        
 }
