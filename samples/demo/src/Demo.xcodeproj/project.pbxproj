@@ -641,7 +641,7 @@
 					"-ObjC",
 					"-all_load",
 				);
-				PRODUCT_NAME = Demo;
+				PRODUCT_NAME = "Sparrow Demo";
 				PROVISIONING_PROFILE = "";
 				SDKROOT = iphoneos;
 				USER_HEADER_SEARCH_PATHS = "../../../sparrow/src/**";
@@ -675,7 +675,7 @@
 					"-ObjC",
 					"-all_load",
 				);
-				PRODUCT_NAME = Demo;
+				PRODUCT_NAME = "Sparrow Demo";
 				PROVISIONING_PROFILE = "";
 				SDKROOT = iphoneos;
 				USER_HEADER_SEARCH_PATHS = "../../../sparrow/src/**";
