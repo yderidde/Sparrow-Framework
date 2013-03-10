@@ -15,33 +15,33 @@
 
 @implementation SPGLTexture
 {
-    uint mName;
-    float mWidth;
-    float mHeight;
-    float mScale;
-    BOOL mRepeat;
-    BOOL mPremultipliedAlpha;
-    BOOL mMipmaps;
-    SPTextureSmoothing mSmoothing;
+    uint _name;
+    float _width;
+    float _height;
+    float _scale;
+    BOOL _repeat;
+    BOOL _premultipliedAlpha;
+    BOOL _mipmaps;
+    SPTextureSmoothing _smoothing;
 }
 
-@synthesize name = mName;
-@synthesize repeat = mRepeat;
-@synthesize premultipliedAlpha = mPremultipliedAlpha;
-@synthesize scale = mScale;
-@synthesize smoothing = mSmoothing;
+@synthesize name = _name;
+@synthesize repeat = _repeat;
+@synthesize premultipliedAlpha = _premultipliedAlpha;
+@synthesize scale = _scale;
+@synthesize smoothing = _smoothing;
 
 - (id)initWithName:(uint)name width:(float)width height:(float)height
         containsMipmaps:(BOOL)mipmaps scale:(float)scale premultipliedAlpha:(BOOL)pma
 {
     if ((self = [super init]))
     {
-        mName = name;
-        mWidth = width;
-        mHeight = height;
-        mMipmaps = mipmaps;
-        mScale = scale;
-        mPremultipliedAlpha = pma;
+        _name = name;
+        _width = width;
+        _height = height;
+        _mipmaps = mipmaps;
+        _scale = scale;
+        _premultipliedAlpha = pma;
         
         self.repeat = NO;
         self.smoothing = SPTextureSmoothingBilinear;
@@ -96,43 +96,43 @@
 
 - (float)width
 {
-    return mWidth / mScale;
+    return _width / _scale;
 }
 
 - (float)height
 {
-    return mHeight / mScale;
+    return _height / _scale;
 }
 
 - (void)setRepeat:(BOOL)value
 {
-    mRepeat = value;
-    glBindTexture(GL_TEXTURE_2D, mName);    
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, mRepeat ? GL_REPEAT : GL_CLAMP_TO_EDGE);     
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, mRepeat ? GL_REPEAT : GL_CLAMP_TO_EDGE); 
+    _repeat = value;
+    glBindTexture(GL_TEXTURE_2D, _name);    
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, _repeat ? GL_REPEAT : GL_CLAMP_TO_EDGE);     
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, _repeat ? GL_REPEAT : GL_CLAMP_TO_EDGE); 
 }
 
 - (void)setSmoothing:(SPTextureSmoothing)filterType
 {
-    mSmoothing = filterType;
-    glBindTexture(GL_TEXTURE_2D, mName); 
+    _smoothing = filterType;
+    glBindTexture(GL_TEXTURE_2D, _name); 
     
     int magFilter, minFilter;
     
     if (filterType == SPTextureSmoothingNone)
     {
         magFilter = GL_NEAREST;
-        minFilter = mMipmaps ? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST;
+        minFilter = _mipmaps ? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST;
     }
     else if (filterType == SPTextureSmoothingBilinear)
     {
         magFilter = GL_LINEAR;
-        minFilter = mMipmaps ? GL_LINEAR_MIPMAP_NEAREST : GL_LINEAR;
+        minFilter = _mipmaps ? GL_LINEAR_MIPMAP_NEAREST : GL_LINEAR;
     }
     else
     {
         magFilter = GL_LINEAR;
-        minFilter = mMipmaps ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR;
+        minFilter = _mipmaps ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR;
     }
     
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter); 
@@ -141,7 +141,7 @@
 
 - (void)dealloc
 {     
-    glDeleteTextures(1, &mName); 
+    glDeleteTextures(1, &_name); 
 }
 
 @end

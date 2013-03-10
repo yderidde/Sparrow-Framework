@@ -14,25 +14,25 @@
 
 @implementation SPDelayedInvocation
 {
-    id mTarget;
-    NSMutableSet *mInvocations;
-    double mTotalTime;
-    double mCurrentTime;
+    id _target;
+    NSMutableSet *_invocations;
+    double _totalTime;
+    double _currentTime;
 }
 
-@synthesize totalTime = mTotalTime;
-@synthesize currentTime = mCurrentTime;
-@synthesize target = mTarget;
+@synthesize totalTime = _totalTime;
+@synthesize currentTime = _currentTime;
+@synthesize target = _target;
 
 - (id)initWithTarget:(id)target delay:(double)time
 {
     if (!target) return nil;
     else if ((self = [super init]))
     {
-        mTotalTime = MAX(0.0001, time); // zero is not allowed
-        mCurrentTime = 0;
-        mTarget = target;
-        mInvocations = [[NSMutableSet alloc] init];
+        _totalTime = MAX(0.0001, time); // zero is not allowed
+        _currentTime = 0;
+        _target = target;
+        _invocations = [[NSMutableSet alloc] init];
     }
     return self;
 }
@@ -45,40 +45,40 @@
 - (NSMethodSignature*)methodSignatureForSelector:(SEL)aSelector
 {
     NSMethodSignature *sig = [[self class] instanceMethodSignatureForSelector:aSelector];
-    if (!sig) sig = [mTarget methodSignatureForSelector:aSelector];
+    if (!sig) sig = [_target methodSignatureForSelector:aSelector];
     return sig;
 }
 
 - (void)forwardInvocation:(NSInvocation*)anInvocation
 {
-    if ([mTarget respondsToSelector:[anInvocation selector]])
+    if ([_target respondsToSelector:[anInvocation selector]])
     {
-        anInvocation.target = mTarget;
+        anInvocation.target = _target;
         [anInvocation retainArguments];
-        [mInvocations addObject:anInvocation];
+        [_invocations addObject:anInvocation];
     }
 }
 
 - (void)advanceTime:(double)seconds
 {
-    self.currentTime = mCurrentTime + seconds;
+    self.currentTime = _currentTime + seconds;
 }
 
 - (void)setCurrentTime:(double)currentTime
 {
-    double previousTime = mCurrentTime;    
-    mCurrentTime = MIN(mTotalTime, currentTime);
+    double previousTime = _currentTime;    
+    _currentTime = MIN(_totalTime, currentTime);
     
-    if (previousTime < mTotalTime && mCurrentTime >= mTotalTime)
+    if (previousTime < _totalTime && _currentTime >= _totalTime)
     {
-        [mInvocations makeObjectsPerformSelector:@selector(invoke)];
+        [_invocations makeObjectsPerformSelector:@selector(invoke)];
         [self dispatchEventWithType:SP_EVENT_TYPE_REMOVE_FROM_JUGGLER];
     }
 }
 
 - (BOOL)isComplete
 {
-    return mCurrentTime >= mTotalTime;
+    return _currentTime >= _totalTime;
 }
 
 + (id)invocationWithTarget:(id)target delay:(double)time

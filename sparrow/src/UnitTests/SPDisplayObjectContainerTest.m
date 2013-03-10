@@ -28,13 +28,13 @@
 
 @interface SPDisplayObjectContainerTest : SenTestCase 
 {
-    int mAdded;
-    int mAddedToStage;
-    int mRemoved;
-    int mRemovedFromStage;
-    int mEventCount;
-    SPSprite *mTestSprite;
-    SPEventDispatcher *mBroadcastTarget;
+    int _added;
+    int _addedToStage;
+    int _removed;
+    int _removedFromStage;
+    int _eventCount;
+    SPSprite *_testSprite;
+    SPEventDispatcher *_broadcastTarget;
 }
 
 - (void)addQuadToSprite:(SPSprite*)sprite;
@@ -49,8 +49,8 @@
 
 - (void) setUp
 {
-    mAdded = mAddedToStage = mRemoved = mRemovedFromStage = mEventCount = 0;    
-    mTestSprite = [[SPSprite alloc] init];
+    _added = _addedToStage = _removed = _removedFromStage = _eventCount = 0;    
+    _testSprite = [[SPSprite alloc] init];
 }
 
 - (void)testChildParentHandling
@@ -284,31 +284,31 @@
     
     [sprite addChild:quad];
     
-    STAssertEquals(1, mAdded, @"failure on event 'added'");
-    STAssertEquals(0, mRemoved, @"failure on event 'removed'");
-    STAssertEquals(0, mAddedToStage, @"failure on event 'addedToStage'");
-    STAssertEquals(0, mRemovedFromStage, @"failure on event 'removedFromStage'");
+    STAssertEquals(1, _added, @"failure on event 'added'");
+    STAssertEquals(0, _removed, @"failure on event 'removed'");
+    STAssertEquals(0, _addedToStage, @"failure on event 'addedToStage'");
+    STAssertEquals(0, _removedFromStage, @"failure on event 'removedFromStage'");
     
     [stage addChild:sprite];
     
-    STAssertEquals(1, mAdded, @"failure on event 'added'");
-    STAssertEquals(0, mRemoved, @"failure on event 'removed'");
-    STAssertEquals(1, mAddedToStage, @"failure on event 'addedToStage'");
-    STAssertEquals(0, mRemovedFromStage, @"failure on event 'removedFromStage'");
+    STAssertEquals(1, _added, @"failure on event 'added'");
+    STAssertEquals(0, _removed, @"failure on event 'removed'");
+    STAssertEquals(1, _addedToStage, @"failure on event 'addedToStage'");
+    STAssertEquals(0, _removedFromStage, @"failure on event 'removedFromStage'");
     
     [stage removeChild:sprite];
     
-    STAssertEquals(1, mAdded, @"failure on event 'added'");
-    STAssertEquals(0, mRemoved, @"failure on event 'removed'");
-    STAssertEquals(1, mAddedToStage, @"failure on event 'addedToStage'");
-    STAssertEquals(1, mRemovedFromStage, @"failure on event 'removedFromStage'");
+    STAssertEquals(1, _added, @"failure on event 'added'");
+    STAssertEquals(0, _removed, @"failure on event 'removed'");
+    STAssertEquals(1, _addedToStage, @"failure on event 'addedToStage'");
+    STAssertEquals(1, _removedFromStage, @"failure on event 'removedFromStage'");
     
     [sprite removeChild:quad];
     
-    STAssertEquals(1, mAdded, @"failure on event 'added'");
-    STAssertEquals(1, mRemoved, @"failure on event 'removed'");
-    STAssertEquals(1, mAddedToStage, @"failure on event 'addedToStage'");
-    STAssertEquals(1, mRemovedFromStage, @"failure on event 'removedFromStage'");
+    STAssertEquals(1, _added, @"failure on event 'added'");
+    STAssertEquals(1, _removed, @"failure on event 'removed'");
+    STAssertEquals(1, _addedToStage, @"failure on event 'addedToStage'");
+    STAssertEquals(1, _removedFromStage, @"failure on event 'removedFromStage'");
     
     [quad removeEventListenersAtObject:self forType:SP_EVENT_TYPE_ADDED];
     [quad removeEventListenersAtObject:self forType:SP_EVENT_TYPE_ADDED_TO_STAGE];
@@ -316,24 +316,24 @@
     [quad removeEventListenersAtObject:self forType:SP_EVENT_TYPE_REMOVED_FROM_STAGE];
 }
 
-- (void)onAdded:(SPEvent*)event { mAdded++; }
-- (void)onRemoved:(SPEvent*)event { mRemoved++; }
-- (void)onAddedToStage:(SPEvent*)event { mAddedToStage++; }
-- (void)onRemovedFromStage:(SPEvent*)event { mRemovedFromStage++; }
+- (void)onAdded:(SPEvent*)event { _added++; }
+- (void)onRemoved:(SPEvent*)event { _removed++; }
+- (void)onAddedToStage:(SPEvent*)event { _addedToStage++; }
+- (void)onRemovedFromStage:(SPEvent*)event { _removedFromStage++; }
 
 - (void)testRemovedFromStage
 {
     SPStage *stage = [[SPStage alloc] init];
-    [stage addChild:mTestSprite];    
-    [mTestSprite addEventListener:@selector(onTestSpriteRemovedFromStage:) atObject:self
+    [stage addChild:_testSprite];    
+    [_testSprite addEventListener:@selector(onTestSpriteRemovedFromStage:) atObject:self
                           forType:SP_EVENT_TYPE_REMOVED_FROM_STAGE];    
-    [mTestSprite removeFromParent];
-    [mTestSprite removeEventListenersAtObject:self forType:SP_EVENT_TYPE_REMOVED_FROM_STAGE];        
+    [_testSprite removeFromParent];
+    [_testSprite removeEventListenersAtObject:self forType:SP_EVENT_TYPE_REMOVED_FROM_STAGE];        
 }
 
 - (void)onTestSpriteRemovedFromStage:(SPEvent *)event
 {
-    STAssertNotNil(mTestSprite.stage, @"stage not accessible in removed from stage event");
+    STAssertNotNil(_testSprite.stage, @"stage not accessible in removed from stage event");
 }
 
 - (void)testAddExistingChild
@@ -429,7 +429,7 @@
     // removes the children from their parent when it reaches child1. Furthermore, it should
     // not crash.
     
-    STAssertEquals(3, mEventCount, @"not all children received events!");
+    STAssertEquals(3, _eventCount, @"not all children received events!");
 }
 
 - (void)testBroadcastEventTarget
@@ -451,12 +451,12 @@
     [childA2 addEventListener:@selector(onBroadcastEvent:) atObject:self forType:@"test"];
     [parent broadcastEvent:[SPEvent eventWithType:@"test"]];
     
-    STAssertEquals(parent, mBroadcastTarget, @"wrong event.target on broadcast");
+    STAssertEquals(parent, _broadcastTarget, @"wrong event.target on broadcast");
 }
 
 - (void)onBroadcastEvent:(SPEvent *)event
 {
-    mBroadcastTarget = event.target;
+    _broadcastTarget = event.target;
 }
 
 - (void)onChildEvent:(SPEvent *)event
@@ -466,7 +466,7 @@
     if ([target.name isEqualToString:@"trigger"])
         [target.parent removeAllChildren];
     
-    ++mEventCount;
+    ++_eventCount;
 }
 
 - (void)testRemoveWithEventHandler

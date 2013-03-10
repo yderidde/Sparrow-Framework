@@ -24,45 +24,45 @@ typedef void (*FnPtrSetterUI) (id, SEL, uint);
 
 @implementation SPTweenedProperty
 {
-    id  mTarget;
+    id  _target;
     
-    SEL mGetter;
-    IMP mGetterFunc;
-    SEL mSetter;
-    IMP mSetterFunc;
+    SEL _getter;
+    IMP _getterFunc;
+    SEL _setter;
+    IMP _setterFunc;
     
-    float mStartValue;
-    float mEndValue;
-    char  mNumericType;
+    float _startValue;
+    float _endValue;
+    char  _numericType;
 }
 
-@synthesize startValue = mStartValue;
-@synthesize endValue = mEndValue;
+@synthesize startValue = _startValue;
+@synthesize endValue = _endValue;
 
 - (id)initWithTarget:(id)target name:(NSString *)name endValue:(float)endValue
 {
     if ((self = [super init]))
     {
-        mTarget = target;        
-        mEndValue = endValue;
+        _target = target;        
+        _endValue = endValue;
         
-        mGetter = NSSelectorFromString(name);
-        mSetter = NSSelectorFromString([NSString stringWithFormat:@"set%@%@:", 
+        _getter = NSSelectorFromString(name);
+        _setter = NSSelectorFromString([NSString stringWithFormat:@"set%@%@:", 
                                         [[name substringToIndex:1] uppercaseString], 
                                         [name substringFromIndex:1]]);
         
-        if (![mTarget respondsToSelector:mGetter] || ![mTarget respondsToSelector:mSetter])
+        if (![_target respondsToSelector:_getter] || ![_target respondsToSelector:_setter])
             [NSException raise:SP_EXC_INVALID_OPERATION format:@"property not found or readonly: '%@'", 
              name];    
         
         // query argument type
-        NSMethodSignature *sig = [mTarget methodSignatureForSelector:mGetter];
-        mNumericType = *[sig methodReturnType];    
-        if (mNumericType != 'f' && mNumericType != 'i' && mNumericType != 'd' && mNumericType != 'I')
+        NSMethodSignature *sig = [_target methodSignatureForSelector:_getter];
+        _numericType = *[sig methodReturnType];    
+        if (_numericType != 'f' && _numericType != 'i' && _numericType != 'd' && _numericType != 'I')
             [NSException raise:SP_EXC_INVALID_OPERATION format:@"property not numeric: '%@'", name];
         
-        mGetterFunc = [mTarget methodForSelector:mGetter];
-        mSetterFunc = [mTarget methodForSelector:mSetter];       
+        _getterFunc = [_target methodForSelector:_getter];
+        _setterFunc = [_target methodForSelector:_setter];       
     }
     return self;
 }
@@ -74,55 +74,55 @@ typedef void (*FnPtrSetterUI) (id, SEL, uint);
 
 - (void)setCurrentValue:(float)value
 {
-    if (mNumericType == 'f')
+    if (_numericType == 'f')
     {
-        FnPtrSetterF func = (FnPtrSetterF)mSetterFunc;
-        func(mTarget, mSetter, value);
+        FnPtrSetterF func = (FnPtrSetterF)_setterFunc;
+        func(_target, _setter, value);
     }        
-    else if (mNumericType == 'd')
+    else if (_numericType == 'd')
     {
-        FnPtrSetterD func = (FnPtrSetterD)mSetterFunc;
-        func(mTarget, mSetter, (double)value);
+        FnPtrSetterD func = (FnPtrSetterD)_setterFunc;
+        func(_target, _setter, (double)value);
     }
-    else if (mNumericType == 'I')
+    else if (_numericType == 'I')
     {
-        FnPtrSetterUI func = (FnPtrSetterUI)mSetterFunc;
-        func(mTarget, mSetter, (double)value);
+        FnPtrSetterUI func = (FnPtrSetterUI)_setterFunc;
+        func(_target, _setter, (double)value);
     }
     else
     {
-        FnPtrSetterI func = (FnPtrSetterI)mSetterFunc;
-        func(mTarget, mSetter, (int)(value > 0 ? value+0.5f : value-0.5f));
+        FnPtrSetterI func = (FnPtrSetterI)_setterFunc;
+        func(_target, _setter, (int)(value > 0 ? value+0.5f : value-0.5f));
     }        
 }
 
 - (float)currentValue
 {
-    if (mNumericType == 'f')
+    if (_numericType == 'f')
     {
-        FnPtrGetterF func = (FnPtrGetterF)mGetterFunc;
-        return func(mTarget, mGetter);
+        FnPtrGetterF func = (FnPtrGetterF)_getterFunc;
+        return func(_target, _getter);
     }
-    else if (mNumericType == 'd')
+    else if (_numericType == 'd')
     {
-        FnPtrGetterD func = (FnPtrGetterD)mGetterFunc;
-        return func(mTarget, mGetter);
+        FnPtrGetterD func = (FnPtrGetterD)_getterFunc;
+        return func(_target, _getter);
     }
-    else if (mNumericType == 'I')
+    else if (_numericType == 'I')
     {
-        FnPtrGetterUI func = (FnPtrGetterUI)mGetterFunc;
-        return func(mTarget, mGetter);
+        FnPtrGetterUI func = (FnPtrGetterUI)_getterFunc;
+        return func(_target, _getter);
     }
     else 
     {
-        FnPtrGetterI func = (FnPtrGetterI)mGetterFunc;
-        return func(mTarget, mGetter);
+        FnPtrGetterI func = (FnPtrGetterI)_getterFunc;
+        return func(_target, _getter);
     }
 }
 
 - (float)delta
 {
-    return mEndValue - mStartValue;
+    return _endValue - _startValue;
 }
 
 @end

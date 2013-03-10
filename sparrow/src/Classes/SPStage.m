@@ -20,21 +20,21 @@
 
 @implementation SPStage
 {
-    float mWidth;
-    float mHeight;
-    uint  mColor;
+    float _width;
+    float _height;
+    uint  _color;
 }
 
-@synthesize width = mWidth;
-@synthesize height = mHeight;
-@synthesize color = mColor;
+@synthesize width = _width;
+@synthesize height = _height;
+@synthesize color = _color;
 
 - (id)initWithWidth:(float)width height:(float)height
 {    
     if ((self = [super init]))
     {
-        mWidth = width;
-        mHeight = height;
+        _width = width;
+        _height = height;
     }
     return self;
 }
@@ -65,8 +65,8 @@
 
 - (void)render:(SPRenderSupport *)support
 {
-    [SPRenderSupport clearWithColor:mColor alpha:1.0f];
-    [support setupOrthographicProjectionWithLeft:0 right:mWidth top:0 bottom:mHeight];
+    [SPRenderSupport clearWithColor:_color alpha:1.0f];
+    [support setupOrthographicProjectionWithLeft:0 right:_width top:0 bottom:_height];
     
     [super render:support];
 }

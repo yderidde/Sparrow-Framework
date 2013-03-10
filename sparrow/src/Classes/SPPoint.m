@@ -19,20 +19,20 @@
 
 @implementation SPPoint
 {
-    float mX;
-    float mY;
+    float _x;
+    float _y;
 }
 
-@synthesize x = mX;
-@synthesize y = mY;
+@synthesize x = _x;
+@synthesize y = _y;
 
 // designated initializer
 - (id)initWithX:(float)x y:(float)y
 {
     if ((self = [super init]))
     {
-        mX = x;
-        mY = y;        
+        _x = x;
+        _y = y;        
     }
     return self;
 }
@@ -49,74 +49,74 @@
 
 - (float)length
 {
-    return sqrtf(SQ(mX) + SQ(mY));
+    return sqrtf(SQ(_x) + SQ(_y));
 }
 
 - (float)lengthSquared 
 {
-    return SQ(mX) + SQ(mY);
+    return SQ(_x) + SQ(_y);
 }
 
 - (float)angle
 {
-    return atan2f(mY, mX);
+    return atan2f(_y, _x);
 }
 
 - (BOOL)isOrigin
 {
-    return mX == 0.0f && mY == 0.0f;
+    return _x == 0.0f && _y == 0.0f;
 }
 
 - (SPPoint *)invert
 {
-    return [[SPPoint alloc] initWithX:-mX y:-mY];
+    return [[SPPoint alloc] initWithX:-_x y:-_y];
 }
 
 - (SPPoint*)addPoint:(SPPoint*)point
 {
-    return [[SPPoint alloc] initWithX:mX+point->mX y:mY+point->mY];
+    return [[SPPoint alloc] initWithX:_x+point->_x y:_y+point->_y];
 }
 
 - (SPPoint*)subtractPoint:(SPPoint*)point
 {
-    return [[SPPoint alloc] initWithX:mX-point->mX y:mY-point->mY];
+    return [[SPPoint alloc] initWithX:_x-point->_x y:_y-point->_y];
 }
 
 - (SPPoint *)scaleBy:(float)scalar
 {
-    return [[SPPoint alloc] initWithX:mX * scalar y:mY * scalar];
+    return [[SPPoint alloc] initWithX:_x * scalar y:_y * scalar];
 }
 
 - (SPPoint *)rotateBy:(float)angle  
 {
     float sina = sinf(angle);
     float cosa = cosf(angle);
-    return [[SPPoint alloc] initWithX:(mX * cosa) - (mY * sina) y:(mX * sina) + (mY * cosa)];
+    return [[SPPoint alloc] initWithX:(_x * cosa) - (_y * sina) y:(_x * sina) + (_y * cosa)];
 }
 
 - (SPPoint *)normalize
 {
-    if (mX == 0 && mY == 0)
+    if (_x == 0 && _y == 0)
         [NSException raise:SP_EXC_INVALID_OPERATION format:@"Cannot normalize point in the origin"];
         
     float inverseLength = 1.0f / self.length;
-    return [[SPPoint alloc] initWithX:mX * inverseLength y:mY * inverseLength];
+    return [[SPPoint alloc] initWithX:_x * inverseLength y:_y * inverseLength];
 }
 
 - (float)dot:(SPPoint *)other
 {
-    return mX * other->mX + mY * other->mY;
+    return _x * other->_x + _y * other->_y;
 }
 
 - (void)copyFromPoint:(SPPoint *)point
 {
-    mX = point->mX;
-    mY = point->mY;
+    _x = point->_x;
+    _y = point->_y;
 }
 
 - (GLKVector2)convertToGLKVector
 {
-    return GLKVector2Make(mX, mY);
+    return GLKVector2Make(_x, _y);
 }
 
 - (BOOL)isEquivalent:(SPPoint *)other
@@ -126,25 +126,25 @@
     else
     {
         SPPoint *point = (SPPoint*)other;
-        return SP_IS_FLOAT_EQUAL(mX, point->mX) && SP_IS_FLOAT_EQUAL(mY, point->mY);    
+        return SP_IS_FLOAT_EQUAL(_x, point->_x) && SP_IS_FLOAT_EQUAL(_y, point->_y);    
     }
 }
 
 - (NSString *)description
 {
-    return [NSString stringWithFormat:@"[SPPoint: x=%f, y=%f]", mX, mY];
+    return [NSString stringWithFormat:@"[SPPoint: x=%f, y=%f]", _x, _y];
 }
 
 + (float)distanceFromPoint:(SPPoint*)p1 toPoint:(SPPoint*)p2
 {
-    return sqrtf(SQ(p2->mX - p1->mX) + SQ(p2->mY - p1->mY));
+    return sqrtf(SQ(p2->_x - p1->_x) + SQ(p2->_y - p1->_y));
 }
 
 + (SPPoint *)interpolateFromPoint:(SPPoint *)p1 toPoint:(SPPoint *)p2 ratio:(float)ratio
 {
     float invRatio = 1.0f - ratio;
-    return [SPPoint pointWithX:invRatio * p1->mX + ratio * p2->mX
-                             y:invRatio * p1->mY + ratio * p2->mY];
+    return [SPPoint pointWithX:invRatio * p1->_x + ratio * p2->_x
+                             y:invRatio * p1->_y + ratio * p2->_y];
 }
 
 + (float)angleBetweenPoint:(SPPoint *)p1 andPoint:(SPPoint *)p2
@@ -172,7 +172,7 @@
 
 - (id)copyWithZone:(NSZone*)zone
 {
-    return [[[self class] allocWithZone:zone] initWithX:mX y:mY];
+    return [[[self class] allocWithZone:zone] initWithX:_x y:_y];
 }
 
 #pragma mark SPPoolObject

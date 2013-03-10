@@ -29,41 +29,41 @@
 
 @implementation SPViewController
 {
-    EAGLContext *mContext;
-    Class mRootClass;
-    SPStage *mStage;
-    SPDisplayObject *mRoot;
-    SPJuggler *mJuggler;
-    SPTouchProcessor *mTouchProcessor;
-    SPRenderSupport *mSupport;
+    EAGLContext *_context;
+    Class _rootClass;
+    SPStage *_stage;
+    SPDisplayObject *_root;
+    SPJuggler *_juggler;
+    SPTouchProcessor *_touchProcessor;
+    SPRenderSupport *_support;
     
-    double mLastTouchTimestamp;
-    float mContentScaleFactor;
-    float mViewScaleFactor;
-    BOOL mSupportHighResolutions;
-    BOOL mDoubleResolutionOnPad;
+    double _lastTouchTimestamp;
+    float _contentScaleFactor;
+    float _viewScaleFactor;
+    BOOL _supportHighResolutions;
+    BOOL _doubleResolutionOnPad;
 }
 
-@synthesize stage = mStage;
-@synthesize juggler = mJuggler;
-@synthesize root = mRoot;
-@synthesize context = mContext;
-@synthesize supportHighResolutions = mSupportHighResolutions;
-@synthesize doubleResolutionOnPad = mDoubleResolutionOnPad;
-@synthesize contentScaleFactor = mContentScaleFactor;
+@synthesize stage = _stage;
+@synthesize juggler = _juggler;
+@synthesize root = _root;
+@synthesize context = _context;
+@synthesize supportHighResolutions = _supportHighResolutions;
+@synthesize doubleResolutionOnPad = _doubleResolutionOnPad;
+@synthesize contentScaleFactor = _contentScaleFactor;
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
     if ((self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil]))
     {
-        mContentScaleFactor = 1.0f;
-        mStage = [[SPStage alloc] init];
-        mJuggler = [[SPJuggler alloc] init];
-        mTouchProcessor = [[SPTouchProcessor alloc] initWithRoot:mStage];
-        mContext = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
-        mSupport = [[SPRenderSupport alloc] init];
+        _contentScaleFactor = 1.0f;
+        _stage = [[SPStage alloc] init];
+        _juggler = [[SPJuggler alloc] init];
+        _touchProcessor = [[SPTouchProcessor alloc] initWithRoot:_stage];
+        _context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
+        _support = [[SPRenderSupport alloc] init];
         
-        if (!mContext || ![EAGLContext setCurrentContext:mContext])
+        if (!_context || ![EAGLContext setCurrentContext:_context])
             NSLog(@"Could not create render context");
         
         [Sparrow setCurrentController:self];
@@ -75,12 +75,12 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    [self glkView].context = mContext;
+    [self glkView].context = _context;
 }
 
 - (void)viewDidUnload
 {
-    mContext = nil;
+    _context = nil;
     [EAGLContext setCurrentContext:nil];
 }
 
@@ -105,27 +105,27 @@
 
 - (void)startWithRoot:(Class)rootClass supportHighResolutions:(BOOL)hd doubleOnPad:(BOOL)pad
 {
-    if (mRootClass)
+    if (_rootClass)
         [NSException raise:SP_EXC_INVALID_OPERATION
                     format:@"Sparrow has already been started"];
 
     BOOL isPad = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad;
     
-    mRootClass = rootClass;
-    mSupportHighResolutions = hd;
-    mDoubleResolutionOnPad = pad;
-    mViewScaleFactor = mSupportHighResolutions ? [[UIScreen mainScreen] scale] : 1.0f;
-    mContentScaleFactor = (mDoubleResolutionOnPad && isPad) ? mViewScaleFactor * 2.0f : mViewScaleFactor;
+    _rootClass = rootClass;
+    _supportHighResolutions = hd;
+    _doubleResolutionOnPad = pad;
+    _viewScaleFactor = _supportHighResolutions ? [[UIScreen mainScreen] scale] : 1.0f;
+    _contentScaleFactor = (_doubleResolutionOnPad && isPad) ? _viewScaleFactor * 2.0f : _viewScaleFactor;
 }
 
 - (void)createRoot
 {
-    if (!mRoot)
+    if (!_root)
     {
-        mRoot = [[mRootClass alloc] init];
-        [mStage addChild:mRoot atIndex:0];
+        _root = [[_rootClass alloc] init];
+        [_stage addChild:_root atIndex:0];
     
-        if ([mRoot isKindOfClass:[SPStage class]])
+        if ([_root isKindOfClass:[SPStage class]])
             [NSException raise:SP_EXC_INVALID_OPERATION
                         format:@"Root extends 'SPStage' but is expected to extend 'SPSprite' "
                                @"instead (different to Sparrow 1.x)"];
@@ -135,8 +135,8 @@
 - (void)updateStageSize
 {
     CGSize viewSize = self.view.bounds.size;
-    mStage.width  = viewSize.width  * mViewScaleFactor / mContentScaleFactor;
-    mStage.height = viewSize.height * mViewScaleFactor / mContentScaleFactor;
+    _stage.width  = viewSize.width  * _viewScaleFactor / _contentScaleFactor;
+    _stage.height = viewSize.height * _viewScaleFactor / _contentScaleFactor;
 }
 
 #pragma mark - GLKViewDelegate
@@ -145,7 +145,7 @@
 {
     @autoreleasepool
     {
-        if (!mRoot)
+        if (!_root)
         {
             // ideally, we'd do this in 'viewDidLoad', but when iOS starts up in landscape mode,
             // the view width and height are swapped. In this method, however, they are correct.
@@ -155,15 +155,15 @@
         }
         
         [Sparrow setCurrentController:self];
-        [EAGLContext setCurrentContext:mContext];
+        [EAGLContext setCurrentContext:_context];
         
         glDisable(GL_CULL_FACE);
         glDisable(GL_DEPTH_TEST);
         glEnable(GL_BLEND);
         
-        [mSupport nextFrame];
-        [mStage render:mSupport];
-        [mSupport finishQuadBatch];
+        [_support nextFrame];
+        [_stage render:_support];
+        [_support finishQuadBatch];
         
         #if DEBUG
         [SPRenderSupport checkForOpenGLError];
@@ -178,11 +178,11 @@
         double passedTime = self.timeSinceLastUpdate;
         
         [Sparrow setCurrentController:self];
-        [mJuggler advanceTime:passedTime];
+        [_juggler advanceTime:passedTime];
         
         SPEnterFrameEvent *enterFrameEvent =
         [[SPEnterFrameEvent alloc] initWithType:SP_EVENT_TYPE_ENTER_FRAME passedTime:passedTime];
-        [mStage broadcastEvent:enterFrameEvent];
+        [_stage broadcastEvent:enterFrameEvent];
     }
 }
 
@@ -215,19 +215,19 @@
 
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event
 {
-    mLastTouchTimestamp -= 0.0001f; // cancelled touch events have an old timestamp -> workaround
+    _lastTouchTimestamp -= 0.0001f; // cancelled touch events have an old timestamp -> workaround
     [self processTouchEvent:event];
 }
 
 - (void)processTouchEvent:(UIEvent*)event
 {
-    if (!self.paused && mLastTouchTimestamp != event.timestamp)
+    if (!self.paused && _lastTouchTimestamp != event.timestamp)
     {
         @autoreleasepool
         {
             CGSize viewSize = self.view.bounds.size;
-            float xConversion = mStage.width / viewSize.width;
-            float yConversion = mStage.height / viewSize.height;
+            float xConversion = _stage.width / viewSize.width;
+            float yConversion = _stage.height / viewSize.height;
             
             // convert to SPTouches and forward to stage
             NSMutableSet *touches = [NSMutableSet set];
@@ -246,8 +246,8 @@
                 touch.phase = (SPTouchPhase)uiTouch.phase;
                 [touches addObject:touch];
             }
-            [mTouchProcessor processTouches:touches];
-            mLastTouchTimestamp = event.timestamp;
+            [_touchProcessor processTouches:touches];
+            _lastTouchTimestamp = event.timestamp;
         }
     }
 }
@@ -296,19 +296,19 @@
     // inform all display objects about the new game size
     BOOL isPortrait = UIInterfaceOrientationIsPortrait(interfaceOrientation);
     
-    float newWidth  = isPortrait ? MIN(mStage.width, mStage.height) :
-                                   MAX(mStage.width, mStage.height);
-    float newHeight = isPortrait ? MAX(mStage.width, mStage.height) :
-                                   MIN(mStage.width, mStage.height);
+    float newWidth  = isPortrait ? MIN(_stage.width, _stage.height) :
+                                   MAX(_stage.width, _stage.height);
+    float newHeight = isPortrait ? MAX(_stage.width, _stage.height) :
+                                   MIN(_stage.width, _stage.height);
     
-    if (newWidth != mStage.width)
+    if (newWidth != _stage.width)
     {
-        mStage.width  = newWidth;
-        mStage.height = newHeight;
+        _stage.width  = newWidth;
+        _stage.height = newHeight;
         
         SPEvent *resizeEvent = [[SPResizeEvent alloc] initWithType:SP_EVENT_TYPE_RESIZE
                                width:newWidth height:newHeight animationTime:duration];
-        [mStage broadcastEvent:resizeEvent];
+        [_stage broadcastEvent:resizeEvent];
     }
 }
 

@@ -10,7 +10,7 @@
 
 @implementation MovieScene
 {
-    SPMovieClip *mMovie;
+    SPMovieClip *_movie;
 }
 
 - (id)init
@@ -31,17 +31,17 @@
         
         // add frames to movie
         NSArray *frames = [atlas texturesStartingWith:@"walk_"];
-        mMovie = [[SPMovieClip alloc] initWithFrames:frames fps:12];
+        _movie = [[SPMovieClip alloc] initWithFrames:frames fps:12];
         
         // add sounds
         SPSound *stepSound = [[SPSound alloc] initWithContentsOfFile:@"step.caf"];        
-        [mMovie setSound:[stepSound createChannel] atIndex:1];
-        [mMovie setSound:[stepSound createChannel] atIndex:7];
+        [_movie setSound:[stepSound createChannel] atIndex:1];
+        [_movie setSound:[stepSound createChannel] atIndex:7];
         
         // move the clip to the center and add it to the stage
-        mMovie.x = CENTER_X - (int)mMovie.width / 2;
-        mMovie.y = CENTER_Y - (int)mMovie.height / 2; 
-        [self addChild:mMovie];                
+        _movie.x = CENTER_X - (int)_movie.width / 2;
+        _movie.y = CENTER_Y - (int)_movie.height / 2; 
+        [self addChild:_movie];                
 
         // like any animation, the movie needs to be added to the juggler!
         // this is the recommended way to do that.
@@ -53,12 +53,12 @@
 
 - (void)onAddedToStage:(SPEvent *)event
 {
-    [Sparrow.juggler addObject:mMovie];
+    [Sparrow.juggler addObject:_movie];
 }
 
 - (void)onRemovedFromStage:(SPEvent *)event
 {
-    [Sparrow.juggler removeObject:mMovie];
+    [Sparrow.juggler removeObject:_movie];
 }
 
 @end

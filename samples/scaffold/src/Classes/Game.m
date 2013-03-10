@@ -20,7 +20,7 @@
 
 @implementation Game
 {
-    SPSprite *mContents;
+    SPSprite *_contents;
 }
 
 - (id)init
@@ -58,13 +58,13 @@
     
     // Create some placeholder content: a background image, the Sparrow logo, and a text field.
     // The positions are updated when the device is rotated. To make that easy, we put all objects
-    // in one sprite (mContents): it will simply be rotated to be upright when the device rotates.
+    // in one sprite (_contents): it will simply be rotated to be upright when the device rotates.
 
-    mContents = [SPSprite sprite];
-    [self addChild:mContents];
+    _contents = [SPSprite sprite];
+    [self addChild:_contents];
 
     SPImage *background = [[SPImage alloc] initWithContentsOfFile:@"background.jpg"];
-    [mContents addChild:background];
+    [_contents addChild:background];
     
     NSString *text = @"To find out how to create your own game out of this scaffold, "
                      @"have a look at the 'First Steps' section of the Sparrow website!";
@@ -72,14 +72,14 @@
     SPTextField *textField = [[SPTextField alloc] initWithWidth:280 height:80 text:text];
     textField.x = (background.width - textField.width) / 2;
     textField.y = (background.height / 2) - 135;
-    [mContents addChild:textField];
+    [_contents addChild:textField];
 
     SPImage *image = [[SPImage alloc] initWithTexture:[Media atlasTexture:@"sparrow"]];
     image.pivotX = (int)image.width  / 2;
     image.pivotY = (int)image.height / 2;
     image.x = background.width  / 2;
     image.y = background.height / 2 + 40;
-    [mContents addChild:image];
+    [_contents addChild:image];
     
     [self updateLocations];
     
@@ -121,8 +121,8 @@
     int gameWidth  = Sparrow.stage.width;
     int gameHeight = Sparrow.stage.height;
     
-    mContents.x = (int) (gameWidth  - mContents.width)  / 2;
-    mContents.y = (int) (gameHeight - mContents.height) / 2;
+    _contents.x = (int) (gameWidth  - _contents.width)  / 2;
+    _contents.y = (int) (gameHeight - _contents.height) / 2;
 }
 
 - (void)onImageTouched:(SPTouchEvent *)event

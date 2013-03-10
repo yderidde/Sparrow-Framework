@@ -15,11 +15,11 @@
 
 @implementation SPAVSound
 {
-    NSData *mSoundData;
-    double mDuration;
+    NSData *_soundData;
+    double _duration;
 }
 
-@synthesize duration = mDuration;
+@synthesize duration = _duration;
 
 - (id)init
 {
@@ -31,8 +31,8 @@
     if ((self = [super init]))
     {
         NSString *fullPath = [SPUtils absolutePathToFile:path];
-        mSoundData = [[NSData alloc] initWithContentsOfMappedFile:fullPath];
-        mDuration = duration;
+        _soundData = [[NSData alloc] initWithContentsOfMappedFile:fullPath];
+        _duration = duration;
     }
     return self;
 }
@@ -45,7 +45,7 @@
 - (AVAudioPlayer *)createPlayer
 {
     NSError *error = nil;    
-    AVAudioPlayer *player = [[AVAudioPlayer alloc] initWithData:mSoundData error:&error];
+    AVAudioPlayer *player = [[AVAudioPlayer alloc] initWithData:_soundData error:&error];
     if (error) NSLog(@"Could not create AVAudioPlayer: %@", [error description]);    
     return player;	
 }

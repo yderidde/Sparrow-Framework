@@ -19,11 +19,11 @@
 
 @implementation SPImage
 {
-    SPVertexData *mVertexDataCache;
-    BOOL mVertexDataCacheInvalid;
+    SPVertexData *_vertexDataCache;
+    BOOL _vertexDataCacheInvalid;
 }
 
-@synthesize texture = mTexture;
+@synthesize texture = _texture;
 
 - (id)initWithTexture:(SPTexture*)texture
 {
@@ -36,14 +36,14 @@
     
     if ((self = [super initWithWidth:width height:height color:SP_WHITE premultipliedAlpha:pma]))
     {
-        mVertexData.vertices[1].texCoords.x = 1.0f;
-        mVertexData.vertices[2].texCoords.y = 1.0f;
-        mVertexData.vertices[3].texCoords.x = 1.0f;
-        mVertexData.vertices[3].texCoords.y = 1.0f;
+        _vertexData.vertices[1].texCoords.x = 1.0f;
+        _vertexData.vertices[2].texCoords.y = 1.0f;
+        _vertexData.vertices[3].texCoords.x = 1.0f;
+        _vertexData.vertices[3].texCoords.y = 1.0f;
         
-        mTexture = texture;
-        mVertexDataCache = [[SPVertexData alloc] initWithSize:4 premultipliedAlpha:pma];
-        mVertexDataCacheInvalid = YES;
+        _texture = texture;
+        _vertexDataCache = [[SPVertexData alloc] initWithSize:4 premultipliedAlpha:pma];
+        _vertexDataCacheInvalid = YES;
     }
     return self;
 }
@@ -65,49 +65,49 @@
 
 - (void)setTexCoords:(SPPoint*)coords ofVertex:(int)vertexID
 {
-    [mVertexData setTexCoords:coords atIndex:vertexID];
+    [_vertexData setTexCoords:coords atIndex:vertexID];
     [self vertexDataDidChange];
 }
 
 - (SPPoint*)texCoordsOfVertex:(int)vertexID
 {
-    return [mVertexData texCoordsAtIndex:vertexID];
+    return [_vertexData texCoordsAtIndex:vertexID];
 }
 
 - (void)readjustSize
 {
-    SPRectangle *frame = mTexture.frame;    
-    float width  = frame ? frame.width  : mTexture.width;
-    float height = frame ? frame.height : mTexture.height;
+    SPRectangle *frame = _texture.frame;    
+    float width  = frame ? frame.width  : _texture.width;
+    float height = frame ? frame.height : _texture.height;
 
-    mVertexData.vertices[1].position.x = width;
-    mVertexData.vertices[2].position.y = height;
-    mVertexData.vertices[3].position.x = width;
-    mVertexData.vertices[3].position.y = height;
+    _vertexData.vertices[1].position.x = width;
+    _vertexData.vertices[2].position.y = height;
+    _vertexData.vertices[3].position.x = width;
+    _vertexData.vertices[3].position.y = height;
     
     [self vertexDataDidChange];
 }
 
 - (void)vertexDataDidChange
 {
-    mVertexDataCacheInvalid = YES;
+    _vertexDataCacheInvalid = YES;
 }
 
 - (void)copyVertexDataTo:(SPVertexData *)targetData atIndex:(int)targetIndex
 {
-    if (mVertexDataCacheInvalid)
+    if (_vertexDataCacheInvalid)
     {
-        mVertexDataCacheInvalid = NO;
-        [mVertexData copyToVertexData:mVertexDataCache];
-        [mTexture adjustVertexData:mVertexDataCache atIndex:0 numVertices:4];
+        _vertexDataCacheInvalid = NO;
+        [_vertexData copyToVertexData:_vertexDataCache];
+        [_texture adjustVertexData:_vertexDataCache atIndex:0 numVertices:4];
     }
     
-    [mVertexDataCache copyToVertexData:targetData atIndex:targetIndex];
+    [_vertexDataCache copyToVertexData:targetData atIndex:targetIndex];
 }
 
 - (void)render:(SPRenderSupport *)support
 {
-    [support batchQuad:self texture:mTexture];
+    [support batchQuad:self texture:_texture];
 }
 
 - (void)setTexture:(SPTexture *)value
@@ -116,11 +116,11 @@
     {
         [NSException raise:SP_EXC_INVALID_OPERATION format:@"texture cannot be nil!"];
     }
-    else if (value != mTexture)
+    else if (value != _texture)
     {
-        mTexture = value;
-        [mVertexData setPremultipliedAlpha:mTexture.premultipliedAlpha updateVertices:YES];
-        [mVertexDataCache setPremultipliedAlpha:mTexture.premultipliedAlpha updateVertices:NO];
+        _texture = value;
+        [_vertexData setPremultipliedAlpha:_texture.premultipliedAlpha updateVertices:YES];
+        [_vertexDataCache setPremultipliedAlpha:_texture.premultipliedAlpha updateVertices:NO];
         [self vertexDataDidChange];
     }
 }

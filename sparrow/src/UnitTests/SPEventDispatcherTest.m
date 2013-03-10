@@ -23,7 +23,7 @@
 
 @interface SPEventDispatcherTest : SenTestCase 
 {
-    int mTestCounter;
+    int _testCounter;
 }
 
 @end
@@ -36,7 +36,7 @@
 
 - (void)setUp
 {
-    mTestCounter = 0;
+    _testCounter = 0;
 }
 
 - (void)testAddAndRemoveEventListener
@@ -64,7 +64,7 @@
     SPEventDispatcher *dispatcher = [[SPEventDispatcher alloc] init];
     [dispatcher addEventListener:@selector(onEvent:) atObject:self forType:EVENT_TYPE];    
     [dispatcher dispatchEventWithType:EVENT_TYPE];
-    STAssertEquals(1, mTestCounter, @"event listener not called");    
+    STAssertEquals(1, _testCounter, @"event listener not called");    
     
     [dispatcher removeEventListener:@selector(onEvent:) atObject:self forType:EVENT_TYPE];    
 }
@@ -89,11 +89,11 @@
     
     [sprite4 dispatchEventWithType:EVENT_TYPE];
     
-    STAssertEquals(1, mTestCounter, @"event bubbled, but should not have");
-    mTestCounter = 0;
+    STAssertEquals(1, _testCounter, @"event bubbled, but should not have");
+    _testCounter = 0;
     
     [sprite4 dispatchEventWithType:EVENT_TYPE bubbles:YES];
-    STAssertEquals(2, mTestCounter, @"event bubbling incorrect");
+    STAssertEquals(2, _testCounter, @"event bubbling incorrect");
     
     [sprite1 removeEventListenersAtObject:self forType:EVENT_TYPE];
     [sprite2 removeEventListenersAtObject:self forType:EVENT_TYPE];
@@ -110,7 +110,7 @@
     [sprite addEventListener:@selector(onEvent3:) atObject:self forType:EVENT_TYPE];
     [sprite dispatchEvent:[SPEvent eventWithType:EVENT_TYPE]];    
     
-    STAssertEquals(2, mTestCounter, @"stopEventImmediately did not work correctly");
+    STAssertEquals(2, _testCounter, @"stopEventImmediately did not work correctly");
     
     [sprite removeEventListenersAtObject:self forType:EVENT_TYPE];
 }
@@ -142,17 +142,17 @@
 
 - (void)onEvent:(SPEvent*)event
 {
-    mTestCounter++;
+    _testCounter++;
 }
 
 - (void)onEvent2:(SPEvent*)event
 {
-    mTestCounter *= 2;
+    _testCounter *= 2;
 }
 
 - (void)onEvent3:(SPEvent*)event
 {
-    mTestCounter += 3;
+    _testCounter += 3;
 }
 
 - (void)stopEvent:(SPEvent*)event

@@ -23,7 +23,7 @@
 
 @interface SPMovieClipTest : SenTestCase 
 {
-    int mCompletedCount;
+    int _completedCount;
 }
 @end
 
@@ -33,12 +33,12 @@
 
 - (void) setUp
 {
-    mCompletedCount = 0;
+    _completedCount = 0;
 }
 
 - (void)onMovieCompleted:(SPEvent*)event
 {
-    mCompletedCount++;
+    _completedCount++;
 }
 
 - (void)testFrameManipulation
@@ -203,28 +203,28 @@
     movie.loop = NO;
     
     [movie advanceTime:frameDuration];
-    STAssertEquals(0, mCompletedCount, @"completed event fired too soon");
+    STAssertEquals(0, _completedCount, @"completed event fired too soon");
     [movie advanceTime:frameDuration];
-    STAssertEquals(0, mCompletedCount, @"completed event fired too soon");
+    STAssertEquals(0, _completedCount, @"completed event fired too soon");
     [movie advanceTime:frameDuration];
-    STAssertEquals(0, mCompletedCount, @"completed event fired too soon");
+    STAssertEquals(0, _completedCount, @"completed event fired too soon");
     [movie advanceTime:frameDuration];
-    STAssertEquals(1, mCompletedCount, @"completed event not fired");    
+    STAssertEquals(1, _completedCount, @"completed event not fired");    
     [movie advanceTime:numFrames * 2 * frameDuration];
-    STAssertEquals(1, mCompletedCount, @"too many completed events fired");
+    STAssertEquals(1, _completedCount, @"too many completed events fired");
     
     movie.loop = YES;
     
     [movie advanceTime:frameDuration];
-    STAssertEquals(1, mCompletedCount, @"completed event fired too soon");
+    STAssertEquals(1, _completedCount, @"completed event fired too soon");
     [movie advanceTime:frameDuration];
-    STAssertEquals(1, mCompletedCount, @"completed event fired too soon");
+    STAssertEquals(1, _completedCount, @"completed event fired too soon");
     [movie advanceTime:frameDuration];
-    STAssertEquals(1, mCompletedCount, @"completed event fired too soon");
+    STAssertEquals(1, _completedCount, @"completed event fired too soon");
     [movie advanceTime:frameDuration];
-    STAssertEquals(2, mCompletedCount, @"completed event not fired");    
+    STAssertEquals(2, _completedCount, @"completed event not fired");    
     [movie advanceTime:numFrames * 2 * frameDuration];
-    STAssertEquals(4, mCompletedCount, @"wrong number of events dispatched");
+    STAssertEquals(4, _completedCount, @"wrong number of events dispatched");
 }
 
 @end

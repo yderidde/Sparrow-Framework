@@ -8,20 +8,20 @@
 
 @implementation AppDelegate
 {
-    SPViewController *mViewController;
-    UIWindow *mWindow;
+    SPViewController *_viewController;
+    UIWindow *_window;
 }
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
     CGRect screenBounds = [UIScreen mainScreen].bounds;
-    mWindow = [[UIWindow alloc] initWithFrame:screenBounds];
+    _window = [[UIWindow alloc] initWithFrame:screenBounds];
     
-    mViewController = [[SPViewController alloc] init];
-    [mViewController startWithRoot:[Game class] supportHighResolutions:YES doubleOnPad:YES];
+    _viewController = [[SPViewController alloc] init];
+    [_viewController startWithRoot:[Game class] supportHighResolutions:YES doubleOnPad:YES];
     
-    [mWindow setRootViewController:mViewController];
-    [mWindow makeKeyAndVisible];
+    [_window setRootViewController:_viewController];
+    [_window makeKeyAndVisible];
     
     return YES;
 }

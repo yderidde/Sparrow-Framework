@@ -27,10 +27,10 @@
 
 @interface SPTweenTest : SenTestCase 
 {
-    int mStartedCount;
-    int mUpdatedCount;
-    int mCompletedCount;
-    int mRepeatedCount;
+    int _startedCount;
+    int _updatedCount;
+    int _completedCount;
+    int _repeatedCount;
 }
 
 @property (nonatomic, assign) int intProperty;
@@ -41,20 +41,20 @@
 
 @implementation SPTweenTest
 
-@synthesize intProperty = mIntProperty;
+@synthesize intProperty = _intProperty;
 
 - (void) setUp
 {
-    mStartedCount = mUpdatedCount = mCompletedCount = mRepeatedCount = 0;
+    _startedCount = _updatedCount = _completedCount = _repeatedCount = 0;
 }
 
 - (SPTween *)tweenWithTarget:(id)target time:(double)time
 {
     SPTween *tween = [SPTween tweenWithTarget:target time:time];
-    tween.onStart = ^{ mStartedCount++; };
-    tween.onUpdate = ^{ mUpdatedCount++; };
-    tween.onRepeat = ^{ mRepeatedCount++; };
-    tween.onComplete = ^{ mCompletedCount++; };
+    tween.onStart = ^{ _startedCount++; };
+    tween.onUpdate = ^{ _updatedCount++; };
+    tween.onRepeat = ^{ _repeatedCount++; };
+    tween.onComplete = ^{ _completedCount++; };
     return tween;
 }
 
@@ -81,34 +81,34 @@
     STAssertEqualsWithAccuracy(startX, quad.x, E, @"wrong x");
     STAssertEqualsWithAccuracy(startY, quad.y, E, @"wrong y");
     STAssertEqualsWithAccuracy(startAlpha, quad.alpha, E, @"wrong alpha");        
-    STAssertEquals(0, mStartedCount, @"start event dispatched too soon");
+    STAssertEquals(0, _startedCount, @"start event dispatched too soon");
     
     [tween advanceTime: totalTime/3.0];   
     STAssertEqualsWithAccuracy(startX + (endX-startX)/3.0f, quad.x, E, @"wrong x: %f", quad.x);
     STAssertEqualsWithAccuracy(startY + (endY-startY)/3.0f, quad.y, E, @"wrong y");
     STAssertEqualsWithAccuracy(startAlpha + (endAlpha-startAlpha)/3.0f, quad.alpha, E, @"wrong alpha");
     STAssertEqualsWithAccuracy(totalTime/3.0, tween.currentTime, E, @"wrong current time");
-    STAssertEquals(1, mStartedCount, @"missing start event");
-    STAssertEquals(1, mUpdatedCount, @"missing update event");
-    STAssertEquals(0, mCompletedCount, @"completed event dispatched too soon");
+    STAssertEquals(1, _startedCount, @"missing start event");
+    STAssertEquals(1, _updatedCount, @"missing update event");
+    STAssertEquals(0, _completedCount, @"completed event dispatched too soon");
     
     [tween advanceTime: totalTime/3.0];   
     STAssertEqualsWithAccuracy(startX + 2.0f*(endX-startX)/3.0f, quad.x, E, @"wrong x: %f", quad.x);
     STAssertEqualsWithAccuracy(startY + 2.0f*(endY-startY)/3.0f, quad.y, E, @"wrong y");
     STAssertEqualsWithAccuracy(startAlpha + 2.0f*(endAlpha-startAlpha)/3.0f, quad.alpha, E, @"wrong alpha");
     STAssertEqualsWithAccuracy(2*totalTime/3.0, tween.currentTime, E, @"wrong current time");
-    STAssertEquals(1, mStartedCount, @"too many start events dipatched");
-    STAssertEquals(2, mUpdatedCount, @"missing update event");
-    STAssertEquals(0, mCompletedCount, @"completed event dispatched too soon");
+    STAssertEquals(1, _startedCount, @"too many start events dipatched");
+    STAssertEquals(2, _updatedCount, @"missing update event");
+    STAssertEquals(0, _completedCount, @"completed event dispatched too soon");
     
     [tween advanceTime: totalTime/3.0];
     STAssertEqualsWithAccuracy(endX, quad.x, E, @"wrong x: %f", quad.x);
     STAssertEqualsWithAccuracy(endY, quad.y, E, @"wrong y");
     STAssertEqualsWithAccuracy(endAlpha, quad.alpha, E, @"wrong alpha");
     STAssertEqualsWithAccuracy(totalTime, tween.currentTime, E, @"wrong current time");
-    STAssertEquals(1, mStartedCount, @"too many start events dispatched");
-    STAssertEquals(3, mUpdatedCount, @"missing update event");
-    STAssertEquals(1, mCompletedCount, @"missing completed event");
+    STAssertEquals(1, _startedCount, @"too many start events dispatched");
+    STAssertEquals(3, _updatedCount, @"missing update event");
+    STAssertEquals(1, _completedCount, @"missing completed event");
 }
 
 - (void)testSequentialTweens
@@ -177,23 +177,23 @@
     
     [tween advanceTime:totalTime / 2.0];
     STAssertEqualsWithAccuracy(startX + deltaX, quad.x, E, @"wrong x value");
-    STAssertEquals(1, mRepeatedCount, @"repeated event not fired");
+    STAssertEquals(1, _repeatedCount, @"repeated event not fired");
     
     [tween advanceTime:totalTime / 2.0];
     STAssertEqualsWithAccuracy(startX + 0.5f * deltaX, quad.x, E, @"wrong x value");
     
     [tween advanceTime:totalTime / 2.0];
     STAssertEqualsWithAccuracy(startX + deltaX, quad.x, E, @"wrong x value");
-    STAssertEquals(2, mRepeatedCount, @"repeated event not fired");
+    STAssertEquals(2, _repeatedCount, @"repeated event not fired");
     
     [tween advanceTime:totalTime * 2];
     STAssertEqualsWithAccuracy(startX + deltaX, quad.x, E, @"wrong x value");
-    STAssertEquals(4, mRepeatedCount, @"repeated event not fired the correct number of times");
+    STAssertEquals(4, _repeatedCount, @"repeated event not fired the correct number of times");
     
     [tween advanceTime:totalTime];
     STAssertEqualsWithAccuracy(startX + deltaX, quad.x, E, @"wrong x value");
-    STAssertEquals(4, mRepeatedCount, @"repeated event not fired the correct number of times");
-    STAssertEquals(1, mCompletedCount, @"completed event not fired");
+    STAssertEquals(4, _repeatedCount, @"repeated event not fired the correct number of times");
+    STAssertEquals(1, _completedCount, @"completed event not fired");
 }
 
 - (void)testReversingTween
@@ -221,7 +221,7 @@
 
     [tween advanceTime:totalTime * 0.25];
     STAssertEqualsWithAccuracy(startX + deltaX, quad.x, E, @"wrong x value");
-    STAssertEquals(1, mRepeatedCount, @"repeated event not fired");
+    STAssertEquals(1, _repeatedCount, @"repeated event not fired");
 
     [tween advanceTime:totalTime * 0.25];
     STAssertEqualsWithAccuracy(startX + 0.75f * deltaX, quad.x, E, @"wrong x value");
@@ -231,21 +231,21 @@
 
     [tween advanceTime:totalTime * 0.25];
     STAssertEqualsWithAccuracy(startX, quad.x, E, @"wrong x value");
-    STAssertEquals(2, mRepeatedCount, @"repeated event not fired");
+    STAssertEquals(2, _repeatedCount, @"repeated event not fired");
     
     [tween advanceTime:totalTime * 2];
     STAssertEqualsWithAccuracy(startX, quad.x, E, @"wrong x value");
-    STAssertEquals(4, mRepeatedCount, @"repeated event not fired the correct number of times");
+    STAssertEquals(4, _repeatedCount, @"repeated event not fired the correct number of times");
     
     [tween advanceTime:totalTime];
     STAssertEqualsWithAccuracy(startX + deltaX, quad.x, E, @"wrong x value");
-    STAssertEquals(4, mRepeatedCount, @"repeated event not fired the correct number of times");
-    STAssertEquals(1, mCompletedCount, @"completed event not fired the correct number of times");
+    STAssertEquals(4, _repeatedCount, @"repeated event not fired the correct number of times");
+    STAssertEquals(1, _completedCount, @"completed event not fired the correct number of times");
 
     [tween advanceTime:totalTime];
     STAssertEqualsWithAccuracy(startX + deltaX, quad.x, E, @"wrong x value");
-    STAssertEquals(4, mRepeatedCount, @"repeated event not fired the correct number of times");
-    STAssertEquals(1, mCompletedCount, @"completed event not fired the correct number of times");
+    STAssertEquals(4, _repeatedCount, @"repeated event not fired the correct number of times");
+    STAssertEquals(1, _completedCount, @"completed event not fired the correct number of times");
 }
 
 - (void)testTweenWithChangingLoop
@@ -261,23 +261,23 @@
     [tween animateProperty:@"x" targetValue:startX + deltaX];
     
     [tween advanceTime:totalTime / 2.0f];
-    STAssertEquals(0, mCompletedCount, @"completed event fired too soon");
+    STAssertEquals(0, _completedCount, @"completed event fired too soon");
     
     [tween advanceTime:totalTime / 2.0f];
-    STAssertEquals(1, mCompletedCount, @"completed event not fired");
-    STAssertEquals(0, mRepeatedCount,  @"repeated event fired too often");
+    STAssertEquals(1, _completedCount, @"completed event not fired");
+    STAssertEquals(0, _repeatedCount,  @"repeated event fired too often");
     
     [tween advanceTime:totalTime * 2];
-    STAssertEquals(1, mCompletedCount, @"completed event fired too often");
+    STAssertEquals(1, _completedCount, @"completed event fired too often");
     
     tween.repeatCount = 100;
     
     [tween advanceTime:totalTime / 2.0f];
-    STAssertEquals(1, mCompletedCount, @"completed event fired too often");
+    STAssertEquals(1, _completedCount, @"completed event fired too often");
     
     [tween advanceTime:totalTime / 2.0f];
-    STAssertEquals(1, mCompletedCount, @"completed event fired too often");
-    STAssertEquals(1, mRepeatedCount,  @"repeated event not fired");
+    STAssertEquals(1, _completedCount, @"completed event fired too often");
+    STAssertEquals(1, _repeatedCount,  @"repeated event not fired");
 }
 
 - (void)testRepeatDelay
@@ -318,7 +318,7 @@
     tween.repeatCount = 0;
     [tween advanceTime:1000];
     
-    STAssertEquals(1000, mRepeatedCount, @"wrong number of repetitions");
+    STAssertEquals(1000, _repeatedCount, @"wrong number of repetitions");
 }
 
 - (void)testUnsignedIntTween
@@ -363,9 +363,9 @@
     [tween animateProperty:@"x" targetValue:100.0f];
     [tween advanceTime:advanceTime];
     
-    STAssertEquals(1, mUpdatedCount, @"short tween did not call onUpdate");
-    STAssertEquals(1, mStartedCount, @"short tween did not call onStarted");
-    STAssertEquals(1, mCompletedCount, @"short tween did not call onCompleted");
+    STAssertEquals(1, _updatedCount, @"short tween did not call onUpdate");
+    STAssertEquals(1, _startedCount, @"short tween did not call onStarted");
+    STAssertEquals(1, _completedCount, @"short tween did not call onCompleted");
 }
 
 - (void)testShortTween

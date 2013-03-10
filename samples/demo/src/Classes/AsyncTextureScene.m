@@ -10,11 +10,11 @@
 
 @implementation AsyncTextureScene
 {
-    SPButton *mFileButton;
-    SPButton *mUrlButton;
-    SPTextField *mLogText;
-    SPImage *mFileImage;
-    SPImage *mUrlImage;
+    SPButton *_fileButton;
+    SPButton *_urlButton;
+    SPImage  *_fileImage;
+    SPImage  *_urlImage;
+    SPTextField *_logText;
 }
 
 - (id)init
@@ -23,54 +23,54 @@
     {
         SPTexture *buttonTexture = [SPTexture textureWithContentsOfFile:@"button_normal.png"];
         
-        mFileButton = [SPButton buttonWithUpState:buttonTexture text:@"Load from File"];
-        mFileButton.x = 20;
-        mFileButton.y = 20;
-        [mFileButton addEventListener:@selector(onFileButtonTriggered:) atObject:self
+        _fileButton = [SPButton buttonWithUpState:buttonTexture text:@"Load from File"];
+        _fileButton.x = 20;
+        _fileButton.y = 20;
+        [_fileButton addEventListener:@selector(onFileButtonTriggered:) atObject:self
                               forType:SP_EVENT_TYPE_TRIGGERED];
-        [self addChild:mFileButton];
+        [self addChild:_fileButton];
         
-        mUrlButton = [SPButton buttonWithUpState:buttonTexture text:@"Load from Web"];
-        mUrlButton.x = 300 - mUrlButton.width;
-        mUrlButton.y = 20;
-        [mUrlButton addEventListener:@selector(onUrlButtonTriggered:) atObject:self
+        _urlButton = [SPButton buttonWithUpState:buttonTexture text:@"Load from Web"];
+        _urlButton.x = 300 - _urlButton.width;
+        _urlButton.y = 20;
+        [_urlButton addEventListener:@selector(onUrlButtonTriggered:) atObject:self
                               forType:SP_EVENT_TYPE_TRIGGERED];
-        [self addChild:mUrlButton];
+        [self addChild:_urlButton];
 
-        mLogText = [SPTextField textFieldWithWidth:280 height:50 text:@""
+        _logText = [SPTextField textFieldWithWidth:280 height:50 text:@""
                                             fontName:@"Verdana" fontSize:12 color:0x0];
-        mLogText.x = 20;
-        mLogText.y = mFileButton.y + mFileButton.height + 5;
-        [self addChild:mLogText];
+        _logText.x = 20;
+        _logText.y = _fileButton.y + _fileButton.height + 5;
+        [self addChild:_logText];
     }
     return self;
 }
 
 - (void)onFileButtonTriggered:(SPEvent *)event
 {
-    mFileImage.visible = NO;
-    mLogText.text = @"Loading texture ...";
+    _fileImage.visible = NO;
+    _logText.text = @"Loading texture ...";
     
     [SPTexture loadFromFile:@"async_local.png"
                  onComplete:^(SPTexture *texture, NSError *outError)
     {
         if (outError)
-            mLogText.text = [outError localizedDescription];
+            _logText.text = [outError localizedDescription];
         else
         {
-            mLogText.text = @"File loaded successfully.";
+            _logText.text = @"File loaded successfully.";
             
-            if (!mFileImage)
+            if (!_fileImage)
             {
-                mFileImage = [[SPImage alloc] initWithTexture:texture];
-                mFileImage.x = (int)(self.stage.width - texture.width) / 2;
-                mFileImage.y = 110;
-                [self addChild:mFileImage];
+                _fileImage = [[SPImage alloc] initWithTexture:texture];
+                _fileImage.x = (int)(self.stage.width - texture.width) / 2;
+                _fileImage.y = 110;
+                [self addChild:_fileImage];
             }
             else
             {
-                mFileImage.visible = YES;
-                mFileImage.texture = texture;
+                _fileImage.visible = YES;
+                _fileImage.texture = texture;
             }
         }
     }];
@@ -78,8 +78,8 @@
 
 - (void)onUrlButtonTriggered:(SPEvent *)event
 {
-    mUrlImage.visible = NO;
-    mLogText.text = @"Loading texture ...";
+    _urlImage.visible = NO;
+    _logText.text = @"Loading texture ...";
     
     // If your texture name contains a suffix like "@2x", you can use
     // "[SPTexture loadTextureFromSuffixedURL:...]". In this case, we have
@@ -93,22 +93,22 @@
                 onComplete:^(SPTexture *texture, NSError *outError)
      {
          if (outError)
-             mLogText.text = [outError localizedDescription];
+             _logText.text = [outError localizedDescription];
          else
          {
-             mLogText.text = @"File loaded successfully.";
+             _logText.text = @"File loaded successfully.";
              
-             if (!mUrlImage)
+             if (!_urlImage)
              {
-                 mUrlImage = [[SPImage alloc] initWithTexture:texture];
-                 mUrlImage.x = (int)(self.stage.width - texture.width) / 2;
-                 mUrlImage.y = 275;
-                 [self addChild:mUrlImage];
+                 _urlImage = [[SPImage alloc] initWithTexture:texture];
+                 _urlImage.x = (int)(self.stage.width - texture.width) / 2;
+                 _urlImage.y = 275;
+                 [self addChild:_urlImage];
              }
              else
              {
-                 mUrlImage.visible = YES;
-                 mUrlImage.texture = texture;
+                 _urlImage.visible = YES;
+                 _urlImage.texture = texture;
              }
          }
      }];

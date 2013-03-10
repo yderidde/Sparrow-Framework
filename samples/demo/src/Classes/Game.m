@@ -20,9 +20,9 @@
 
 @implementation Game
 {
-    Scene *mCurrentScene;
-    SPSprite *mMainMenu;
-    float mOffsetY;
+    Scene *_currentScene;
+    SPSprite *_mainMenu;
+    float _offsetY;
 }
 
 - (id)init
@@ -30,21 +30,21 @@
     if ((self = [super init]))
     {
         // make simple adjustments for iPhone 5+ screens:
-        mOffsetY = (Sparrow.stage.height - 480) / 2;
+        _offsetY = (Sparrow.stage.height - 480) / 2;
         
         // add background image
         SPImage *background = [SPImage imageWithContentsOfFile:@"background.jpg"];
-        background.y = mOffsetY > 0.0f ? 0.0 : -44;
+        background.y = _offsetY > 0.0f ? 0.0 : -44;
         [self addChild:background];
         
         // this sprite will contain objects that are only visible in the main menu
-        mMainMenu = [[SPSprite alloc] init];
-        mMainMenu.y = mOffsetY;
-        [self addChild:mMainMenu];
+        _mainMenu = [[SPSprite alloc] init];
+        _mainMenu.y = _offsetY;
+        [self addChild:_mainMenu];
         
         SPImage *logo = [SPImage imageWithContentsOfFile:@"logo.png"];
-        logo.y = mOffsetY + 5;
-        [mMainMenu addChild:logo];
+        logo.y = _offsetY + 5;
+        [_mainMenu addChild:logo];
         
         // choose which scenes will be accessible
         NSArray *scenesToCreate = @[@"Textures", [TextureScene class],
@@ -70,7 +70,7 @@
             
             SPButton *button = [SPButton buttonWithUpState:buttonTexture text:sceneTitle];
             button.x = count % 2 == 0 ? 28 : 167;
-            button.y = mOffsetY + 170 + (count / 2) * 52;
+            button.y = _offsetY + 170 + (count / 2) * 52;
             button.name = NSStringFromClass(sceneClass);
             
             if (scenesToCreate.count % 2 != 0 && count % 2 == 1)
@@ -78,7 +78,7 @@
             
             [button addEventListener:@selector(onButtonTriggered:) atObject:self 
                              forType:SP_EVENT_TYPE_TRIGGERED];
-            [mMainMenu addChild:button];
+            [_mainMenu addChild:button];
             ++count;
         }
         
@@ -91,24 +91,24 @@
 
 - (void)onButtonTriggered:(SPEvent *)event
 {
-    if (mCurrentScene) return;
+    if (_currentScene) return;
     
     // the class name of the scene is saved in the "name" property of the button. 
     SPButton *button = (SPButton *)event.target;
     Class sceneClass = NSClassFromString(button.name);
     
     // create an instance of that class and add it to the display tree.
-    mCurrentScene = [[sceneClass alloc] init];
-    mCurrentScene.y = mOffsetY;
-    mMainMenu.visible = NO;
-    [self addChild:mCurrentScene];
+    _currentScene = [[sceneClass alloc] init];
+    _currentScene.y = _offsetY;
+    _mainMenu.visible = NO;
+    [self addChild:_currentScene];
 }
 
 - (void)onSceneClosing:(SPEvent *)event
 {
-    [mCurrentScene removeFromParent];
-    mCurrentScene = nil;
-    mMainMenu.visible = YES;
+    [_currentScene removeFromParent];
+    _currentScene = nil;
+    _mainMenu.visible = YES;
 }
 
 @end

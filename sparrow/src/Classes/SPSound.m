@@ -21,7 +21,7 @@
 
 @implementation SPSound
 {
-    NSMutableSet *mPlayingChannels;
+    NSMutableSet *_playingChannels;
 }
 
 - (id)init
@@ -31,7 +31,7 @@
         [NSException raise:SP_EXC_ABSTRACT_CLASS 
                     format:@"Attempting to initialize abstract class SPSound."];        
         return nil;
-    } 
+    }
     
     return [super init];
 }
@@ -163,15 +163,15 @@
                       forType:SP_EVENT_TYPE_COMPLETED];
     [channel play];
     
-    if (!mPlayingChannels) mPlayingChannels = [[NSMutableSet alloc] init];    
-    [mPlayingChannels addObject:channel];
+    if (!_playingChannels) _playingChannels = [[NSMutableSet alloc] init];    
+    [_playingChannels addObject:channel];
 }
 
 - (void)onSoundCompleted:(SPEvent *)event
 {
     SPSoundChannel *channel = (SPSoundChannel *)event.target;
     [channel stop];
-    [mPlayingChannels removeObject:channel];
+    [_playingChannels removeObject:channel];
 }
 
 - (SPSoundChannel *)createChannel

@@ -12,9 +12,9 @@
 
 @implementation SoundScene
 {
-    SPSoundChannel *mMusicChannel;
-    SPSoundChannel *mSoundChannel;
-    SPButton *mChannelButton;
+    SPSoundChannel *_musicChannel;
+    SPSoundChannel *_soundChannel;
+    SPButton *_channelButton;
 }
 
 - (id)init
@@ -28,12 +28,12 @@
         // Create music channel:
         
         SPSound *music = [SPSound soundWithContentsOfFile:@"music.aifc"];        
-        mMusicChannel = [music createChannel];
-        mMusicChannel.loop = YES;
+        _musicChannel = [music createChannel];
+        _musicChannel.loop = YES;
         
         SPSound *sound = [SPSound soundWithContentsOfFile:@"sound0.caf"];
-        mSoundChannel = [sound createChannel];
-        [mSoundChannel addEventListener:@selector(onSoundCompleted:) atObject:self
+        _soundChannel = [sound createChannel];
+        [_soundChannel addEventListener:@selector(onSoundCompleted:) atObject:self
                                 forType:SP_EVENT_TYPE_COMPLETED];
         
         SPTexture *buttonTexture = [SPTexture textureWithContentsOfFile:@"button_square.png"];
@@ -100,13 +100,13 @@
         channelLabel.height = 30;
         [self addChild:channelLabel];
         
-        mChannelButton = [SPButton buttonWithUpState:buttonTexture text:@">"];
-        mChannelButton.x = 200;
-        mChannelButton.y = simpleButton.y;
-        mChannelButton.fontName = FONTNAME;
-        [mChannelButton addEventListener:@selector(onChannelButtonTriggered:) atObject:self
+        _channelButton = [SPButton buttonWithUpState:buttonTexture text:@">"];
+        _channelButton.x = 200;
+        _channelButton.y = simpleButton.y;
+        _channelButton.fontName = FONTNAME;
+        [_channelButton addEventListener:@selector(onChannelButtonTriggered:) atObject:self
                                 forType:SP_EVENT_TYPE_TRIGGERED];  
-        [self addChild:mChannelButton];
+        [self addChild:_channelButton];
         
         // volume buttons
         
@@ -164,17 +164,17 @@
 
 - (void)onPlayButtonTriggered:(SPEvent *)event
 {    
-    [mMusicChannel play];
+    [_musicChannel play];
 }
 
 - (void)onPauseButtonTriggered:(SPEvent *)event
 {    
-    [mMusicChannel pause];
+    [_musicChannel pause];
 }
 
 - (void)onStopButtonTriggered:(SPEvent *)event
 {    
-    [mMusicChannel stop];
+    [_musicChannel stop];
 }
 
 - (void)onSimpleButtonTriggered:(SPEvent *)event
@@ -186,8 +186,8 @@
 - (void)onChannelButtonTriggered:(SPEvent *)event
 {
     // we change the color to demonstrate the "onCompleted" feature
-    mChannelButton.fontColor = 0xff0000;
-    [mSoundChannel play];
+    _channelButton.fontColor = 0xff0000;
+    [_soundChannel play];
 }
 
 - (void)onVolume0ButtonTriggered:(SPEvent *)event
@@ -207,7 +207,7 @@
 
 - (void)onSoundCompleted:(SPEvent *)event
 {
-    mChannelButton.fontColor = 0x0;
+    _channelButton.fontColor = 0x0;
 }
 
 - (void)dealloc
@@ -215,11 +215,11 @@
     // This is really IMPORTANT: either stop the sound or remove the event listener!!!
     // Otherwise the sound continues to play, and when it completes, the event handler will
     // already be garbage -> crash!    
-    [mSoundChannel stop];
+    [_soundChannel stop];
     
     // The music channel has no event listener attached, so technically, this call is not 
     // necessary. But it's a good habit to stop any sound before releasing it (see above.)
-    [mMusicChannel stop];
+    [_musicChannel stop];
     
 }
 

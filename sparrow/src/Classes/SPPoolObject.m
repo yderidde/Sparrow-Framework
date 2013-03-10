@@ -28,8 +28,8 @@
 
 @implementation SPPoolObject
 {
-    SPPoolObject *mPoolPredecessor;
-    uint mRetainCount;
+    SPPoolObject *_poolPredecessor;
+    uint _retainCount;
 }
 
 + (id)allocWithZone:(NSZone *)zone
@@ -50,42 +50,42 @@
     {
         // pool is empty -> allocate
         SPPoolObject *object = NSAllocateObject(self, 0, NULL);
-        object->mRetainCount = 1;
+        object->_retainCount = 1;
         return object;
     }
     else 
     {
         // recycle element, update poolInfo
         SPPoolObject *object = poolInfo->lastElement;
-        poolInfo->lastElement = object->mPoolPredecessor;
+        poolInfo->lastElement = object->_poolPredecessor;
 
-        // zero out memory. (do not overwrite isa & mPoolPredecessor, thus the offset)
+        // zero out memory. (do not overwrite isa & _poolPredecessor, thus the offset)
         unsigned int sizeOfFields = sizeof(Class) + sizeof(SPPoolObject *);
         memset((char*)(id)object + sizeOfFields, 0, malloc_size(object) - sizeOfFields);
-        object->mRetainCount = 1;
+        object->_retainCount = 1;
         return object;
     }
 }
 
 - (uint)retainCount
 {
-    return mRetainCount;
+    return _retainCount;
 }
 
 - (id)retain
 {
-    ++mRetainCount;
+    ++_retainCount;
     return self;
 }
 
 - (oneway void)release
 {
-    --mRetainCount;
+    --_retainCount;
     
-    if (!mRetainCount)
+    if (!_retainCount)
     {
         SPPoolInfo *poolInfo = [isa poolInfo];
-        self->mPoolPredecessor = poolInfo->lastElement;
+        self->_poolPredecessor = poolInfo->lastElement;
         poolInfo->lastElement = self;
     }
 }
@@ -106,7 +106,7 @@
     while ((lastElement = poolInfo->lastElement))
     {
         ++count;        
-        poolInfo->lastElement = lastElement->mPoolPredecessor;
+        poolInfo->lastElement = lastElement->_poolPredecessor;
         [lastElement purge];
     }
     

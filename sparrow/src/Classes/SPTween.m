@@ -20,58 +20,58 @@ typedef float (*FnPtrTransition) (id, SEL, float);
 
 @implementation SPTween
 {
-    id mTarget;
-    SEL mTransition;
-    IMP mTransitionFunc;
-    NSMutableArray *mProperties;
+    id _target;
+    SEL _transition;
+    IMP _transitionFunc;
+    NSMutableArray *_properties;
     
-    double mTotalTime;
-    double mCurrentTime;
-    double mDelay;
+    double _totalTime;
+    double _currentTime;
+    double _delay;
     
-    int mRepeatCount;
-    double mRepeatDelay;
-    BOOL mReverse;
-    int mCurrentCycle;
+    int _repeatCount;
+    double _repeatDelay;
+    BOOL _reverse;
+    int _currentCycle;
     
-    SPCallbackBlock mOnStart;
-    SPCallbackBlock mOnUpdate;
-    SPCallbackBlock mOnRepeat;
-    SPCallbackBlock mOnComplete;
+    SPCallbackBlock _onStart;
+    SPCallbackBlock _onUpdate;
+    SPCallbackBlock _onRepeat;
+    SPCallbackBlock _onComplete;
 }
 
-@synthesize totalTime = mTotalTime;
-@synthesize currentTime = mCurrentTime;
-@synthesize delay = mDelay;
-@synthesize target = mTarget;
-@synthesize repeatCount = mRepeatCount;
-@synthesize repeatDelay = mRepeatDelay;
-@synthesize reverse = mReverse;
-@synthesize onStart = mOnStart;
-@synthesize onUpdate = mOnUpdate;
-@synthesize onRepeat = mOnRepeat;
-@synthesize onComplete = mOnComplete;
+@synthesize totalTime = _totalTime;
+@synthesize currentTime = _currentTime;
+@synthesize delay = _delay;
+@synthesize target = _target;
+@synthesize repeatCount = _repeatCount;
+@synthesize repeatDelay = _repeatDelay;
+@synthesize reverse = _reverse;
+@synthesize onStart = _onStart;
+@synthesize onUpdate = _onUpdate;
+@synthesize onRepeat = _onRepeat;
+@synthesize onComplete = _onComplete;
 
 - (id)initWithTarget:(id)target time:(double)time transition:(NSString*)transition
 {
     if ((self = [super init]))
     {
-        mTarget = target;
-        mTotalTime = MAX(0.0001, time); // zero is not allowed
-        mCurrentTime = 0;
-        mDelay = 0;
-        mProperties = [[NSMutableArray alloc] init];
-        mRepeatCount = 1;
-        mCurrentCycle = -1;
-        mReverse = NO;
+        _target = target;
+        _totalTime = MAX(0.0001, time); // zero is not allowed
+        _currentTime = 0;
+        _delay = 0;
+        _properties = [[NSMutableArray alloc] init];
+        _repeatCount = 1;
+        _currentCycle = -1;
+        _reverse = NO;
 
         // create function pointer for transition
         NSString *transMethod = [transition stringByAppendingString:TRANS_SUFFIX];
-        mTransition = NSSelectorFromString(transMethod);    
-        if (![SPTransitions respondsToSelector:mTransition])
+        _transition = NSSelectorFromString(transMethod);    
+        if (![SPTransitions respondsToSelector:_transition])
             [NSException raise:SP_EXC_INVALID_OPERATION 
                         format:@"transition not found: '%@'", transition];
-        mTransitionFunc = [SPTransitions methodForSelector:mTransition];
+        _transitionFunc = [SPTransitions methodForSelector:_transition];
     }
     return self;
 }
@@ -83,11 +83,11 @@ typedef float (*FnPtrTransition) (id, SEL, float);
 
 - (void)animateProperty:(NSString*)property targetValue:(float)value
 {    
-    if (!mTarget) return; // tweening nil just does nothing.
+    if (!_target) return; // tweening nil just does nothing.
     
     SPTweenedProperty *tweenedProp = [[SPTweenedProperty alloc] 
-        initWithTarget:mTarget name:property endValue:value];
-    [mProperties addObject:tweenedProp];
+        initWithTarget:_target name:property endValue:value];
+    [_properties addObject:tweenedProp];
 }
 
 - (void)moveToX:(float)x y:(float)y
@@ -109,53 +109,53 @@ typedef float (*FnPtrTransition) (id, SEL, float);
 
 - (void)advanceTime:(double)time
 {
-    if (time == 0.0 || (mRepeatCount == 1 && mCurrentTime == mTotalTime))
+    if (time == 0.0 || (_repeatCount == 1 && _currentTime == _totalTime))
         return; // nothing to do
-    else if ((mRepeatCount == 0 || mRepeatCount > 1) && mCurrentTime == mTotalTime)
-        mCurrentTime = 0.0;
+    else if ((_repeatCount == 0 || _repeatCount > 1) && _currentTime == _totalTime)
+        _currentTime = 0.0;
     
-    double previousTime = mCurrentTime;
-    double restTime = mTotalTime - mCurrentTime;
+    double previousTime = _currentTime;
+    double restTime = _totalTime - _currentTime;
     double carryOverTime = time > restTime ? time - restTime : 0.0;    
-    mCurrentTime = MIN(mTotalTime, mCurrentTime + time);
-    BOOL isStarting = mCurrentCycle < 0 && previousTime <= 0 && mCurrentTime > 0;
+    _currentTime = MIN(_totalTime, _currentTime + time);
+    BOOL isStarting = _currentCycle < 0 && previousTime <= 0 && _currentTime > 0;
 
-    if (mCurrentTime <= 0) return; // the delay is not over yet
+    if (_currentTime <= 0) return; // the delay is not over yet
 
     if (isStarting)
     {
-        mCurrentCycle++;
-        if (mOnStart) mOnStart();
+        _currentCycle++;
+        if (_onStart) _onStart();
     }
     
-    float ratio = mCurrentTime / mTotalTime;
-    BOOL reversed = mReverse && (mCurrentCycle % 2 == 1);
-    FnPtrTransition transFunc = (FnPtrTransition) mTransitionFunc;
+    float ratio = _currentTime / _totalTime;
+    BOOL reversed = _reverse && (_currentCycle % 2 == 1);
+    FnPtrTransition transFunc = (FnPtrTransition) _transitionFunc;
     Class transClass = [SPTransitions class];
     
-    for (SPTweenedProperty *prop in mProperties)
+    for (SPTweenedProperty *prop in _properties)
     {
         if (isStarting) prop.startValue = prop.currentValue;
-        float transitionValue = reversed ? transFunc(transClass, mTransition, 1.0 - ratio) :
-                                           transFunc(transClass, mTransition, ratio);
+        float transitionValue = reversed ? transFunc(transClass, _transition, 1.0 - ratio) :
+                                           transFunc(transClass, _transition, ratio);
         prop.currentValue = prop.startValue + prop.delta * transitionValue;
     }
     
-    if (mOnUpdate) mOnUpdate();
+    if (_onUpdate) _onUpdate();
     
-    if (previousTime < mTotalTime && mCurrentTime >= mTotalTime)
+    if (previousTime < _totalTime && _currentTime >= _totalTime)
     {
-        if (mRepeatCount == 0 || mRepeatCount > 1)
+        if (_repeatCount == 0 || _repeatCount > 1)
         {
-            mCurrentTime = -mRepeatDelay;
-            mCurrentCycle++;
-            if (mRepeatCount > 1) mRepeatCount--;
-            if (mOnRepeat) mOnRepeat();
+            _currentTime = -_repeatDelay;
+            _currentCycle++;
+            if (_repeatCount > 1) _repeatCount--;
+            if (_onRepeat) _onRepeat();
         }
         else
         {
             [self dispatchEventWithType:SP_EVENT_TYPE_REMOVE_FROM_JUGGLER];
-            if (mOnComplete) mOnComplete();
+            if (_onComplete) _onComplete();
         }
     }
     
@@ -165,19 +165,19 @@ typedef float (*FnPtrTransition) (id, SEL, float);
 
 - (NSString*)transition
 {
-    NSString *selectorName = NSStringFromSelector(mTransition);
+    NSString *selectorName = NSStringFromSelector(_transition);
     return [selectorName substringToIndex:selectorName.length - [TRANS_SUFFIX length]];
 }
 
 - (BOOL)isComplete
 {
-    return mCurrentTime >= mTotalTime && mRepeatCount == 1;
+    return _currentTime >= _totalTime && _repeatCount == 1;
 }
 
 - (void)setDelay:(double)delay
 {
-    mCurrentTime = mCurrentTime + mDelay - delay;
-    mDelay = delay;
+    _currentTime = _currentTime + _delay - delay;
+    _delay = delay;
 }
 
 + (id)tweenWithTarget:(id)target time:(double)time transition:(NSString*)transition

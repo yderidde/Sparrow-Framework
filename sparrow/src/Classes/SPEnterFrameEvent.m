@@ -14,16 +14,16 @@
 
 @implementation SPEnterFrameEvent
 {
-    double mPassedTime;
+    double _passedTime;
 }
 
-@synthesize passedTime = mPassedTime;
+@synthesize passedTime = _passedTime;
 
 - (id)initWithType:(NSString*)type bubbles:(BOOL)bubbles passedTime:(double)seconds 
 {
     if ((self = [super initWithType:type bubbles:bubbles]))
     {
-        mPassedTime = seconds;
+        _passedTime = seconds;
     }
     return self;    
 }

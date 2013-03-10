@@ -18,30 +18,30 @@
 
 @implementation SPQuadBatch
 {
-    int mNumQuads;
-    BOOL mSyncRequired;
+    int _numQuads;
+    BOOL _syncRequired;
     
-    SPTexture *mTexture;
-    BOOL mPremultipliedAlpha;
+    SPTexture *_texture;
+    BOOL _premultipliedAlpha;
     
-    GLKBaseEffect *mBaseEffect;
-    SPVertexData *mVertexData;
-    uint mVertexBufferName;
-    ushort *mIndexData;
-    uint mIndexBufferName;
+    GLKBaseEffect *_baseEffect;
+    SPVertexData *_vertexData;
+    uint _vertexBufferName;
+    ushort *_indexData;
+    uint _indexBufferName;
 }
 
-@synthesize numQuads = mNumQuads;
+@synthesize numQuads = _numQuads;
 
 - (id)init
 {
     if ((self = [super init]))
     {
-        mNumQuads = 0;
-        mSyncRequired = NO;
-        mVertexData = [[SPVertexData alloc] init];
-        mBaseEffect = [[GLKBaseEffect alloc] init];
-        mBaseEffect.transform.projectionMatrix = GLKMatrix4Identity;
+        _numQuads = 0;
+        _syncRequired = NO;
+        _vertexData = [[SPVertexData alloc] init];
+        _baseEffect = [[GLKBaseEffect alloc] init];
+        _baseEffect.transform.projectionMatrix = GLKMatrix4Identity;
     }
     
     return self;
@@ -49,17 +49,17 @@
 
 - (void)dealloc
 {
-    free(mIndexData);
+    free(_indexData);
     
-    glDeleteBuffers(1, &mVertexBufferName);
-    glDeleteBuffers(1, &mIndexBufferName);
+    glDeleteBuffers(1, &_vertexBufferName);
+    glDeleteBuffers(1, &_indexBufferName);
 }
 
 - (void)reset
 {
-    mNumQuads = 0;
-    mTexture = nil;
-    mSyncRequired = YES;
+    _numQuads = 0;
+    _texture = nil;
+    _syncRequired = YES;
 }
 
 - (void)expand
@@ -69,19 +69,19 @@
     int numVertices = newCapacity * 4;
     int numIndices  = newCapacity * 6;
     
-    mVertexData.numVertices = numVertices;
+    _vertexData.numVertices = numVertices;
     
-    if (!mIndexData) mIndexData = malloc(sizeof(ushort) * numIndices);
-    else             mIndexData = realloc(mIndexData, sizeof(ushort) * numIndices);
+    if (!_indexData) _indexData = malloc(sizeof(ushort) * numIndices);
+    else             _indexData = realloc(_indexData, sizeof(ushort) * numIndices);
     
     for (int i=oldCapacity; i<newCapacity; ++i)
     {
-        mIndexData[i*6  ] = i*4;
-        mIndexData[i*6+1] = i*4 + 1;
-        mIndexData[i*6+2] = i*4 + 2;
-        mIndexData[i*6+3] = i*4 + 1;
-        mIndexData[i*6+4] = i*4 + 3;
-        mIndexData[i*6+5] = i*4 + 2;
+        _indexData[i*6  ] = i*4;
+        _indexData[i*6+1] = i*4 + 1;
+        _indexData[i*6+2] = i*4 + 2;
+        _indexData[i*6+3] = i*4 + 1;
+        _indexData[i*6+4] = i*4 + 3;
+        _indexData[i*6+5] = i*4 + 2;
     }
     
     [self createBuffers];
@@ -89,35 +89,35 @@
 
 - (void)createBuffers
 {
-    int numVertices = mVertexData.numVertices;
+    int numVertices = _vertexData.numVertices;
     int numIndices = numVertices / 4 * 6;
     
-    if (mVertexBufferName) glDeleteBuffers(1, &mVertexBufferName);
-    if (mIndexBufferName)  glDeleteBuffers(1, &mIndexBufferName);
+    if (_vertexBufferName) glDeleteBuffers(1, &_vertexBufferName);
+    if (_indexBufferName)  glDeleteBuffers(1, &_indexBufferName);
     if (numVertices == 0)  return;
     
-    glGenBuffers(1, &mVertexBufferName);
-    glGenBuffers(1, &mIndexBufferName);
+    glGenBuffers(1, &_vertexBufferName);
+    glGenBuffers(1, &_indexBufferName);
     
-    glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferName);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(SPVertex) * numVertices, mVertexData.vertices, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, _vertexBufferName);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(SPVertex) * numVertices, _vertexData.vertices, GL_STATIC_DRAW);
     
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndexBufferName);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(ushort) * numIndices, mIndexData, GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indexBufferName);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(ushort) * numIndices, _indexData, GL_STATIC_DRAW);
     
-    mSyncRequired = NO;
+    _syncRequired = NO;
 }
 
 - (void)syncBuffers
 {
-    if (!mVertexBufferName)
+    if (!_vertexBufferName)
         [self createBuffers];
     else
     {
-        int numVertices = mNumQuads * 4;
-        glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferName);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(SPVertex) * numVertices, mVertexData.vertices);
-        mSyncRequired = NO;
+        int numVertices = _numQuads * 4;
+        glBindBuffer(GL_ARRAY_BUFFER, _vertexBufferName);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(SPVertex) * numVertices, _vertexData.vertices);
+        _syncRequired = NO;
     }
 }
 
@@ -139,47 +139,47 @@
 - (void)addQuad:(SPQuad *)quad texture:(SPTexture *)texture alpha:(float)alpha matrix:(SPMatrix *)matrix
 {
     if (!matrix) matrix = quad.transformationMatrix;
-    if (mNumQuads + 1 > self.capacity) [self expand];
-    if (mNumQuads == 0)
+    if (_numQuads + 1 > self.capacity) [self expand];
+    if (_numQuads == 0)
     {
-        mTexture = texture;
-        mPremultipliedAlpha = quad.premultipliedAlpha;
-        [mVertexData setPremultipliedAlpha:quad.premultipliedAlpha updateVertices:NO];
+        _texture = texture;
+        _premultipliedAlpha = quad.premultipliedAlpha;
+        [_vertexData setPremultipliedAlpha:quad.premultipliedAlpha updateVertices:NO];
     }
     
-    int vertexID = mNumQuads * 4;
+    int vertexID = _numQuads * 4;
     
-    [quad copyVertexDataTo:mVertexData atIndex:vertexID];
-    [mVertexData transformVerticesWithMatrix:matrix atIndex:vertexID numVertices:4];
+    [quad copyVertexDataTo:_vertexData atIndex:vertexID];
+    [_vertexData transformVerticesWithMatrix:matrix atIndex:vertexID numVertices:4];
     
     if (alpha != 1.0f)
-        [mVertexData scaleAlphaBy:alpha atIndex:vertexID numVertices:4];
+        [_vertexData scaleAlphaBy:alpha atIndex:vertexID numVertices:4];
     
-    mSyncRequired = YES;
-    ++mNumQuads;
+    _syncRequired = YES;
+    ++_numQuads;
 }
 
 - (BOOL)isStateChangeWithQuad:(SPQuad *)quad texture:(SPTexture *)texture numQuads:(int)numQuads
 {
-    if (mNumQuads == 0) return NO;
-    else if (mNumQuads + numQuads > 8192) return YES; // maximum buffer size
-    else if (!mTexture && !texture) return mPremultipliedAlpha != quad.premultipliedAlpha;
-    else if (mTexture && texture)
-        return mTexture.name != texture.name ||
-               mTexture.repeat != texture.repeat ||
-               mTexture.smoothing != texture.smoothing;
+    if (_numQuads == 0) return NO;
+    else if (_numQuads + numQuads > 8192) return YES; // maximum buffer size
+    else if (!_texture && !texture) return _premultipliedAlpha != quad.premultipliedAlpha;
+    else if (_texture && texture)
+        return _texture.name != texture.name ||
+               _texture.repeat != texture.repeat ||
+               _texture.smoothing != texture.smoothing;
     else return YES;
 }
 
 - (SPRectangle *)boundsInSpace:(SPDisplayObject *)targetSpace
 {
     SPMatrix *matrix = targetSpace == self ? nil : [self transformationMatrixToSpace:targetSpace];
-    return [mVertexData boundsAfterTransformation:matrix];
+    return [_vertexData boundsAfterTransformation:matrix];
 }
 
 - (void)render:(SPRenderSupport *)support
 {
-    if (mNumQuads)
+    if (_numQuads)
     {
         [support finishQuadBatch];
         [self renderWithAlpha:support.alpha matrix:support.mvpMatrix];
@@ -188,30 +188,30 @@
 
 - (void)renderWithAlpha:(float)alpha matrix:(SPMatrix *)matrix
 {
-    if (!mNumQuads) return;
-    if (mSyncRequired) [self syncBuffers];
+    if (!_numQuads) return;
+    if (_syncRequired) [self syncBuffers];
     
     // TODO: alpha
     
-    mBaseEffect.texture2d0.enabled = (mTexture != nil);
-    mBaseEffect.texture2d0.name = mTexture.name;
-    mBaseEffect.transform.modelviewMatrix = [matrix convertToGLKMatrix4];
+    _baseEffect.texture2d0.enabled = (_texture != nil);
+    _baseEffect.texture2d0.name = _texture.name;
+    _baseEffect.transform.modelviewMatrix = [matrix convertToGLKMatrix4];
 
-    [mBaseEffect prepareToDraw];
+    [_baseEffect prepareToDraw];
 
-    if (mPremultipliedAlpha) glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    if (_premultipliedAlpha) glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     else                     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
     glEnableVertexAttribArray(GLKVertexAttribPosition);
     glEnableVertexAttribArray(GLKVertexAttribColor);
     
-    if (mTexture)
+    if (_texture)
         glEnableVertexAttribArray(GLKVertexAttribTexCoord0);
     else
         glDisableVertexAttribArray(GLKVertexAttribTexCoord0);
     
-    glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferName);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndexBufferName);
+    glBindBuffer(GL_ARRAY_BUFFER, _vertexBufferName);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indexBufferName);
     
     glVertexAttribPointer(GLKVertexAttribPosition, 2, GL_FLOAT, GL_FALSE, sizeof(SPVertex),
                           (void *)(offsetof(SPVertex, position)));
@@ -219,19 +219,19 @@
     glVertexAttribPointer(GLKVertexAttribColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(SPVertex),
                           (void *)(offsetof(SPVertex, color)));
     
-    if (mTexture)
+    if (_texture)
     {
         glVertexAttribPointer(GLKVertexAttribTexCoord0, 2, GL_FLOAT, GL_FALSE, sizeof(SPVertex),
                               (void *)(offsetof(SPVertex, texCoords)));
     }
     
-    int numIndices = mNumQuads * 6;
+    int numIndices = _numQuads * 6;
     glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_SHORT, 0);
 }
 
 - (int)capacity
 {
-    return mVertexData.numVertices / 4;
+    return _vertexData.numVertices / 4;
 }
 
 @end

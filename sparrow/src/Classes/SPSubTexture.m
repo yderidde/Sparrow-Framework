@@ -16,15 +16,15 @@
 
 @implementation SPSubTexture
 {
-    SPTexture *mBaseTexture;
-    SPRectangle *mClipping;
-    SPRectangle *mRootClipping;
-    SPRectangle *mFrame;
+    SPTexture *_baseTexture;
+    SPRectangle *_clipping;
+    SPRectangle *_rootClipping;
+    SPRectangle *_frame;
 }
 
-@synthesize baseTexture = mBaseTexture;
-@synthesize clipping = mClipping;
-@synthesize frame = mFrame;
+@synthesize baseTexture = _baseTexture;
+@synthesize clipping = _clipping;
+@synthesize frame = _frame;
 
 - (id)initWithRegion:(SPRectangle*)region ofTexture:(SPTexture*)texture
 {
@@ -35,8 +35,8 @@
 {
     if ((self = [super init]))
     {
-        mBaseTexture = texture;
-        mFrame = [frame copy];
+        _baseTexture = texture;
+        _frame = [frame copy];
         
         // convert region to clipping rectangle (which has values between 0 and 1)
         if (region)
@@ -58,21 +58,21 @@
 - (void)setClipping:(SPRectangle *)clipping
 {
     // private method! Only called via the constructor - thus we don't need to create a copy.
-    mClipping = clipping;
+    _clipping = clipping;
     
     // if the base texture is a sub texture as well, calculate clipping 
     // in reference to the root texture         
-    mRootClipping = [mClipping copy];
-    SPTexture *baseTexture = mBaseTexture;
+    _rootClipping = [_clipping copy];
+    SPTexture *baseTexture = _baseTexture;
     while ([baseTexture isKindOfClass:[SPSubTexture class]])
     {
         SPSubTexture *baseSubTexture = (SPSubTexture *)baseTexture;
-        SPRectangle *baseClipping = baseSubTexture->mClipping;
+        SPRectangle *baseClipping = baseSubTexture->_clipping;
         
-        mRootClipping.x = baseClipping.x + mRootClipping.x * baseClipping.width;
-        mRootClipping.y = baseClipping.y + mRootClipping.y * baseClipping.height;
-        mRootClipping.width *= baseClipping.width;
-        mRootClipping.height *= baseClipping.height;
+        _rootClipping.x = baseClipping.x + _rootClipping.x * baseClipping.width;
+        _rootClipping.y = baseClipping.y + _rootClipping.y * baseClipping.height;
+        _rootClipping.width *= baseClipping.width;
+        _rootClipping.height *= baseClipping.height;
         
         baseTexture = baseSubTexture.baseTexture;
     } 
@@ -80,32 +80,32 @@
 
 - (void)adjustVertexData:(SPVertexData *)vertexData atIndex:(int)index numVertices:(int)count
 {
-    if (mFrame)
+    if (_frame)
     {
         if (count != 4)
             [NSException raise:SP_EXC_INVALID_OPERATION
                         format:@"Textures with a frame can only be used on quads"];
         
-        float deltaRight  = mFrame.width  + mFrame.x - self.width;
-        float deltaBottom = mFrame.height + mFrame.y - self.height;
+        float deltaRight  = _frame.width  + _frame.x - self.width;
+        float deltaBottom = _frame.height + _frame.y - self.height;
         
-        vertexData.vertices[index].position.x -= mFrame.x;
-        vertexData.vertices[index].position.y -= mFrame.y;
+        vertexData.vertices[index].position.x -= _frame.x;
+        vertexData.vertices[index].position.y -= _frame.y;
         
         vertexData.vertices[index+1].position.x -= deltaRight;
-        vertexData.vertices[index+1].position.y -= mFrame.y;
+        vertexData.vertices[index+1].position.y -= _frame.y;
 
-        vertexData.vertices[index+2].position.x -= mFrame.x;
+        vertexData.vertices[index+2].position.x -= _frame.x;
         vertexData.vertices[index+2].position.y -= deltaBottom;
         
         vertexData.vertices[index+3].position.x -= deltaRight;
         vertexData.vertices[index+3].position.y -= deltaBottom;
     }
     
-    float clipX = mRootClipping.x;
-    float clipY = mRootClipping.y;
-    float clipWidth = mRootClipping.width;
-    float clipHeight = mRootClipping.height;
+    float clipX = _rootClipping.x;
+    float clipY = _rootClipping.y;
+    float clipWidth = _rootClipping.width;
+    float clipHeight = _rootClipping.height;
     
     for (int i=index; i<index+count; ++i)
     {
@@ -117,47 +117,47 @@
 
 - (float)width
 {
-    return mBaseTexture.width * mClipping.width;
+    return _baseTexture.width * _clipping.width;
 }
 
 - (float)height
 {
-    return mBaseTexture.height * mClipping.height;
+    return _baseTexture.height * _clipping.height;
 }
 
 - (uint)name
 {
-    return mBaseTexture.name;
+    return _baseTexture.name;
 }
 
 - (void)setRepeat:(BOOL)value
 {
-    mBaseTexture.repeat = value;
+    _baseTexture.repeat = value;
 }
 
 - (BOOL)repeat
 {
-    return mBaseTexture.repeat;
+    return _baseTexture.repeat;
 }
 
 - (SPTextureSmoothing)smoothing
 {    
-    return mBaseTexture.smoothing;
+    return _baseTexture.smoothing;
 }
 
 - (void)setSmoothing:(SPTextureSmoothing)value
 {
-    mBaseTexture.smoothing = value;
+    _baseTexture.smoothing = value;
 }
 
 - (BOOL)premultipliedAlpha
 {
-    return mBaseTexture.premultipliedAlpha;
+    return _baseTexture.premultipliedAlpha;
 }
 
 - (float)scale
 {
-    return mBaseTexture.scale;
+    return _baseTexture.scale;
 }
 
 + (id)textureWithRegion:(SPRectangle*)region ofTexture:(SPTexture*)texture

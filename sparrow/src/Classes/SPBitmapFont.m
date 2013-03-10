@@ -38,26 +38,26 @@
 
 @implementation SPBitmapFont
 {
-    SPTexture *mFontTexture;
-    NSString *mName;
-    NSString *mPath;
-    NSMutableDictionary *mChars;
-    float mSize;
-    float mLineHeight;
+    SPTexture *_fontTexture;
+    NSString *_name;
+    NSString *_path;
+    NSMutableDictionary *_chars;
+    float _size;
+    float _lineHeight;
 }
 
-@synthesize name = mName;
-@synthesize lineHeight = mLineHeight;
-@synthesize size = mSize;
+@synthesize name = _name;
+@synthesize lineHeight = _lineHeight;
+@synthesize size = _size;
 
 - (id)initWithContentsOfFile:(NSString *)path texture:(SPTexture *)texture
 {
     if ((self = [super init]))
     {
-        mName = @"unknown";
-        mLineHeight = mSize = SP_DEFAULT_FONT_SIZE;
-        mFontTexture = texture;
-        mChars = [[NSMutableDictionary alloc] init];
+        _name = @"unknown";
+        _lineHeight = _size = SP_DEFAULT_FONT_SIZE;
+        _fontTexture = texture;
+        _chars = [[NSMutableDictionary alloc] init];
         
         [self parseFontXml:path];
     }
@@ -79,12 +79,12 @@
     if (!path) return;
     
     float scaleFactor = Sparrow.contentScaleFactor;
-    mPath = [SPUtils absolutePathToFile:path withScaleFactor:scaleFactor];
-    if (!mPath) [NSException raise:SP_EXC_FILE_NOT_FOUND format:@"file not found: %@", path];
+    _path = [SPUtils absolutePathToFile:path withScaleFactor:scaleFactor];
+    if (!_path) [NSException raise:SP_EXC_FILE_NOT_FOUND format:@"file not found: %@", path];
     
     @autoreleasepool
     {
-        NSData *xmlData = [[NSData alloc] initWithContentsOfFile:mPath];
+        NSData *xmlData = [[NSData alloc] initWithContentsOfFile:_path];
         NSXMLParser *xmlParser = [[NSXMLParser alloc] initWithData:xmlData];
         
         xmlParser.delegate = self;
@@ -105,14 +105,14 @@
     if ([elementName isEqualToString:@"char"])
     {
         int charID = [[attributeDict valueForKey:@"id"] intValue];        
-        float scale = mFontTexture.scale;
+        float scale = _fontTexture.scale;
         
         SPRectangle *region = [[SPRectangle alloc] init];
-        region.x = [[attributeDict valueForKey:@"x"] floatValue] / scale + mFontTexture.frame.x;
-        region.y = [[attributeDict valueForKey:@"y"] floatValue] / scale + mFontTexture.frame.y;
+        region.x = [[attributeDict valueForKey:@"x"] floatValue] / scale + _fontTexture.frame.x;
+        region.y = [[attributeDict valueForKey:@"y"] floatValue] / scale + _fontTexture.frame.y;
         region.width = [[attributeDict valueForKey:@"width"] floatValue] / scale;
         region.height = [[attributeDict valueForKey:@"height"] floatValue] / scale;
-        SPSubTexture *texture = [[SPSubTexture alloc] initWithRegion:region ofTexture:mFontTexture];
+        SPSubTexture *texture = [[SPSubTexture alloc] initWithRegion:region ofTexture:_fontTexture];
         
         float xOffset = [[attributeDict valueForKey:@"xoffset"] floatValue] / scale;
         float yOffset = [[attributeDict valueForKey:@"yoffset"] floatValue] / scale;
@@ -122,46 +122,46 @@
                                                             xOffset:xOffset yOffset:yOffset 
                                                            xAdvance:xAdvance];
         
-        mChars[@(charID)] = bitmapChar;
+        _chars[@(charID)] = bitmapChar;
     }
 	else if ([elementName isEqualToString:@"kerning"])
 	{
 		int first  = [[attributeDict valueForKey:@"first"] intValue];
         int second = [[attributeDict valueForKey:@"second"] intValue];
-        float amount = [[attributeDict valueForKey:@"amount"] floatValue] / mFontTexture.scale;
+        float amount = [[attributeDict valueForKey:@"amount"] floatValue] / _fontTexture.scale;
 		[[self charByID:second] addKerning:amount toChar:first];
 	}
     else if ([elementName isEqualToString:@"info"])
     {
-        mName = [[attributeDict valueForKey:@"face"] copy];
-        mSize = [[attributeDict valueForKey:@"size"] floatValue];
+        _name = [[attributeDict valueForKey:@"face"] copy];
+        _size = [[attributeDict valueForKey:@"size"] floatValue];
     }
     else if ([elementName isEqualToString:@"common"])
     {
-        mLineHeight = [[attributeDict valueForKey:@"lineHeight"] floatValue];
+        _lineHeight = [[attributeDict valueForKey:@"lineHeight"] floatValue];
     }
     else if ([elementName isEqualToString:@"page"])
     {
         int id = [[attributeDict valueForKey:@"id"] intValue];
         if (id != 0) [NSException raise:SP_EXC_FILE_INVALID 
                                  format:@"Bitmap fonts with multiple pages are not supported"];
-        if (!mFontTexture)
+        if (!_fontTexture)
         {
             NSString *filename = [attributeDict valueForKey:@"file"];
-            NSString *folder = [mPath stringByDeletingLastPathComponent];
+            NSString *folder = [_path stringByDeletingLastPathComponent];
             NSString *absolutePath = [folder stringByAppendingPathComponent:filename];
-            mFontTexture = [[SPTexture alloc] initWithContentsOfFile:absolutePath];             
+            _fontTexture = [[SPTexture alloc] initWithContentsOfFile:absolutePath];             
         }
         
         // update sizes, now that we know the scale setting
-        mSize /= mFontTexture.scale;
-        mLineHeight /= mFontTexture.scale;
+        _size /= _fontTexture.scale;
+        _lineHeight /= _fontTexture.scale;
     }
 }
 
 - (SPBitmapChar *)charByID:(int)charID
 {
-    return (SPBitmapChar *)mChars[@(charID)];
+    return (SPBitmapChar *)_chars[@(charID)];
 }
 
 - (SPDisplayObject *)createDisplayObjectWithWidth:(float)width height:(float)height
@@ -171,9 +171,9 @@
 {    
     SPSprite *lineContainer = [SPSprite sprite];
     
-    if (size < 0) size *= -mSize;
+    if (size < 0) size *= -_size;
     
-    float scale = size / mSize;
+    float scale = size / _size;
     lineContainer.scaleX = lineContainer.scaleY = scale;        
     float containerWidth = width / scale;
     float containerHeight = height / scale;    
@@ -235,10 +235,10 @@
         
         if (lineFull || i == text.length - 1)
         {
-            float nextLineY = currentLine.y + mLineHeight;             
+            float nextLineY = currentLine.y + _lineHeight;             
             [lineContainer addChild:currentLine];                        
             
-            if (nextLineY + mLineHeight <= containerHeight)
+            if (nextLineY + _lineHeight <= containerHeight)
             {
                 currentLine = [SPSprite sprite];
                 currentLine.y = nextLineY;            
@@ -271,7 +271,7 @@
     
     if (vAlign != SPVAlignTop)
     {
-        float contentHeight = lineContainer.numChildren * mLineHeight * scale;
+        float contentHeight = lineContainer.numChildren * _lineHeight * scale;
         float heightDiff = height - contentHeight;
         lineContainer.y = (int)(vAlign == SPVAlignBottom ? heightDiff : heightDiff / 2.0f);
     }

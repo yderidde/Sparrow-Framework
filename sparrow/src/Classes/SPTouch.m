@@ -16,24 +16,24 @@
 
 @implementation SPTouch
 {
-    double mTimestamp;
-    float mGlobalX;
-    float mGlobalY;
-    float mPreviousGlobalX;
-    float mPreviousGlobalY;
-    int mTapCount;
-    SPTouchPhase mPhase;
-    SPDisplayObject *__weak mTarget;
+    double _timestamp;
+    float _globalX;
+    float _globalY;
+    float _previousGlobalX;
+    float _previousGlobalY;
+    int _tapCount;
+    SPTouchPhase _phase;
+    SPDisplayObject *__weak _target;
 }
 
-@synthesize timestamp = mTimestamp;
-@synthesize globalX = mGlobalX;
-@synthesize globalY = mGlobalY;
-@synthesize previousGlobalX = mPreviousGlobalX;
-@synthesize previousGlobalY = mPreviousGlobalY;
-@synthesize tapCount = mTapCount;
-@synthesize phase = mPhase;
-@synthesize target = mTarget;
+@synthesize timestamp = _timestamp;
+@synthesize globalX = _globalX;
+@synthesize globalY = _globalY;
+@synthesize previousGlobalX = _previousGlobalX;
+@synthesize previousGlobalY = _previousGlobalY;
+@synthesize tapCount = _tapCount;
+@synthesize phase = _phase;
+@synthesize target = _target;
 
 - (id)init
 {
@@ -42,20 +42,20 @@
 
 - (SPPoint*)locationInSpace:(SPDisplayObject*)space
 {
-    SPMatrix *transformationMatrix = [mTarget.root transformationMatrixToSpace:space];
-    return [transformationMatrix transformPointWithX:mGlobalX y:mGlobalY];
+    SPMatrix *transformationMatrix = [_target.root transformationMatrixToSpace:space];
+    return [transformationMatrix transformPointWithX:_globalX y:_globalY];
 }
 
 - (SPPoint*)previousLocationInSpace:(SPDisplayObject*)space
 {
-    SPMatrix *transformationMatrix = [mTarget.root transformationMatrixToSpace:space];
-    return [transformationMatrix transformPointWithX:mPreviousGlobalX y:mPreviousGlobalY];
+    SPMatrix *transformationMatrix = [_target.root transformationMatrixToSpace:space];
+    return [transformationMatrix transformPointWithX:_previousGlobalX y:_previousGlobalY];
 }
 
 - (NSString *)description
 {
     return [NSString stringWithFormat:@"[SPTouch: globalX=%.1f, globalY=%.1f, phase=%d, tapCount=%d]",
-            mGlobalX, mGlobalY, mPhase, mTapCount];
+            _globalX, _globalY, _phase, _tapCount];
 }
 
 @end
@@ -68,43 +68,43 @@
 
 - (void)setTimestamp:(double)timestamp
 {
-    mTimestamp = timestamp;
+    _timestamp = timestamp;
 }
 
 - (void)setGlobalX:(float)x
 {
-    mGlobalX = x;
+    _globalX = x;
 }
 
 - (void)setGlobalY:(float)y
 {
-    mGlobalY = y;
+    _globalY = y;
 }
 
 - (void)setPreviousGlobalX:(float)x
 {
-    mPreviousGlobalX = x;
+    _previousGlobalX = x;
 }
 
 - (void)setPreviousGlobalY:(float)y
 {
-    mPreviousGlobalY = y;
+    _previousGlobalY = y;
 }
 
 - (void)setTapCount:(int)tapCount
 {
-    mTapCount = tapCount;
+    _tapCount = tapCount;
 }
 
 - (void)setPhase:(SPTouchPhase)phase
 {
-    mPhase = phase;
+    _phase = phase;
 }
 
 - (void)setTarget:(SPDisplayObject*)target
 {
-    if (mTarget != target)
-        mTarget = target;
+    if (_target != target)
+        _target = target;
 }
 
 + (SPTouch*)touch

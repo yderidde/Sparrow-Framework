@@ -109,7 +109,7 @@
 /* Begin PBXFileReference section */
 		1D3623240D0F684500981E51 /* DemoAppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DemoAppDelegate.h; sourceTree = "<group>"; };
 		1D3623250D0F684500981E51 /* DemoAppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DemoAppDelegate.m; sourceTree = "<group>"; };
-		1D6058910D05DD3D006BFB54 /* Demo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Demo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1D6058910D05DD3D006BFB54 /* Sparrow Demo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Sparrow Demo.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		25C23A5511EC631500A25DF7 /* button_back.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = button_back.png; sourceTree = "<group>"; };
 		25C23A5611EC631500A25DF7 /* button_big.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = button_big.png; sourceTree = "<group>"; };
 		25C23A5711EC631500A25DF7 /* button_normal.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = button_normal.png; sourceTree = "<group>"; };
@@ -239,7 +239,7 @@
 		19C28FACFE9D520D11CA2CBB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				1D6058910D05DD3D006BFB54 /* Demo.app */,
+				1D6058910D05DD3D006BFB54 /* Sparrow Demo.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -448,7 +448,7 @@
 			);
 			name = Demo;
 			productName = Demo;
-			productReference = 1D6058910D05DD3D006BFB54 /* Demo.app */;
+			productReference = 1D6058910D05DD3D006BFB54 /* Sparrow Demo.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */

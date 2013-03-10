@@ -25,18 +25,18 @@
 
 @implementation SPTouchProcessor
 {
-    SPDisplayObjectContainer *__weak mRoot;
-    NSMutableSet *mCurrentTouches;
+    SPDisplayObjectContainer *__weak _root;
+    NSMutableSet *_currentTouches;
 }
 
-@synthesize root = mRoot;
+@synthesize root = _root;
 
 - (id)initWithRoot:(SPDisplayObjectContainer*)root
 {
     if ((self = [super init]))
     {
-        mRoot = root;
-        mCurrentTouches = [[NSMutableSet alloc] initWithCapacity:2];
+        _root = root;
+        _currentTouches = [[NSMutableSet alloc] initWithCapacity:2];
         
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(cancelCurrentTouches:)
                                               name:UIApplicationWillResignActiveNotification object:nil];
@@ -58,7 +58,7 @@
     {
         SPTouch *currentTouch = nil;
         
-        for (SPTouch *existingTouch in mCurrentTouches)
+        for (SPTouch *existingTouch in _currentTouches)
         {
             if (existingTouch.phase == SPTouchPhaseEnded || existingTouch.phase == SPTouchPhaseCancelled)
                 continue;
@@ -81,7 +81,7 @@
                 {
                     // target could have been removed from stage -> find new target in that case
                     SPPoint *touchPosition = [SPPoint pointWithX:touch.globalX y:touch.globalY];
-                    existingTouch.target = [mRoot hitTestPoint:touchPosition forTouch:YES];       
+                    existingTouch.target = [_root hitTestPoint:touchPosition forTouch:YES];       
                 }
                 
                 currentTouch = existingTouch;
@@ -101,7 +101,7 @@
             currentTouch.phase = touch.phase;
             currentTouch.tapCount = touch.tapCount;
             SPPoint *touchPosition = [SPPoint pointWithX:touch.globalX y:touch.globalY];
-            currentTouch.target = [mRoot hitTestPoint:touchPosition forTouch:YES];
+            currentTouch.target = [_root hitTestPoint:touchPosition forTouch:YES];
         }
         
         [processedTouches addObject:currentTouch];
@@ -115,23 +115,23 @@
         [touch.target dispatchEvent:touchEvent];
     }
     
-    mCurrentTouches = processedTouches;
+    _currentTouches = processedTouches;
 }
 
 - (void)cancelCurrentTouches:(NSNotification *)notification
 {
     double now = CACurrentMediaTime();
     
-    for (SPTouch *touch in mCurrentTouches)
+    for (SPTouch *touch in _currentTouches)
     {
         touch.phase = SPTouchPhaseCancelled;
         touch.timestamp = now;
     }
 
-    for (SPTouch *touch in mCurrentTouches)
-        [touch.target dispatchEvent:[SPTouchEvent eventWithType:SP_EVENT_TYPE_TOUCH touches:mCurrentTouches]];
+    for (SPTouch *touch in _currentTouches)
+        [touch.target dispatchEvent:[SPTouchEvent eventWithType:SP_EVENT_TYPE_TOUCH touches:_currentTouches]];
 
-    [mCurrentTouches removeAllObjects];
+    [_currentTouches removeAllObjects];
 }
 
 - (void) dealloc

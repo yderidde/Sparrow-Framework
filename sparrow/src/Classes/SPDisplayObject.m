@@ -22,40 +22,40 @@ float square(float value) { return value * value; }
 
 @implementation SPDisplayObject
 {
-    float mX;
-    float mY;
-    float mPivotX;
-    float mPivotY;
-    float mScaleX;
-    float mScaleY;
-    float mSkewX;
-    float mSkewY;
-    float mRotation;
-    float mAlpha;
-    BOOL mVisible;
-    BOOL mTouchable;
-    BOOL mOrientationChanged;
+    float _x;
+    float _y;
+    float _pivotX;
+    float _pivotY;
+    float _scaleX;
+    float _scaleY;
+    float _skewX;
+    float _skewY;
+    float _rotation;
+    float _alpha;
+    BOOL _visible;
+    BOOL _touchable;
+    BOOL _orientationChanged;
     
-    SPDisplayObjectContainer *__weak mParent;
-    SPMatrix *mTransformationMatrix;
-    double mLastTouchTimestamp;
-    NSString *mName;
+    SPDisplayObjectContainer *__weak _parent;
+    SPMatrix *_transformationMatrix;
+    double _lastTouchTimestamp;
+    NSString *_name;
 }
 
-@synthesize x = mX;
-@synthesize y = mY;
-@synthesize pivotX = mPivotX;
-@synthesize pivotY = mPivotY;
-@synthesize scaleX = mScaleX;
-@synthesize scaleY = mScaleY;
-@synthesize skewX  = mSkewX;
-@synthesize skewY  = mSkewY;
-@synthesize rotation = mRotation;
-@synthesize parent = mParent;
-@synthesize alpha = mAlpha;
-@synthesize visible = mVisible;
-@synthesize touchable = mTouchable;
-@synthesize name = mName;
+@synthesize x = _x;
+@synthesize y = _y;
+@synthesize pivotX = _pivotX;
+@synthesize pivotY = _pivotY;
+@synthesize scaleX = _scaleX;
+@synthesize scaleY = _scaleY;
+@synthesize skewX  = _skewX;
+@synthesize skewY  = _skewY;
+@synthesize rotation = _rotation;
+@synthesize parent = _parent;
+@synthesize alpha = _alpha;
+@synthesize visible = _visible;
+@synthesize touchable = _touchable;
+@synthesize name = _name;
 
 - (id)init
 {    
@@ -70,13 +70,13 @@ float square(float value) { return value * value; }
     
     if ((self = [super init]))
     {
-        mAlpha = 1.0f;
-        mScaleX = 1.0f;
-        mScaleY = 1.0f;
-        mVisible = YES;
-        mTouchable = YES;
-        mTransformationMatrix = [[SPMatrix alloc] init];
-        mOrientationChanged = NO;
+        _alpha = 1.0f;
+        _scaleX = 1.0f;
+        _scaleY = 1.0f;
+        _visible = YES;
+        _touchable = YES;
+        _transformationMatrix = [[SPMatrix alloc] init];
+        _orientationChanged = NO;
     }
     return self;
 }
@@ -88,7 +88,7 @@ float square(float value) { return value * value; }
 
 - (void)removeFromParent
 {
-    [mParent removeChild:self];
+    [_parent removeChild:self];
 }
 
 - (SPMatrix *)transformationMatrixToSpace:(SPDisplayObject *)targetSpace
@@ -97,7 +97,7 @@ float square(float value) { return value * value; }
     {
         return [SPMatrix matrixWithIdentity];
     }
-    else if (targetSpace == mParent || (!targetSpace && !mParent))
+    else if (targetSpace == _parent || (!targetSpace && !_parent))
     {
         return [self.transformationMatrix copy];
     }
@@ -110,11 +110,11 @@ float square(float value) { return value * value; }
         while (currentObject != targetSpace)
         {
             [selfMatrix appendMatrix:currentObject.transformationMatrix];
-            currentObject = currentObject->mParent;
+            currentObject = currentObject->_parent;
         }        
         return selfMatrix; 
     }
-    else if (targetSpace->mParent == self)
+    else if (targetSpace->_parent == self)
     {
         SPMatrix *targetMatrix = [targetSpace.transformationMatrix copy];
         [targetMatrix invert];
@@ -135,7 +135,7 @@ float square(float value) { return value * value; }
     while (currentObject && count < SP_MAX_DISPLAY_TREE_DEPTH)
     {
         ancestors[count++] = currentObject;
-        currentObject = currentObject->mParent;
+        currentObject = currentObject->_parent;
     }
 
     currentObject = targetSpace;    
@@ -149,7 +149,7 @@ float square(float value) { return value * value; }
                 break;                
             }            
         }
-        currentObject = currentObject->mParent;
+        currentObject = currentObject->_parent;
     }
     
     if (!commonParent)
@@ -161,7 +161,7 @@ float square(float value) { return value * value; }
     while (currentObject != commonParent)
     {
         [selfMatrix appendMatrix:currentObject.transformationMatrix];
-        currentObject = currentObject->mParent;
+        currentObject = currentObject->_parent;
     }
     
     // 3.: Now move up from target until we reach the common parent
@@ -170,7 +170,7 @@ float square(float value) { return value * value; }
     while (currentObject && currentObject != commonParent)
     {
         [targetMatrix appendMatrix:currentObject.transformationMatrix];
-        currentObject = currentObject->mParent;
+        currentObject = currentObject->_parent;
     }    
     
     // 4.: Combine the two matrices
@@ -189,13 +189,13 @@ float square(float value) { return value * value; }
 
 - (SPRectangle *)bounds
 {
-    return [self boundsInSpace:mParent];
+    return [self boundsInSpace:_parent];
 }
 
 - (SPDisplayObject *)hitTestPoint:(SPPoint *)localPoint forTouch:(BOOL)isTouch
 {
     // on a touch test, invisible or untouchable objects cause the test to fail
-    if (isTouch && (!mVisible || !mTouchable)) return nil;
+    if (isTouch && (!_visible || !_touchable)) return nil;
     
     // otherwise, check bounding box
     if ([[self boundsInSpace:self] containsPoint:localPoint]) return self; 
@@ -222,8 +222,8 @@ float square(float value) { return value * value; }
     if ([event isKindOfClass:[SPTouchEvent class]])
     {
         SPTouchEvent *touchEvent = (SPTouchEvent*)event;
-        if (touchEvent.timestamp == mLastTouchTimestamp) return;        
-        else mLastTouchTimestamp = touchEvent.timestamp;
+        if (touchEvent.timestamp == _lastTouchTimestamp) return;        
+        else _lastTouchTimestamp = touchEvent.timestamp;
     }
     
     [super dispatchEvent:event];
@@ -245,12 +245,12 @@ float square(float value) { return value * value; }
 
 - (float)width
 {
-    return [self boundsInSpace:mParent].width; 
+    return [self boundsInSpace:_parent].width; 
 }
 
 - (void)setWidth:(float)value
 {
-    // this method calls 'self.scaleX' instead of changing mScaleX directly.
+    // this method calls 'self.scaleX' instead of changing _scaleX directly.
     // that way, subclasses reacting on size changes need to override only the scaleX method.
     
     self.scaleX = 1.0f;
@@ -260,7 +260,7 @@ float square(float value) { return value * value; }
 
 - (float)height
 {
-    return [self boundsInSpace:mParent].height;
+    return [self boundsInSpace:_parent].height;
 }
 
 - (void)setHeight:(float)value
@@ -272,73 +272,73 @@ float square(float value) { return value * value; }
 
 - (void)setX:(float)value
 {
-    if (value != mX)
+    if (value != _x)
     {
-        mX = value;
-        mOrientationChanged = YES;
+        _x = value;
+        _orientationChanged = YES;
     }
 }
 
 - (void)setY:(float)value
 {
-    if (value != mY)
+    if (value != _y)
     {
-        mY = value;
-        mOrientationChanged = YES;
+        _y = value;
+        _orientationChanged = YES;
     }
 }
 
 - (void)setScaleX:(float)value
 {
-    if (value != mScaleX)
+    if (value != _scaleX)
     {
-        mScaleX = value;
-        mOrientationChanged = YES;
+        _scaleX = value;
+        _orientationChanged = YES;
     }
 }
 
 - (void)setScaleY:(float)value
 {
-    if (value != mScaleY)
+    if (value != _scaleY)
     {
-        mScaleY = value;
-        mOrientationChanged = YES;
+        _scaleY = value;
+        _orientationChanged = YES;
     }
 }
 
 - (void)setSkewX:(float)value
 {
-    if (value != mSkewX)
+    if (value != _skewX)
     {
-        mSkewX = value;
-        mOrientationChanged = YES;
+        _skewX = value;
+        _orientationChanged = YES;
     }
 }
 
 - (void)setSkewY:(float)value
 {
-    if (value != mSkewY)
+    if (value != _skewY)
     {
-        mSkewY = value;
-        mOrientationChanged = YES;
+        _skewY = value;
+        _orientationChanged = YES;
     }
 }
 
 - (void)setPivotX:(float)value
 {
-    if (value != mPivotX)
+    if (value != _pivotX)
     {
-        mPivotX = value;
-        mOrientationChanged = YES;
+        _pivotX = value;
+        _orientationChanged = YES;
     }
 }
 
 - (void)setPivotY:(float)value
 {
-    if (value != mPivotY)
+    if (value != _pivotY)
     {
-        mPivotY = value;
-        mOrientationChanged = YES;
+        _pivotY = value;
+        _orientationChanged = YES;
     }
 }
 
@@ -351,19 +351,19 @@ float square(float value) { return value * value; }
     if (value < -PI) value += TWO_PI;
     if (value >  PI) value -= TWO_PI;
     
-    mRotation = value;
-    mOrientationChanged = YES;
+    _rotation = value;
+    _orientationChanged = YES;
 }
 
 - (void)setAlpha:(float)value
 {
-    mAlpha = MAX(0.0f, MIN(1.0f, value));
+    _alpha = MAX(0.0f, MIN(1.0f, value));
 }
 
 - (SPDisplayObject *)base
 {
     SPDisplayObject *currentObject = self;
-    while (currentObject->mParent) currentObject = currentObject->mParent;
+    while (currentObject->_parent) currentObject = currentObject->_parent;
     return currentObject;
 }
 
@@ -371,10 +371,10 @@ float square(float value) { return value * value; }
 {
     Class stageClass = [SPStage class];
     SPDisplayObject *currentObject = self;
-    while (currentObject->mParent)
+    while (currentObject->_parent)
     {
-        if ([currentObject->mParent isMemberOfClass:stageClass]) return currentObject;
-        else currentObject = currentObject->mParent;
+        if ([currentObject->_parent isMemberOfClass:stageClass]) return currentObject;
+        else currentObject = currentObject->_parent;
     }
     return nil;
 }
@@ -388,69 +388,69 @@ float square(float value) { return value * value; }
 
 - (SPMatrix*)transformationMatrix
 {
-    if (mOrientationChanged)
+    if (_orientationChanged)
     {
-        mOrientationChanged = NO;
-        [mTransformationMatrix identity];
+        _orientationChanged = NO;
+        [_transformationMatrix identity];
     
-        if (mScaleX != 1.0f || mScaleY != 1.0f) [mTransformationMatrix scaleXBy:mScaleX yBy:mScaleY];
-        if (mSkewX  != 1.0f || mSkewY  != 1.0f) [mTransformationMatrix skewXBy:mSkewX yBy:mSkewY];
-        if (mRotation != 0.0f)                 [mTransformationMatrix rotateBy:mRotation];
-        if (mX != 0.0f || mY != 0.0f)           [mTransformationMatrix translateXBy:mX yBy:mY];
+        if (_scaleX != 1.0f || _scaleY != 1.0f) [_transformationMatrix scaleXBy:_scaleX yBy:_scaleY];
+        if (_skewX  != 1.0f || _skewY  != 1.0f) [_transformationMatrix skewXBy:_skewX yBy:_skewY];
+        if (_rotation != 0.0f)                  [_transformationMatrix rotateBy:_rotation];
+        if (_x != 0.0f || _y != 0.0f)           [_transformationMatrix translateXBy:_x yBy:_y];
         
-        if (mPivotX != 0.0 || mPivotY != 0.0)
+        if (_pivotX != 0.0 || _pivotY != 0.0)
         {
             // prepend pivot transformation
-            mTransformationMatrix.tx = mX - mTransformationMatrix.a * mPivotX
-                                          - mTransformationMatrix.c * mPivotY;
-            mTransformationMatrix.ty = mY - mTransformationMatrix.b * mPivotX
-                                          - mTransformationMatrix.d * mPivotY;
+            _transformationMatrix.tx = _x - _transformationMatrix.a * _pivotX
+                                          - _transformationMatrix.c * _pivotY;
+            _transformationMatrix.ty = _y - _transformationMatrix.b * _pivotX
+                                          - _transformationMatrix.d * _pivotY;
         }
     }
     
-    return mTransformationMatrix;
+    return _transformationMatrix;
 }
 
 - (void)setTransformationMatrix:(SPMatrix *)matrix
 {
-    mOrientationChanged = NO;
-    [mTransformationMatrix copyFromMatrix:matrix];
+    _orientationChanged = NO;
+    [_transformationMatrix copyFromMatrix:matrix];
     
-    mX = matrix.tx;
-    mY = matrix.ty;
+    _x = matrix.tx;
+    _y = matrix.ty;
     
-    mScaleX = sqrtf(square(matrix.a) + square(matrix.b));
-    mSkewY  = acosf(matrix.a / mScaleX);
+    _scaleX = sqrtf(square(matrix.a) + square(matrix.b));
+    _skewY  = acosf(matrix.a / _scaleX);
     
-    if (!SP_IS_FLOAT_EQUAL(matrix.b, mScaleX * sinf(mSkewY)))
+    if (!SP_IS_FLOAT_EQUAL(matrix.b, _scaleX * sinf(_skewY)))
     {
-        mScaleX *= -1.0f;
-        mSkewY = acosf(matrix.a / mScaleX);
+        _scaleX *= -1.0f;
+        _skewY = acosf(matrix.a / _scaleX);
     }
     
-    mScaleY = sqrtf(square(matrix.c) + square(matrix.d));
-    mSkewX  = acosf(matrix.d / mScaleY);
+    _scaleY = sqrtf(square(matrix.c) + square(matrix.d));
+    _skewX  = acosf(matrix.d / _scaleY);
     
-    if (!SP_IS_FLOAT_EQUAL(matrix.c, -mScaleY * sinf(mSkewX)))
+    if (!SP_IS_FLOAT_EQUAL(matrix.c, -_scaleY * sinf(_skewX)))
     {
-        mScaleY *= -1.0f;
-        mSkewX = acosf(matrix.d / mScaleY);
+        _scaleY *= -1.0f;
+        _skewX = acosf(matrix.d / _scaleY);
     }
     
-    if (SP_IS_FLOAT_EQUAL(mSkewX, mSkewY))
+    if (SP_IS_FLOAT_EQUAL(_skewX, _skewY))
     {
-        mRotation = mSkewX;
-        mSkewX = mSkewY = 0.0f;
+        _rotation = _skewX;
+        _skewX = _skewY = 0.0f;
     }
     else
     {
-        mRotation = 0.0f;
+        _rotation = 0.0f;
     }
 }
 
 - (BOOL)hasVisibleArea
 {
-    return mAlpha != 0.0f && mVisible && mScaleX != 0.0f && mScaleY != 0.0f;
+    return _alpha != 0.0f && _visible && _scaleX != 0.0f && _scaleY != 0.0f;
 }
 
 @end
@@ -463,13 +463,13 @@ float square(float value) { return value * value; }
 { 
     SPDisplayObject *ancestor = parent;
     while (ancestor != self && ancestor != nil)
-        ancestor = ancestor->mParent;
+        ancestor = ancestor->_parent;
     
     if (ancestor == self)
         [NSException raise:SP_EXC_INVALID_OPERATION 
                     format:@"An object cannot be added as a child to itself or one of its children"];
     else
-        mParent = parent; // only assigned, not retained (to avoid a circular reference).
+        _parent = parent; // only assigned, not retained (to avoid a circular reference).
 }
 
 - (void)dispatchEventOnChildren:(SPEvent *)event

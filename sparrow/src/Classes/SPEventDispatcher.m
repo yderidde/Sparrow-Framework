@@ -19,29 +19,29 @@
 
 @implementation SPEventDispatcher
 {
-    NSMutableDictionary *mEventListeners;
+    NSMutableDictionary *_eventListeners;
 }
 
 - (void)addEventListener:(SPEventListener *)listener forType:(NSString *)eventType
 {
-    if (!mEventListeners)
-        mEventListeners = [[NSMutableDictionary alloc] init];
+    if (!_eventListeners)
+        _eventListeners = [[NSMutableDictionary alloc] init];
     
     // When an event listener is added or removed, a new NSArray object is created, instead of
     // changing the array. The reason for this is that we can avoid creating a copy of the NSArray
     // in the "dispatchEvent"-method, which is called far more often than
     // "add"- and "removeEventListener".
     
-    NSArray *listeners = mEventListeners[eventType];
+    NSArray *listeners = _eventListeners[eventType];
     if (!listeners)
     {
         listeners = @[listener];
-        mEventListeners[eventType] = listeners;
+        _eventListeners[eventType] = listeners;
     }
     else
     {
         listeners = [listeners arrayByAddingObject:listener];
-        mEventListeners[eventType] = listeners;
+        _eventListeners[eventType] = listeners;
     }
 }
 
@@ -60,7 +60,7 @@
 - (void)removeEventListenersForType:(NSString *)eventType withTarget:(id)object
                         andSelector:(SEL)selector orBlock:(SPEventBlock)block
 {
-    NSArray *listeners = mEventListeners[eventType];
+    NSArray *listeners = _eventListeners[eventType];
     if (listeners)
     {
         NSMutableArray *remainingListeners = [[NSMutableArray alloc] init];
@@ -70,8 +70,8 @@
                 [remainingListeners addObject:listener];
         }
         
-        if (remainingListeners.count == 0) [mEventListeners removeObjectForKey:eventType];
-        else mEventListeners[eventType] = remainingListeners;
+        if (remainingListeners.count == 0) [_eventListeners removeObjectForKey:eventType];
+        else _eventListeners[eventType] = remainingListeners;
     }
 }
 
@@ -92,7 +92,7 @@
 
 - (BOOL)hasEventListenerForType:(NSString*)eventType
 {
-    return mEventListeners[eventType] != nil;
+    return _eventListeners[eventType] != nil;
 }
 
 - (void)dispatchEventWithType:(NSString *)type
@@ -109,7 +109,7 @@
 
 - (void)dispatchEvent:(SPEvent*)event
 {
-    NSMutableArray *listeners = mEventListeners[event.type];   
+    NSMutableArray *listeners = _eventListeners[event.type];   
     if (!event.bubbles && !listeners) return; // no need to do anything.
     
     // if the event already has a current target, it was re-dispatched by user -> we change the

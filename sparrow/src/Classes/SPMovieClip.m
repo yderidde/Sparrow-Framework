@@ -16,37 +16,37 @@
 
 @implementation SPMovieClip
 {
-    NSMutableArray *mTextures;
-    NSMutableArray *mSounds;
-    NSMutableArray *mDurations;
+    NSMutableArray *_textures;
+    NSMutableArray *_sounds;
+    NSMutableArray *_durations;
     
-    double mDefaultFrameDuration;
-    double mTotalTime;
-    double mCurrentTime;
-    BOOL mLoop;
-    BOOL mPlaying;
-    int mCurrentFrame;
+    double _defaultFrameDuration;
+    double _totalTime;
+    double _currentTime;
+    BOOL _loop;
+    BOOL _playing;
+    int _currentFrame;
 }
 
-@synthesize loop = mLoop;
-@synthesize isPlaying = mPlaying;
-@synthesize currentFrame = mCurrentFrame;
-@synthesize totalTime = mTotalTime;
-@synthesize currentTime = mCurrentTime;
+@synthesize loop = _loop;
+@synthesize isPlaying = _playing;
+@synthesize currentFrame = _currentFrame;
+@synthesize totalTime = _totalTime;
+@synthesize currentTime = _currentTime;
 
 - (id)initWithFrame:(SPTexture *)texture fps:(float)fps
 {
     if ((self = [super initWithTexture:texture]))
     {
-        mDefaultFrameDuration = 1.0f / fps;
-        mLoop = YES;
-        mPlaying = YES;
-        mTotalTime = 0.0;
-        mCurrentTime = 0.0;
-        mCurrentFrame = 0;
-        mTextures = [[NSMutableArray alloc] init];
-        mSounds = [[NSMutableArray alloc] init];
-        mDurations = [[NSMutableArray alloc] init];        
+        _defaultFrameDuration = 1.0f / fps;
+        _loop = YES;
+        _playing = YES;
+        _totalTime = 0.0;
+        _currentTime = 0.0;
+        _currentFrame = 0;
+        _textures = [[NSMutableArray alloc] init];
+        _sounds = [[NSMutableArray alloc] init];
+        _durations = [[NSMutableArray alloc] init];        
         [self addFrameWithTexture:texture];
     }
     return self;
@@ -88,7 +88,7 @@
 
 - (void)addFrameWithTexture:(SPTexture *)texture atIndex:(int)frameID
 {
-    [self addFrameWithTexture:texture duration:mDefaultFrameDuration atIndex:frameID];
+    [self addFrameWithTexture:texture duration:_defaultFrameDuration atIndex:frameID];
 }
 
 - (void)addFrameWithTexture:(SPTexture *)texture duration:(double)duration atIndex:(int)frameID
@@ -99,60 +99,60 @@
 - (void)addFrameWithTexture:(SPTexture *)texture duration:(double)duration
                       sound:(SPSoundChannel *)sound atIndex:(int)frameID
 {
-    mTotalTime += duration;
-    [mTextures insertObject:texture atIndex:frameID];
-    [mDurations insertObject:@(duration) atIndex:frameID];
-    [mSounds insertObject:(sound ? sound : [NSNull null]) atIndex:frameID];
+    _totalTime += duration;
+    [_textures insertObject:texture atIndex:frameID];
+    [_durations insertObject:@(duration) atIndex:frameID];
+    [_sounds insertObject:(sound ? sound : [NSNull null]) atIndex:frameID];
 }
 
 - (void)removeFrameAtIndex:(int)frameID
 {
-    mTotalTime -= [self durationAtIndex:frameID];
-    [mTextures removeObjectAtIndex:frameID];
-    [mDurations removeObjectAtIndex:frameID];
-    [mSounds removeObjectAtIndex:frameID];
+    _totalTime -= [self durationAtIndex:frameID];
+    [_textures removeObjectAtIndex:frameID];
+    [_durations removeObjectAtIndex:frameID];
+    [_sounds removeObjectAtIndex:frameID];
 }
 
 - (void)setTexture:(SPTexture *)texture atIndex:(int)frameID
 {
-    mTextures[frameID] = texture;
+    _textures[frameID] = texture;
 }
 
 - (void)setSound:(SPSoundChannel *)sound atIndex:(int)frameID
 {
-    mSounds[frameID] = sound ? sound : [NSNull null];
+    _sounds[frameID] = sound ? sound : [NSNull null];
 }
 
 - (void)setDuration:(double)duration atIndex:(int)frameID
 {
-    mTotalTime -= [self durationAtIndex:frameID];
-    mDurations[frameID] = @(duration);
-    mTotalTime += duration;
+    _totalTime -= [self durationAtIndex:frameID];
+    _durations[frameID] = @(duration);
+    _totalTime += duration;
 }
 
 - (SPTexture *)textureAtIndex:(int)frameID
 {
-    return mTextures[frameID];    
+    return _textures[frameID];    
 }
 
 - (SPSoundChannel *)soundAtIndex:(int)frameID
 {
-    id sound = mSounds[frameID];
+    id sound = _sounds[frameID];
     if ([NSNull class] != [sound class]) return sound;
     else return nil;
 }
 
 - (double)durationAtIndex:(int)frameID
 {
-    return [mDurations[frameID] doubleValue];
+    return [_durations[frameID] doubleValue];
 }
 
 - (void)setFps:(float)fps
 {
     float newFrameDuration = (fps == 0.0f ? INT_MAX : 1.0 / fps);
-	float acceleration = newFrameDuration / mDefaultFrameDuration;
-    mCurrentTime *= acceleration;
-    mDefaultFrameDuration = newFrameDuration;
+	float acceleration = newFrameDuration / _defaultFrameDuration;
+    _currentTime *= acceleration;
+    _defaultFrameDuration = newFrameDuration;
     
 	for (int i=0; i<self.numFrames; ++i)
 		[self setDuration:[self durationAtIndex:i] * acceleration atIndex:i];
@@ -160,64 +160,64 @@
 
 - (float)fps
 {
-	return (float)(1.0 / mDefaultFrameDuration);
+	return (float)(1.0 / _defaultFrameDuration);
 }
 
 - (int)numFrames
 {        
-    return mTextures.count;
+    return _textures.count;
 }
 
 - (void)play
 {
-    mPlaying = YES;    
+    _playing = YES;    
 }
 
 - (void)pause
 {
-    mPlaying = NO;
+    _playing = NO;
 }
 
 - (void)stop
 {
-    mPlaying = NO;
+    _playing = NO;
     self.currentFrame = 0;
 }
 
 - (void)updateCurrentFrame
 {
-    self.texture = mTextures[mCurrentFrame];
+    self.texture = _textures[_currentFrame];
 }
 
 - (void)playCurrentSound
 {
-    id sound = mSounds[mCurrentFrame];
+    id sound = _sounds[_currentFrame];
     if ([NSNull class] != [sound class])                    
         [sound play];
 }
 
 - (void)setCurrentFrame:(int)frameID
 {
-    mCurrentFrame = frameID;
-    mCurrentTime = 0.0;
+    _currentFrame = frameID;
+    _currentTime = 0.0;
     
     for (int i=0; i<frameID; ++i)
-        mCurrentTime += [mDurations[i] doubleValue];
+        _currentTime += [_durations[i] doubleValue];
     
     [self updateCurrentFrame];
 }
 
 - (BOOL)isPlaying
 {
-    if (mPlaying)
-        return mLoop || mCurrentTime < mTotalTime;
+    if (_playing)
+        return _loop || _currentTime < _totalTime;
     else
         return NO;
 }
 
 - (BOOL)isComplete
 {
-    return !mLoop && mCurrentTime >= mTotalTime;
+    return !_loop && _currentTime >= _totalTime;
 }
 
 + (id)movieWithFrame:(SPTexture *)texture fps:(float)fps
@@ -234,24 +234,24 @@
 
 - (void)advanceTime:(double)seconds
 {    
-    if (mLoop && mCurrentTime == mTotalTime) mCurrentTime = 0.0;    
-    if (!mPlaying || seconds == 0.0 || mCurrentTime == mTotalTime) return;    
+    if (_loop && _currentTime == _totalTime) _currentTime = 0.0;    
+    if (!_playing || seconds == 0.0 || _currentTime == _totalTime) return;    
     
     int i = 0;
     double durationSum = 0.0;
-    double previousTime = mCurrentTime;
-    double restTime = mTotalTime - mCurrentTime;
+    double previousTime = _currentTime;
+    double restTime = _totalTime - _currentTime;
     double carryOverTime = seconds > restTime ? seconds - restTime : 0.0;
-    mCurrentTime = MIN(mTotalTime, mCurrentTime + seconds);            
+    _currentTime = MIN(_totalTime, _currentTime + seconds);            
        
-    for (NSNumber *frameDuration in mDurations)
+    for (NSNumber *frameDuration in _durations)
     {
         double fd = [frameDuration doubleValue];
-        if (durationSum + fd >= mCurrentTime)            
+        if (durationSum + fd >= _currentTime)            
         {
-            if (mCurrentFrame != i)
+            if (_currentFrame != i)
             {
-                mCurrentFrame = i;
+                _currentFrame = i;
                 [self updateCurrentFrame];
                 [self playCurrentSound];
             }
@@ -262,7 +262,7 @@
         durationSum += fd;
     }
     
-    if (previousTime < mTotalTime && mCurrentTime == mTotalTime)
+    if (previousTime < _totalTime && _currentTime == _totalTime)
         [self dispatchEventWithType:SP_EVENT_TYPE_COMPLETED];
     
     [self advanceTime:carryOverTime];

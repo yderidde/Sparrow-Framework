@@ -21,45 +21,45 @@
 
 @implementation SPRenderSupport
 {
-    SPMatrix *mProjectionMatrix;
-    SPMatrix *mModelviewMatrix;
-    SPMatrix *mMvpMatrix;
-    NSMutableArray *mMatrixStack;
-    int mMatrixStackSize;
+    SPMatrix *_projectionMatrix;
+    SPMatrix *_modelviewMatrix;
+    SPMatrix *_mvpMatrix;
+    NSMutableArray *_matrixStack;
+    int _matrixStackSize;
     
-    float *mAlphaStack;
-    int mAlphaStackSize;
+    float *_alphaStack;
+    int _alphaStackSize;
     
-    GLKBaseEffect *mBaseEffect;
-    uint mBoundTextureName;
+    GLKBaseEffect *_baseEffect;
+    uint _boundTextureName;
     
-    NSMutableArray *mQuadBatches;
-    int mCurrentQuadBatchID;
+    NSMutableArray *_quadBatches;
+    int _currentQuadBatchID;
 }
 
-@synthesize usingPremultipliedAlpha = mPremultipliedAlpha;
-@synthesize modelviewMatrix = mModelviewMatrix;
-@synthesize projectionMatrix = mProjectionMatrix;
+@synthesize usingPremultipliedAlpha = _premultipliedAlpha;
+@synthesize modelviewMatrix = _modelviewMatrix;
+@synthesize projectionMatrix = _projectionMatrix;
 
 - (id)init
 {
     if ((self = [super init]))
     {
-        mProjectionMatrix = [[SPMatrix alloc] init];
-        mModelviewMatrix  = [[SPMatrix alloc] init];
-        mMvpMatrix        = [[SPMatrix alloc] init];
+        _projectionMatrix = [[SPMatrix alloc] init];
+        _modelviewMatrix  = [[SPMatrix alloc] init];
+        _mvpMatrix        = [[SPMatrix alloc] init];
         
-        mMatrixStack = [[NSMutableArray alloc] initWithCapacity:16];
-        mMatrixStackSize = 0;
+        _matrixStack = [[NSMutableArray alloc] initWithCapacity:16];
+        _matrixStackSize = 0;
         
-        mAlphaStack = calloc(SP_MAX_DISPLAY_TREE_DEPTH, sizeof(float));
-        mAlphaStack[0] = 1.0f;
-        mAlphaStackSize = 1;
+        _alphaStack = calloc(SP_MAX_DISPLAY_TREE_DEPTH, sizeof(float));
+        _alphaStack[0] = 1.0f;
+        _alphaStackSize = 1;
         
-        mBaseEffect = [[GLKBaseEffect alloc] init];
+        _baseEffect = [[GLKBaseEffect alloc] init];
         
-        mQuadBatches = [[NSMutableArray alloc] initWithObjects:[[SPQuadBatch alloc] init], nil];
-        mCurrentQuadBatchID = 0;
+        _quadBatches = [[NSMutableArray alloc] initWithObjects:[[SPQuadBatch alloc] init], nil];
+        _currentQuadBatchID = 0;
         
         [self loadIdentity];
         [self setupOrthographicProjectionWithLeft:0 right:320 top:0 bottom:480];
@@ -69,13 +69,13 @@
 
 - (void)dealloc
 {
-    free(mAlphaStack);
+    free(_alphaStack);
 }
 
 - (void)nextFrame
 {
     [self resetMatrix];
-    mCurrentQuadBatchID = 0;
+    _currentQuadBatchID = 0;
 }
 
 + (void)clearWithColor:(uint)color alpha:(float)alpha;
@@ -99,10 +99,10 @@
 
 - (float)pushAlpha:(float)alpha
 {
-    if (mAlphaStackSize < SP_MAX_DISPLAY_TREE_DEPTH)
+    if (_alphaStackSize < SP_MAX_DISPLAY_TREE_DEPTH)
     {
-        float newAlpha = mAlphaStack[mAlphaStackSize-1] * alpha;
-        mAlphaStack[mAlphaStackSize++] = newAlpha;
+        float newAlpha = _alphaStack[_alphaStackSize-1] * alpha;
+        _alphaStack[_alphaStackSize++] = newAlpha;
         return newAlpha;
     }
     else
@@ -114,65 +114,65 @@
 
 - (float)popAlpha
 {
-    if (mAlphaStackSize > 0)
-        --mAlphaStackSize;
+    if (_alphaStackSize > 0)
+        --_alphaStackSize;
     
-    return mAlphaStack[mAlphaStackSize-1];
+    return _alphaStack[_alphaStackSize-1];
 }
 
 - (float)alpha
 {
-    return mAlphaStack[mAlphaStackSize-1];
+    return _alphaStack[_alphaStackSize-1];
 }
 
 #pragma mark - matrix manipulation
 
 - (void)loadIdentity
 {
-    [mModelviewMatrix identity];
+    [_modelviewMatrix identity];
 }
 
 - (void)resetMatrix
 {
-    mMatrixStackSize = 0;
+    _matrixStackSize = 0;
     [self loadIdentity];
 }
 
 - (void)pushMatrix
 {
-    if (mMatrixStack.count < mMatrixStackSize + 1)
-        [mMatrixStack addObject:[SPMatrix matrixWithIdentity]];
+    if (_matrixStack.count < _matrixStackSize + 1)
+        [_matrixStack addObject:[SPMatrix matrixWithIdentity]];
     
-    SPMatrix *currentMatrix = mMatrixStack[mMatrixStackSize++];
-    [currentMatrix copyFromMatrix:mModelviewMatrix];
+    SPMatrix *currentMatrix = _matrixStack[_matrixStackSize++];
+    [currentMatrix copyFromMatrix:_modelviewMatrix];
 }
 
 - (void)popMatrix
 {
-    SPMatrix *currentMatrix = mMatrixStack[--mMatrixStackSize];
-    [mModelviewMatrix copyFromMatrix:currentMatrix];
+    SPMatrix *currentMatrix = _matrixStack[--_matrixStackSize];
+    [_modelviewMatrix copyFromMatrix:currentMatrix];
 }
 
 - (void)setupOrthographicProjectionWithLeft:(float)left right:(float)right
                                         top:(float)top bottom:(float)bottom;
 {
-    [mProjectionMatrix setA:2.0f/(right-left) b:0.0f c:0.0f d:2.0f/(top-bottom)
+    [_projectionMatrix setA:2.0f/(right-left) b:0.0f c:0.0f d:2.0f/(top-bottom)
                          tx:-(right+left) / (right-left)
                          ty:-(top+bottom) / (top-bottom)];
     
-    mBaseEffect.transform.projectionMatrix = [mProjectionMatrix convertToGLKMatrix4];
+    _baseEffect.transform.projectionMatrix = [_projectionMatrix convertToGLKMatrix4];
 }
 
 - (void)prependMatrix:(SPMatrix *)matrix
 {
-    [mModelviewMatrix prependMatrix:matrix];
+    [_modelviewMatrix prependMatrix:matrix];
 }
 
 - (SPMatrix *)mvpMatrix
 {
-    [mMvpMatrix copyFromMatrix:mModelviewMatrix];
-    [mMvpMatrix appendMatrix:mProjectionMatrix];
-    return mMvpMatrix;
+    [_mvpMatrix copyFromMatrix:_modelviewMatrix];
+    [_mvpMatrix appendMatrix:_projectionMatrix];
+    return _mvpMatrix;
 }
 
 #pragma mark - rendering
@@ -182,7 +182,7 @@
     if ([self.currentQuadBatch isStateChangeWithQuad:quad texture:texture numQuads:1])
         [self finishQuadBatch];
     
-    [self.currentQuadBatch addQuad:quad texture:texture alpha:self.alpha matrix:mModelviewMatrix];
+    [self.currentQuadBatch addQuad:quad texture:texture alpha:self.alpha matrix:_modelviewMatrix];
 }
 
 - (void)finishQuadBatch
@@ -191,19 +191,19 @@
     
     if (currentBatch.numQuads)
     {
-        [currentBatch renderWithAlpha:1.0f matrix:mProjectionMatrix];
+        [currentBatch renderWithAlpha:1.0f matrix:_projectionMatrix];
         [currentBatch reset];
         
-        ++mCurrentQuadBatchID;
+        ++_currentQuadBatchID;
         
-        if (mQuadBatches.count <= mCurrentQuadBatchID)
-            [mQuadBatches addObject:[[SPQuadBatch alloc] init]];
+        if (_quadBatches.count <= _currentQuadBatchID)
+            [_quadBatches addObject:[[SPQuadBatch alloc] init]];
     }
 }
 
 - (SPQuadBatch *)currentQuadBatch
 {
-    return mQuadBatches[mCurrentQuadBatchID];
+    return _quadBatches[_currentQuadBatchID];
 }
 
 @end

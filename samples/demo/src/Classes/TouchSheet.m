@@ -20,7 +20,7 @@
 
 @implementation TouchSheet
 {
-    SPQuad *mQuad;
+    SPQuad *_quad;
 }
 
 - (id)initWithQuad:(SPQuad*)quad
@@ -28,11 +28,11 @@
     if ((self = [super init]))
     {
         // move quad to center, so that scaling works like expected
-        mQuad = quad;
-        mQuad.x = (int)mQuad.width/-2;
-        mQuad.y = (int)mQuad.height/-2;        
-        [mQuad addEventListener:@selector(onTouchEvent:) atObject:self forType:SP_EVENT_TYPE_TOUCH];
-        [self addChild:mQuad];
+        _quad = quad;
+        _quad.x = (int)_quad.width/-2;
+        _quad.y = (int)_quad.height/-2;        
+        [_quad addEventListener:@selector(onTouchEvent:) atObject:self forType:SP_EVENT_TYPE_TOUCH];
+        [self addChild:_quad];
     }
     return self;    
 }
@@ -108,7 +108,7 @@
 - (void)dealloc
 {
     // event listeners should always be removed to avoid memory leaks!
-    [mQuad removeEventListenersAtObject:self forType:SP_EVENT_TYPE_TOUCH];
+    [_quad removeEventListenersAtObject:self forType:SP_EVENT_TYPE_TOUCH];
 }
 
 @end

@@ -31,18 +31,18 @@
 
 @implementation SPALSoundChannel
 {
-    SPALSound *mSound;
-    uint mSourceID;
-    float mVolume;
-    BOOL mLoop;
+    SPALSound *_sound;
+    uint _sourceID;
+    float _volume;
+    BOOL _loop;
     
-    double mStartMoment;
-    double mPauseMoment;
-    BOOL mInterrupted;
+    double _startMoment;
+    double _pauseMoment;
+    BOOL _interrupted;
 }
 
-@synthesize volume = mVolume;
-@synthesize loop = mLoop;
+@synthesize volume = _volume;
+@synthesize loop = _loop;
 
 - (id)init
 {
@@ -53,15 +53,15 @@
 {
     if ((self = [super init]))
     {
-        mSound = sound;
-        mVolume = 1.0f;
-        mLoop = NO;
-        mInterrupted = NO;
-        mStartMoment = 0.0;
-        mPauseMoment = 0.0;
+        _sound = sound;
+        _volume = 1.0f;
+        _loop = NO;
+        _interrupted = NO;
+        _startMoment = 0.0;
+        _pauseMoment = 0.0;
         
-        alGenSources(1, &mSourceID);
-        alSourcei(mSourceID, AL_BUFFER, sound.bufferID);
+        alGenSources(1, &_sourceID);
+        alSourcei(_sourceID, AL_BUFFER, sound.bufferID);
         ALenum errorCode = alGetError();
         if (errorCode != AL_NO_ERROR)
         {
@@ -81,10 +81,10 @@
 - (void)dealloc
 {
     [[NSNotificationCenter defaultCenter] removeObserver:self];    
-    alSourceStop(mSourceID);
-    alSourcei(mSourceID, AL_BUFFER, 0);
-    alDeleteSources(1, &mSourceID);
-    mSourceID = 0;
+    alSourceStop(_sourceID);
+    alSourcei(_sourceID, AL_BUFFER, 0);
+    alDeleteSources(1, &_sourceID);
+    _sourceID = 0;
 }
 
 - (void)play
@@ -93,18 +93,18 @@
     {
         double now = CACurrentMediaTime();
         
-        if (mPauseMoment != 0.0) // paused
+        if (_pauseMoment != 0.0) // paused
         {
-            mStartMoment += now - mPauseMoment;
-            mPauseMoment = 0.0;
+            _startMoment += now - _pauseMoment;
+            _pauseMoment = 0.0;
         }
         else // stopped 
         {
-            mStartMoment = now;
+            _startMoment = now;
         }
         
         [self scheduleSoundCompletedEvent];        
-        alSourcePlay(mSourceID);
+        alSourcePlay(_sourceID);
     }
 }
 
@@ -113,67 +113,67 @@
     if (self.isPlaying)
     {    
         [self revokeSoundCompletedEvent];
-        mPauseMoment = CACurrentMediaTime();
-        alSourcePause(mSourceID);
+        _pauseMoment = CACurrentMediaTime();
+        alSourcePause(_sourceID);
     }
 }
 
 - (void)stop
 {
     [self revokeSoundCompletedEvent];
-    mStartMoment = mPauseMoment = 0.0;
-    alSourceStop(mSourceID);
+    _startMoment = _pauseMoment = 0.0;
+    alSourceStop(_sourceID);
 }
 
 - (BOOL)isPlaying
 {
     ALint state;
-    alGetSourcei(mSourceID, AL_SOURCE_STATE, &state);
+    alGetSourcei(_sourceID, AL_SOURCE_STATE, &state);
     return state == AL_PLAYING;
 }
 
 - (BOOL)isPaused
 {
     ALint state;
-    alGetSourcei(mSourceID, AL_SOURCE_STATE, &state);
+    alGetSourcei(_sourceID, AL_SOURCE_STATE, &state);
     return state == AL_PAUSED;
 }
 
 - (BOOL)isStopped
 {
     ALint state;
-    alGetSourcei(mSourceID, AL_SOURCE_STATE, &state);
+    alGetSourcei(_sourceID, AL_SOURCE_STATE, &state);
     return state == AL_STOPPED;
 }
 
 - (void)setLoop:(BOOL)value
 {
-    if (value != mLoop)
+    if (value != _loop)
     {
-        mLoop = value;
-        alSourcei(mSourceID, AL_LOOPING, mLoop);        
+        _loop = value;
+        alSourcei(_sourceID, AL_LOOPING, _loop);        
     }    
 }
 
 - (void)setVolume:(float)value
 {
-    if (value != mVolume)
+    if (value != _volume)
     {
-        mVolume = value;
-        alSourcef(mSourceID, AL_GAIN, mVolume);        
+        _volume = value;
+        alSourcef(_sourceID, AL_GAIN, _volume);        
     }
 }
 
 - (double)duration
 {
-    return [mSound duration];
+    return [_sound duration];
 }
 
 - (void)scheduleSoundCompletedEvent
 {
-    if (mStartMoment != 0.0)
+    if (_startMoment != 0.0)
     {    
-        double remainingTime = mSound.duration - (CACurrentMediaTime() - mStartMoment);        
+        double remainingTime = _sound.duration - (CACurrentMediaTime() - _startMoment);        
         [self revokeSoundCompletedEvent];
         if (remainingTime >= 0.0)
         {        
@@ -191,7 +191,7 @@
 
 - (void)dispatchCompletedEvent
 {
-    if (!mLoop)
+    if (!_loop)
         [self dispatchEventWithType:SP_EVENT_TYPE_COMPLETED];
 }
 
@@ -200,18 +200,18 @@
     if (self.isPlaying)
     {
         [self revokeSoundCompletedEvent];
-        mInterrupted = YES;
-        mPauseMoment = CACurrentMediaTime();
+        _interrupted = YES;
+        _pauseMoment = CACurrentMediaTime();
     }
 }
 
 - (void)onInterruptionEnded:(NSNotification *)notification
 {
-    if (mInterrupted)
+    if (_interrupted)
     {
-        mStartMoment += CACurrentMediaTime() - mPauseMoment;
-        mPauseMoment = 0.0;
-        mInterrupted = NO;
+        _startMoment += CACurrentMediaTime() - _pauseMoment;
+        _pauseMoment = 0.0;
+        _interrupted = NO;
         [self scheduleSoundCompletedEvent];
     }
 }

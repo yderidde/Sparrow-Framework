@@ -34,7 +34,7 @@
 
 @interface SPImage : SPQuad 
 {
-    SPTexture *mTexture;
+    SPTexture *_texture;
 }
 
 /// --------------------

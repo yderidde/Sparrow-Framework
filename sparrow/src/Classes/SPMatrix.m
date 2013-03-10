@@ -15,22 +15,22 @@
 
 @implementation SPMatrix
 {
-    float mA, mB, mC, mD;
-    float mTx, mTy;
+    float _a, _b, _c, _d;
+    float _tx, _ty;
 }
 
-@synthesize a=mA, b=mB, c=mC, d=mD, tx=mTx, ty=mTy;
+@synthesize a=_a, b=_b, c=_c, d=_d, tx=_tx, ty=_ty;
 
 // --- c functions ---
 
 static void setValues(SPMatrix *matrix, float a, float b, float c, float d, float tx, float ty)
 {
-    matrix->mA = a;
-    matrix->mB = b;
-    matrix->mC = c;
-    matrix->mD = d;
-    matrix->mTx = tx;
-    matrix->mTy = ty;    
+    matrix->_a = a;
+    matrix->_b = b;
+    matrix->_c = c;
+    matrix->_d = d;
+    matrix->_tx = tx;
+    matrix->_ty = ty;    
 }
 
 // ---
@@ -39,8 +39,8 @@ static void setValues(SPMatrix *matrix, float a, float b, float c, float d, floa
 {
     if ((self = [super init]))
     {
-        mA = a; mB = b; mC = c; mD = d;
-        mTx = tx; mTy = ty;
+        _a = a; _b = b; _c = c; _d = d;
+        _tx = tx; _ty = ty;
     }
     return self;
 }
@@ -52,49 +52,49 @@ static void setValues(SPMatrix *matrix, float a, float b, float c, float d, floa
 
 - (void)setA:(float)a b:(float)b c:(float)c d:(float)d tx:(float)tx ty:(float)ty
 {
-    mA = a; mB = b; mC = c; mD = d;
-    mTx = tx; mTy = ty;
+    _a = a; _b = b; _c = c; _d = d;
+    _tx = tx; _ty = ty;
 }
 
 - (float)determinant
 {
-    return mA * mD - mC * mB;
+    return _a * _d - _c * _b;
 }
 
 - (void)appendMatrix:(SPMatrix*)lhs
 {
-    setValues(self, lhs->mA * mA  + lhs->mC * mB, 
-                    lhs->mB * mA  + lhs->mD * mB, 
-                    lhs->mA * mC  + lhs->mC * mD,
-                    lhs->mB * mC  + lhs->mD * mD,
-                    lhs->mA * mTx + lhs->mC * mTy + lhs->mTx,
-                    lhs->mB * mTx + lhs->mD * mTy + lhs->mTy);
+    setValues(self, lhs->_a * _a  + lhs->_c * _b, 
+                    lhs->_b * _a  + lhs->_d * _b, 
+                    lhs->_a * _c  + lhs->_c * _d,
+                    lhs->_b * _c  + lhs->_d * _d,
+                    lhs->_a * _tx + lhs->_c * _ty + lhs->_tx,
+                    lhs->_b * _tx + lhs->_d * _ty + lhs->_ty);
 }
 
 - (void)prependMatrix:(SPMatrix *)rhs
 {
-    setValues(self, mA * rhs->mA + mC * rhs->mB,
-                    mB * rhs->mA + mD * rhs->mB,
-                    mA * rhs->mC + mC * rhs->mD,
-                    mB * rhs->mC + mD * rhs->mD,
-                    mTx + mA * rhs->mTx + mC * rhs->mTy,
-                    mTy + mB * rhs->mTx + mD * rhs->mTy);
+    setValues(self, _a * rhs->_a + _c * rhs->_b,
+                    _b * rhs->_a + _d * rhs->_b,
+                    _a * rhs->_c + _c * rhs->_d,
+                    _b * rhs->_c + _d * rhs->_d,
+                    _tx + _a * rhs->_tx + _c * rhs->_ty,
+                    _ty + _b * rhs->_tx + _d * rhs->_ty);
 }
 
 - (void)translateXBy:(float)dx yBy:(float)dy
 {
-    mTx += dx;
-    mTy += dy;    
+    _tx += dx;
+    _ty += dy;    
 }
 
 - (void)scaleXBy:(float)sx yBy:(float)sy
 {
-    mA *= sx;
-    mB *= sy;
-    mC *= sx;
-    mD *= sy;
-    mTx *= sx;
-    mTy *= sy;
+    _a *= sx;
+    _b *= sy;
+    _c *= sx;
+    _d *= sy;
+    _tx *= sx;
+    _ty *= sy;
 }
 
 - (void)scaleBy:(float)scale
@@ -107,9 +107,9 @@ static void setValues(SPMatrix *matrix, float a, float b, float c, float d, floa
     float cos = cosf(angle);
     float sin = sinf(angle);
     
-    setValues(self, mA*cos  - mB*sin,    mA*sin  + mB*cos, 
-                    mC*cos  - mD*sin,    mC*sin  + mD*cos, 
-                    mTx*cos - mTy * sin, mTx*sin + mTy*cos);
+    setValues(self, _a*cos  - _b*sin,    _a*sin  + _b*cos, 
+                    _c*cos  - _d*sin,    _c*sin  + _d*cos, 
+                    _tx*cos - _ty * sin, _tx*sin + _ty*cos);
 }
 
 - (void)skewXBy:(float)sx yBy:(float)sy
@@ -119,12 +119,12 @@ static void setValues(SPMatrix *matrix, float a, float b, float c, float d, floa
     float sinY = sinf(sy);
     float cosY = cosf(sy);
     
-    setValues(self, mA  * cosY - mB  * sinX,
-                    mA  * sinY + mB  * cosX,
-                    mC  * cosY - mD  * sinX,
-                    mC  * sinY + mD  * cosX,
-                    mTx * cosY - mTy * sinX,
-                    mTx * sinY + mTy * cosX);
+    setValues(self, _a  * cosY - _b  * sinX,
+                    _a  * sinY + _b  * cosX,
+                    _c  * cosY - _d  * sinX,
+                    _c  * sinY + _d  * cosX,
+                    _tx * cosY - _ty * sinX,
+                    _tx * sinY + _ty * cosX);
 }
 
 - (void)identity
@@ -134,46 +134,46 @@ static void setValues(SPMatrix *matrix, float a, float b, float c, float d, floa
 
 - (SPPoint*)transformPoint:(SPPoint*)point
 {
-    return [SPPoint pointWithX:mA*point.x + mC*point.y + mTx
-                             y:mB*point.x + mD*point.y + mTy];
+    return [SPPoint pointWithX:_a*point.x + _c*point.y + _tx
+                             y:_b*point.x + _d*point.y + _ty];
 }
 
 - (SPPoint *)transformPointWithX:(float)x y:(float)y
 {
-    return [SPPoint pointWithX:mA*x + mC*y + mTx
-                             y:mB*x + mD*y + mTy];
+    return [SPPoint pointWithX:_a*x + _c*y + _tx
+                             y:_b*x + _d*y + _ty];
 }
 
 - (void)invert
 {
     float det = self.determinant;
-    setValues(self, mD/det, -mB/det, -mC/det, mA/det, (mC*mTy-mD*mTx)/det, (mB*mTx-mA*mTy)/det);
+    setValues(self, _d/det, -_b/det, -_c/det, _a/det, (_c*_ty-_d*_tx)/det, (_b*_tx-_a*_ty)/det);
 }
 
 - (void)copyFromMatrix:(SPMatrix *)matrix
 {
-    setValues(self, matrix->mA, matrix->mB, matrix->mC, matrix->mD, matrix->mTx, matrix->mTy);
+    setValues(self, matrix->_a, matrix->_b, matrix->_c, matrix->_d, matrix->_tx, matrix->_ty);
 }
 
 - (GLKMatrix4)convertToGLKMatrix4
 {
     GLKMatrix4 matrix = GLKMatrix4Identity;
     
-    matrix.m00 = mA;
-    matrix.m01 = mB;
-    matrix.m10 = mC;
-    matrix.m11 = mD;
-    matrix.m30 = mTx;
-    matrix.m31 = mTy;
+    matrix.m00 = _a;
+    matrix.m01 = _b;
+    matrix.m10 = _c;
+    matrix.m11 = _d;
+    matrix.m30 = _tx;
+    matrix.m31 = _ty;
     
     return matrix;
 }
 
 - (GLKMatrix3)convertToGLKMatrix3
 {
-    return GLKMatrix3Make(mA,  mB,  0.0f,
-                          mC,  mD,  0.0f,
-                          mTx, mTy, 1.0f);
+    return GLKMatrix3Make(_a,  _b,  0.0f,
+                          _c,  _d,  0.0f,
+                          _tx, _ty, 1.0f);
 }
 
 - (BOOL)isEquivalent:(SPMatrix *)other
@@ -183,16 +183,16 @@ static void setValues(SPMatrix *matrix, float a, float b, float c, float d, floa
     else 
     {    
         SPMatrix *matrix = (SPMatrix*)other;
-        return SP_IS_FLOAT_EQUAL(mA, matrix->mA) && SP_IS_FLOAT_EQUAL(mB, matrix->mB) &&
-               SP_IS_FLOAT_EQUAL(mC, matrix->mC) && SP_IS_FLOAT_EQUAL(mD, matrix->mD) &&
-               SP_IS_FLOAT_EQUAL(mTx, matrix->mTx) && SP_IS_FLOAT_EQUAL(mTy, matrix->mTy);
+        return SP_IS_FLOAT_EQUAL(_a, matrix->_a) && SP_IS_FLOAT_EQUAL(_b, matrix->_b) &&
+               SP_IS_FLOAT_EQUAL(_c, matrix->_c) && SP_IS_FLOAT_EQUAL(_d, matrix->_d) &&
+               SP_IS_FLOAT_EQUAL(_tx, matrix->_tx) && SP_IS_FLOAT_EQUAL(_ty, matrix->_ty);
     }
 }
 
 - (NSString *)description
 {
     return [NSString stringWithFormat:@"[SPMatrix: a=%f, b=%f, c=%f, d=%f, tx=%f, ty=%f]", 
-            mA, mB, mC, mD, mTx, mTy];
+            _a, _b, _c, _d, _tx, _ty];
 }
 
 + (id)matrixWithA:(float)a b:(float)b c:(float)c d:(float)d tx:(float)tx ty:(float)ty
@@ -209,8 +209,8 @@ static void setValues(SPMatrix *matrix, float a, float b, float c, float d, floa
 
 - (id)copyWithZone:(NSZone*)zone
 {
-    return [[[self class] allocWithZone:zone] initWithA:mA b:mB c:mC d:mD 
-                                                     tx:mTx ty:mTy];
+    return [[[self class] allocWithZone:zone] initWithA:_a b:_b c:_c d:_d 
+                                                     tx:_tx ty:_ty];
 }
 
 #pragma mark SPPoolObject

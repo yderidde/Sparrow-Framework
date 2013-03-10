@@ -32,26 +32,26 @@
 
 @implementation SPButton
 {
-    SPTexture *mUpState;
-    SPTexture *mDownState;
+    SPTexture *_upState;
+    SPTexture *_downState;
     
-    SPSprite *mContents;
-    SPImage *mBackground;
-    SPTextField *mTextField;
-    SPRectangle *mTextBounds;
+    SPSprite *_contents;
+    SPImage *_background;
+    SPTextField *_textField;
+    SPRectangle *_textBounds;
     
-    float mScaleWhenDown;
-    float mAlphaWhenDisabled;
-    BOOL mEnabled;
-    BOOL mIsDown;
+    float _scaleWhenDown;
+    float _alphaWhenDisabled;
+    BOOL _enabled;
+    BOOL _isDown;
 }
 
-@synthesize scaleWhenDown = mScaleWhenDown;
-@synthesize alphaWhenDisabled = mAlphaWhenDisabled;
-@synthesize enabled = mEnabled;
-@synthesize upState = mUpState;
-@synthesize downState = mDownState;
-@synthesize textBounds = mTextBounds;
+@synthesize scaleWhenDown = _scaleWhenDown;
+@synthesize alphaWhenDisabled = _alphaWhenDisabled;
+@synthesize enabled = _enabled;
+@synthesize upState = _upState;
+@synthesize downState = _downState;
+@synthesize textBounds = _textBounds;
 
 #define MAX_DRAG_DIST 40
 
@@ -59,19 +59,19 @@
 {
     if ((self = [super init]))
     {
-        mUpState = upState;
-        mDownState = downState;
-        mContents = [[SPSprite alloc] init];
-        mBackground = [[SPImage alloc] initWithTexture:upState];
-        mTextField = nil;
-        mScaleWhenDown = 1.0f;
-        mAlphaWhenDisabled = 0.5f;
-        mEnabled = YES;
-        mIsDown = NO;
-        mTextBounds = [[SPRectangle alloc] initWithX:0 y:0 width:mUpState.width height:mUpState.height];
+        _upState = upState;
+        _downState = downState;
+        _contents = [[SPSprite alloc] init];
+        _background = [[SPImage alloc] initWithTexture:upState];
+        _textField = nil;
+        _scaleWhenDown = 1.0f;
+        _alphaWhenDisabled = 0.5f;
+        _enabled = YES;
+        _isDown = NO;
+        _textBounds = [[SPRectangle alloc] initWithX:0 y:0 width:_upState.width height:_upState.height];
         
-        [mContents addChild:mBackground];
-        [self addChild:mContents];
+        [_contents addChild:_background];
+        [self addChild:_contents];
         [self addEventListener:@selector(onTouch:) atObject:self forType:SP_EVENT_TYPE_TOUCH];
     }
     return self;
@@ -87,7 +87,7 @@
 - (id)initWithUpState:(SPTexture*)upState
 {
     self = [self initWithUpState:upState downState:upState];
-    mScaleWhenDown = 0.9f;
+    _scaleWhenDown = 0.9f;
     return self;
 }
 
@@ -99,18 +99,18 @@
 
 - (void)onTouch:(SPTouchEvent*)touchEvent
 {    
-    if (!mEnabled) return;    
+    if (!_enabled) return;    
     SPTouch *touch = [[touchEvent touchesWithTarget:self] anyObject];
     
-    if (touch.phase == SPTouchPhaseBegan && !mIsDown)
+    if (touch.phase == SPTouchPhaseBegan && !_isDown)
     {
-        mBackground.texture = mDownState;
-        mContents.scaleX = mContents.scaleY = mScaleWhenDown;
-        mContents.x = (1.0f - mScaleWhenDown) / 2.0f * mBackground.width;
-        mContents.y = (1.0f - mScaleWhenDown) / 2.0f * mBackground.height;
-        mIsDown = YES;
+        _background.texture = _downState;
+        _contents.scaleX = _contents.scaleY = _scaleWhenDown;
+        _contents.x = (1.0f - _scaleWhenDown) / 2.0f * _background.width;
+        _contents.y = (1.0f - _scaleWhenDown) / 2.0f * _background.height;
+        _isDown = YES;
     }
-    else if (touch.phase == SPTouchPhaseMoved && mIsDown)
+    else if (touch.phase == SPTouchPhaseMoved && _isDown)
     {
         // reset button when user dragged too far away after pushing
         SPRectangle *buttonRect = [self boundsInSpace:self.stage];
@@ -122,12 +122,12 @@
             [self resetContents];
         }            
     }
-    else if (touch.phase == SPTouchPhaseEnded && mIsDown)
+    else if (touch.phase == SPTouchPhaseEnded && _isDown)
     {
         [self resetContents];
         [self dispatchEventWithType:SP_EVENT_TYPE_TRIGGERED];
     }    
-    else if (touch.phase == SPTouchPhaseCancelled && mIsDown)
+    else if (touch.phase == SPTouchPhaseCancelled && _isDown)
     {
         [self resetContents];
     }
@@ -135,79 +135,79 @@
 
 - (void)resetContents
 {
-    mIsDown = NO;
-    mBackground.texture = mUpState;
-    mContents.x = mContents.y = 0;        
-    mContents.scaleX = mContents.scaleY = 1.0f;
+    _isDown = NO;
+    _background.texture = _upState;
+    _contents.x = _contents.y = 0;        
+    _contents.scaleX = _contents.scaleY = 1.0f;
 }
 
 - (void)setEnabled:(BOOL)value
 {
-    mEnabled = value;
-    if (mEnabled) 
+    _enabled = value;
+    if (_enabled) 
     {
-        mContents.alpha = 1.0f;
+        _contents.alpha = 1.0f;
     }
     else
     {
-        mContents.alpha = mAlphaWhenDisabled;
+        _contents.alpha = _alphaWhenDisabled;
         [self resetContents];
     }    
 }
 
 - (void)setUpState:(SPTexture*)upState
 {
-    if (upState != mUpState)
+    if (upState != _upState)
     {    
-        mUpState = upState;
-        if (!mIsDown) mBackground.texture = upState;
+        _upState = upState;
+        if (!_isDown) _background.texture = upState;
     }
 }
 
 - (void)setDownState:(SPTexture*)downState
 {
-    if (downState != mDownState)
+    if (downState != _downState)
     {    
-        mDownState = downState;
-        if (mIsDown) mBackground.texture = downState;
+        _downState = downState;
+        if (_isDown) _background.texture = downState;
     }
 }
 
 - (void)createTextField
 {
-    if (!mTextField)
+    if (!_textField)
     {
-        mTextField = [[SPTextField alloc] init];
-        mTextField.vAlign = SPVAlignCenter;
-        mTextField.hAlign = SPHAlignCenter;
-        mTextField.touchable = NO;
-        [mContents addChild:mTextField];
+        _textField = [[SPTextField alloc] init];
+        _textField.vAlign = SPVAlignCenter;
+        _textField.hAlign = SPHAlignCenter;
+        _textField.touchable = NO;
+        [_contents addChild:_textField];
     }
 
-    mTextField.width  = mTextBounds.width;
-    mTextField.height = mTextBounds.height;
-    mTextField.x = mTextBounds.x;
-    mTextField.y = mTextBounds.y;
+    _textField.width  = _textBounds.width;
+    _textField.height = _textBounds.height;
+    _textField.x = _textBounds.x;
+    _textField.y = _textBounds.y;
 }
 
 - (NSString*)text
 {
-    if (mTextField) return mTextField.text;
+    if (_textField) return _textField.text;
     else return @"";
 }
 
 - (void)setText:(NSString*)value
 {
     [self createTextField];
-    mTextField.text = value;   
+    _textField.text = value;   
 }
 
 - (void)setTextBounds:(SPRectangle *)value
 {
-    float scaleX = mBackground.scaleX;
-    float scaleY = mBackground.scaleY;
+    float scaleX = _background.scaleX;
+    float scaleY = _background.scaleY;
     
-    mTextBounds = [[SPRectangle alloc] initWithX:value.x/scaleX y:value.y/scaleY 
+    _textBounds = [[SPRectangle alloc] initWithX:value.x/scaleX y:value.y/scaleY 
                                            width:value.width/scaleX height:value.height/scaleY];
     
     [self createTextField];
@@ -215,47 +215,47 @@
 
 - (SPRectangle *)textBounds
 {
-    float scaleX = mBackground.scaleX;
-    float scaleY = mBackground.scaleY;
+    float scaleX = _background.scaleX;
+    float scaleY = _background.scaleY;
     
-    return [SPRectangle rectangleWithX:mTextBounds.x*scaleX y:mTextBounds.y*scaleY 
-                                 width:mTextBounds.width*scaleX height:mTextBounds.height*scaleY];
+    return [SPRectangle rectangleWithX:_textBounds.x*scaleX y:_textBounds.y*scaleY 
+                                 width:_textBounds.width*scaleX height:_textBounds.height*scaleY];
 }
 
 - (NSString*)fontName
 {
-    if (mTextField) return mTextField.fontName;
+    if (_textField) return _textField.fontName;
     else return SP_DEFAULT_FONT_NAME;
 }
 
 - (void)setFontName:(NSString*)value
 {
     [self createTextField];
-    mTextField.fontName = value;
+    _textField.fontName = value;
 }
 
 - (float)fontSize
 {
-    if (mTextField) return mTextField.fontSize;
+    if (_textField) return _textField.fontSize;
     else return SP_DEFAULT_FONT_SIZE;
 }
 
 - (void)setFontSize:(float)value
 {
     [self createTextField];
-    mTextField.fontSize = value;    
+    _textField.fontSize = value;    
 }
 
 - (uint)fontColor
 {
-    if (mTextField) return mTextField.color;
+    if (_textField) return _textField.color;
     else return SP_DEFAULT_FONT_COLOR;
 }
 
 - (void)setFontColor:(uint)value
 {
     [self createTextField];
-    mTextField.color = value;
+    _textField.color = value;
 }
 
 - (void)setWidth:(float)width
@@ -263,24 +263,24 @@
     // a button behaves just like a textfield: when changing width & height,
     // the textfield is not stretched, but will have more room for its chars.
     
-    mBackground.width = width;
+    _background.width = width;
     [self createTextField];
 }
 
 - (float)width
 {
-    return mBackground.width;
+    return _background.width;
 }
 
 - (void)setHeight:(float)height
 {
-    mBackground.height = height;    
+    _background.height = height;    
     [self createTextField];
 }
 
 - (float)height
 {
-    return mBackground.height;
+    return _background.height;
 }
  
 + (id)buttonWithUpState:(SPTexture*)upState downState:(SPTexture*)downState

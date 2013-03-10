@@ -10,7 +10,7 @@
 
 @implementation Scene
 {
-    SPButton *mBackButton;
+    SPButton *_backButton;
 }
 
 - (id)init
@@ -20,19 +20,19 @@
         // create a button with the text "back" and display it at the bottom of the screen.
         SPTexture *buttonTexture = [SPTexture textureWithContentsOfFile:@"button_back.png"];
         
-        mBackButton = [[SPButton alloc] initWithUpState:buttonTexture text:@"back"];
-        mBackButton.x = CENTER_X - mBackButton.width / 2.0f;
-        mBackButton.y = GAME_HEIGHT - mBackButton.height + 1;
-        [mBackButton addEventListener:@selector(onBackButtonTriggered:) atObject:self 
+        _backButton = [[SPButton alloc] initWithUpState:buttonTexture text:@"back"];
+        _backButton.x = CENTER_X - _backButton.width / 2.0f;
+        _backButton.y = GAME_HEIGHT - _backButton.height + 1;
+        [_backButton addEventListener:@selector(onBackButtonTriggered:) atObject:self 
                               forType:SP_EVENT_TYPE_TRIGGERED];
-        [self addChild:mBackButton];
+        [self addChild:_backButton];
     }
     return self;
 }
 
 - (void)onBackButtonTriggered:(SPEvent *)event
 {
-    [mBackButton removeEventListenersAtObject:self forType:SP_EVENT_TYPE_TRIGGERED];
+    [_backButton removeEventListenersAtObject:self forType:SP_EVENT_TYPE_TRIGGERED];
     [self dispatchEventWithType:EVENT_TYPE_SCENE_CLOSING bubbles:YES];
 }
 

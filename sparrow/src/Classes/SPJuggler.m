@@ -16,36 +16,36 @@
 
 @implementation SPJuggler
 {
-    NSMutableArray *mObjects;
-    double mElapsedTime;
+    NSMutableArray *_objects;
+    double _elapsedTime;
 }
 
-@synthesize elapsedTime = mElapsedTime;
+@synthesize elapsedTime = _elapsedTime;
 
 - (id)init
 {    
     if ((self = [super init]))
     {        
-        mObjects = [[NSMutableArray alloc] init];
-        mElapsedTime = 0.0;
+        _objects = [[NSMutableArray alloc] init];
+        _elapsedTime = 0.0;
     }
     return self;
 }
 
 - (void)advanceTime:(double)seconds
 {
-    mElapsedTime += seconds;
+    _elapsedTime += seconds;
     
     // we need work with a copy, since user-code could modify the collection during the enumeration
-    for (id<SPAnimatable> object in [NSArray arrayWithArray:mObjects])
+    for (id<SPAnimatable> object in [NSArray arrayWithArray:_objects])
         [object advanceTime:seconds];
 }
 
 - (void)addObject:(id<SPAnimatable>)object
 {
-    if (object && ![mObjects containsObject:object])
+    if (object && ![_objects containsObject:object])
     {
-        [mObjects addObject:object];
+        [_objects addObject:object];
         
         if ([(id)object isKindOfClass:[SPEventDispatcher class]])
             [(SPEventDispatcher *)object addEventListener:@selector(onRemove:) atObject:self
@@ -60,7 +60,7 @@
 
 - (void)removeObject:(id<SPAnimatable>)object
 {
-    [mObjects removeObject:object];
+    [_objects removeObject:object];
     
     if ([(id)object isKindOfClass:[SPEventDispatcher class]])
         [(SPEventDispatcher *)object removeEventListenersAtObject:self
@@ -69,14 +69,14 @@
 
 - (void)removeAllObjects
 {
-    for (id object in mObjects)
+    for (id object in _objects)
     {
         if ([(id)object isKindOfClass:[SPEventDispatcher class]])
             [(SPEventDispatcher *)object removeEventListenersAtObject:self
                                          forType:SP_EVENT_TYPE_REMOVE_FROM_JUGGLER];
     }
     
-    [mObjects removeAllObjects];
+    [_objects removeAllObjects];
 }
 
 - (void)removeObjectsWithTarget:(id)object
@@ -84,7 +84,7 @@
     SEL targetSel = @selector(target);
     NSMutableArray *remainingObjects = [[NSMutableArray alloc] init];
     
-    for (id currentObject in mObjects)
+    for (id currentObject in _objects)
     {
         if (![currentObject respondsToSelector:targetSel] || ![[currentObject target] isEqual:object])
             [remainingObjects addObject:currentObject];
@@ -93,12 +93,12 @@
                                                 forType:SP_EVENT_TYPE_REMOVE_FROM_JUGGLER];
     }
     
-    mObjects = remainingObjects;
+    _objects = remainingObjects;
 }
 
 - (BOOL)containsObject:(id<SPAnimatable>)object
 {
-    return [mObjects containsObject:object];
+    return [_objects containsObject:object];
 }
 
 - (id)delayInvocationAtTarget:(id)target byTime:(double)time

@@ -57,7 +57,7 @@
 
 @interface SPQuad : SPDisplayObject
 {
-    SPVertexData *mVertexData;
+    SPVertexData *_vertexData;
 }
 
 /// --------------------
@@ -93,7 +93,7 @@
 /// Copies the raw vertex data to a VertexData instance.
 - (void)copyVertexDataTo:(SPVertexData *)targetData atIndex:(int)targetIndex;
 
-/// Call this method after manually changing the contents of 'mVertexData'.
+/// Call this method after manually changing the contents of '_vertexData'.
 - (void)vertexDataDidChange;
 
 /// Factory method.

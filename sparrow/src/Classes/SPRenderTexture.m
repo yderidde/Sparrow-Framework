@@ -26,9 +26,9 @@
 
 @implementation SPRenderTexture
 {
-    GLuint mFramebuffer;
-    BOOL   mFramebufferIsActive;
-    SPRenderSupport *mRenderSupport;
+    GLuint _framebuffer;
+    BOOL   _framebufferIsActive;
+    SPRenderSupport *_renderSupport;
 }
 
 - (id)initWithWidth:(float)width height:(float)height fillColor:(uint)argb scale:(float)scale
@@ -46,7 +46,7 @@
 
     if ((self = [super initWithRegion:region ofTexture:glTexture]))
     {
-        mRenderSupport = [[SPRenderSupport alloc] init];
+        _renderSupport = [[SPRenderSupport alloc] init];
         
         [self createFramebuffer];
         [self clearWithColor:argb alpha:SP_COLOR_PART_ALPHA(argb)];
@@ -77,8 +77,8 @@
 - (void)createFramebuffer 
 {
     // create framebuffer
-    glGenFramebuffersOES(1, &mFramebuffer);
-    glBindFramebufferOES(GL_FRAMEBUFFER_OES, mFramebuffer);
+    glGenFramebuffersOES(1, &_framebuffer);
+    glBindFramebufferOES(GL_FRAMEBUFFER_OES, _framebuffer);
     
     // attach renderbuffer
     glFramebufferTexture2DOES(GL_FRAMEBUFFER_OES, GL_COLOR_ATTACHMENT0_OES, GL_TEXTURE_2D, 
@@ -93,8 +93,8 @@
 
 - (void)destroyFramebuffer 
 {
-    glDeleteFramebuffersOES(1, &mFramebuffer);
-    mFramebuffer = 0;
+    glDeleteFramebuffersOES(1, &_framebuffer);
+    _framebuffer = 0;
 }
 
 - (void)renderToFramebuffer:(SPDrawingBlock)block
@@ -106,15 +106,15 @@
     
     int stdFramebuffer = -1;
     
-    if (!mFramebufferIsActive)
+    if (!_framebufferIsActive)
     {
-        mFramebufferIsActive = YES;
+        _framebufferIsActive = YES;
         
         // remember standard frame buffer
         glGetIntegerv(GL_FRAMEBUFFER_BINDING_OES, &stdFramebuffer);
         
         // switch to the texture's framebuffer for rendering
-        glBindFramebufferOES(GL_FRAMEBUFFER_OES, mFramebuffer);
+        glBindFramebufferOES(GL_FRAMEBUFFER_OES, _framebuffer);
         
         SPTexture *baseTexture = self.baseTexture;
         float width  = baseTexture.width;
@@ -123,17 +123,17 @@
         
         // prepare viewport and OpenGL matrices
         glViewport(0, 0, width * scale, height * scale);
-        [mRenderSupport setupOrthographicProjectionWithLeft:0 right:width top:height bottom:0];
+        [_renderSupport setupOrthographicProjectionWithLeft:0 right:width top:height bottom:0];
     }
     
     block();
     
     if (stdFramebuffer != -1)
     {
-        mFramebufferIsActive = NO;
+        _framebufferIsActive = NO;
         
-        [mRenderSupport finishQuadBatch];
-        [mRenderSupport nextFrame];
+        [_renderSupport finishQuadBatch];
+        [_renderSupport nextFrame];
         
         // return to standard frame buffer
         glBindFramebufferOES(GL_FRAMEBUFFER_OES, stdFramebuffer);
@@ -144,12 +144,12 @@
 {
     [self renderToFramebuffer:^
      {
-         [mRenderSupport pushMatrix];
+         [_renderSupport pushMatrix];
          
-         [mRenderSupport prependMatrix:object.transformationMatrix];
-         [object render:mRenderSupport];
+         [_renderSupport prependMatrix:object.transformationMatrix];
+         [object render:_renderSupport];
          
-         [mRenderSupport popMatrix];
+         [_renderSupport popMatrix];
      }];
 }
 

@@ -16,16 +16,16 @@
 
 @implementation SPTouchEvent
 {
-    NSSet *mTouches;
+    NSSet *_touches;
 }
 
-@synthesize touches = mTouches;
+@synthesize touches = _touches;
 
 - (id)initWithType:(NSString*)type bubbles:(BOOL)bubbles touches:(NSSet*)touches
 {   
     if ((self = [super initWithType:type bubbles:bubbles]))
     {        
-        mTouches = touches;
+        _touches = touches;
     }
     return self;
 }
@@ -47,13 +47,13 @@
 
 - (double)timestamp
 {
-    return [[mTouches anyObject] timestamp];    
+    return [[_touches anyObject] timestamp];    
 }
 
 - (NSSet*)touchesWithTarget:(SPDisplayObject*)target
 {
     NSMutableSet *touchesFound = [NSMutableSet set];
-    for (SPTouch *touch in mTouches)
+    for (SPTouch *touch in _touches)
     {
         if ([target isEqual:touch.target] ||
             ([target isKindOfClass:[SPDisplayObjectContainer class]] &&
@@ -68,7 +68,7 @@
 - (NSSet*)touchesWithTarget:(SPDisplayObject*)target andPhase:(SPTouchPhase)phase
 {
     NSMutableSet *touchesFound = [NSMutableSet set];
-    for (SPTouch *touch in mTouches)
+    for (SPTouch *touch in _touches)
     {
         if (touch.phase == phase &&
             ([target isEqual:touch.target] || 

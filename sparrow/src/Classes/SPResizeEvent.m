@@ -13,23 +13,23 @@
 
 @implementation SPResizeEvent
 {
-    float mWidth;
-    float mHeight;
-    double mAnimationTime;
+    float _width;
+    float _height;
+    double _animationTime;
 }
 
-@synthesize width = mWidth;
-@synthesize height = mHeight;
-@synthesize animationTime = mAnimationTime;
+@synthesize width = _width;
+@synthesize height = _height;
+@synthesize animationTime = _animationTime;
 
 - (id)initWithType:(NSString *)type width:(float)width height:(float)height 
      animationTime:(double)time
 {
     if ((self = [super initWithType:type bubbles:NO]))
     {
-        mWidth = width;
-        mHeight = height;
-        mAnimationTime = time;
+        _width = width;
+        _height = height;
+        _animationTime = time;
     }
     return self;
 }
@@ -41,7 +41,7 @@
 
 - (BOOL)isPortrait
 {
-    return mHeight > mWidth;
+    return _height > _width;
 }
 
 @end

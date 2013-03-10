@@ -22,15 +22,15 @@
 {
     if ((self = [super init]))
     {
-        mVertexData = [[SPVertexData alloc] initWithSize:4 premultipliedAlpha:pma];
+        _vertexData = [[SPVertexData alloc] initWithSize:4 premultipliedAlpha:pma];
         
-        mVertexData.vertices[1].position.x = width;
-        mVertexData.vertices[2].position.y = height;
-        mVertexData.vertices[3].position.x = width;
-        mVertexData.vertices[3].position.y = height;
+        _vertexData.vertices[1].position.x = width;
+        _vertexData.vertices[2].position.y = height;
+        _vertexData.vertices[3].position.x = width;
+        _vertexData.vertices[3].position.y = height;
         
         for (int i=0; i<4; ++i)
-            mVertexData.vertices[i].color = SPVertexColorMakeWithColorAndAlpha(color, 1.0f);
+            _vertexData.vertices[i].color = SPVertexColorMakeWithColorAndAlpha(color, 1.0f);
         
         [self vertexDataDidChange];
     }
@@ -57,18 +57,18 @@
     SPMatrix *transformationMatrix = targetSpace == self ?
         nil : [self transformationMatrixToSpace:targetSpace];
     
-    return [mVertexData boundsAfterTransformation:transformationMatrix];
+    return [_vertexData boundsAfterTransformation:transformationMatrix];
 }
 
 - (void)setColor:(uint)color ofVertex:(int)vertexID
 {
-    [mVertexData setColor:color atIndex:vertexID];
+    [_vertexData setColor:color atIndex:vertexID];
     [self vertexDataDidChange];
 }
 
 - (uint)colorOfVertex:(int)vertexID
 {
-    return [mVertexData colorAtIndex:vertexID];
+    return [_vertexData colorAtIndex:vertexID];
 }
 
 - (void)setColor:(uint)color
@@ -83,13 +83,13 @@
 
 - (void)setAlpha:(float)alpha ofVertex:(int)vertexID
 {
-    [mVertexData setAlpha:alpha atIndex:vertexID];
+    [_vertexData setAlpha:alpha atIndex:vertexID];
     [self vertexDataDidChange];
 }
 
 - (float)alphaOfVertex:(int)vertexID
 {
-    return [mVertexData alphaAtIndex:vertexID];
+    return [_vertexData alphaAtIndex:vertexID];
 }
 
 - (void)vertexDataDidChange
@@ -99,12 +99,12 @@
 
 - (void)copyVertexDataTo:(SPVertexData *)targetData atIndex:(int)targetIndex
 {
-    [mVertexData copyToVertexData:targetData atIndex:targetIndex];
+    [_vertexData copyToVertexData:targetData atIndex:targetIndex];
 }
 
 - (BOOL)premultipliedAlpha
 {
-    return mVertexData.premultipliedAlpha;
+    return _vertexData.premultipliedAlpha;
 }
 
 - (void)render:(SPRenderSupport *)support

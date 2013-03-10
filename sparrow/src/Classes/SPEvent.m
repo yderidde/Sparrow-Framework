@@ -15,25 +15,25 @@
 
 @implementation SPEvent
 {
-    SPEventDispatcher *__weak mTarget;
-    SPEventDispatcher *__weak mCurrentTarget;
-    NSString *mType;
-    BOOL mStopsImmediatePropagation;
-    BOOL mStopsPropagation;
-    BOOL mBubbles;
+    SPEventDispatcher *__weak _target;
+    SPEventDispatcher *__weak _currentTarget;
+    NSString *_type;
+    BOOL _stopsImmediatePropagation;
+    BOOL _stopsPropagation;
+    BOOL _bubbles;
 }
 
-@synthesize target = mTarget;
-@synthesize currentTarget = mCurrentTarget;
-@synthesize type = mType;
-@synthesize bubbles = mBubbles;
+@synthesize target = _target;
+@synthesize currentTarget = _currentTarget;
+@synthesize type = _type;
+@synthesize bubbles = _bubbles;
 
 - (id)initWithType:(NSString*)type bubbles:(BOOL)bubbles
 {    
     if ((self = [super init]))
     {        
-        mType = [[NSString alloc] initWithString:type];
-        mBubbles = bubbles;
+        _type = [[NSString alloc] initWithString:type];
+        _bubbles = bubbles;
     }
     return self;
 }
@@ -50,18 +50,18 @@
 
 - (void)stopImmediatePropagation
 {
-    mStopsImmediatePropagation = YES;
+    _stopsImmediatePropagation = YES;
 }
 
 - (void)stopPropagation
 {
-    mStopsPropagation = YES;
+    _stopsPropagation = YES;
 }
 
 - (NSString *)description
 {
     return [NSString stringWithFormat:@"[%@: type=\"%@\", bubbles=%@]",
-            NSStringFromClass([self class]), mType, mBubbles ? @"YES" : @"NO"];
+            NSStringFromClass([self class]), _type, _bubbles ? @"YES" : @"NO"];
 }
 
 + (id)eventWithType:(NSString*)type bubbles:(BOOL)bubbles
@@ -83,24 +83,24 @@
 
 - (BOOL)stopsImmediatePropagation
 { 
-    return mStopsImmediatePropagation;
+    return _stopsImmediatePropagation;
 }
 
 - (BOOL)stopsPropagation
 { 
-    return mStopsPropagation;
+    return _stopsPropagation;
 }
 
 - (void)setTarget:(SPEventDispatcher*)target
 {
-    if (mTarget != target)
-        mTarget = target;
+    if (_target != target)
+        _target = target;
 }
 
 - (void)setCurrentTarget:(SPEventDispatcher*)currentTarget
 {
-    if (mCurrentTarget != currentTarget)
-        mCurrentTarget = currentTarget;
+    if (_currentTarget != currentTarget)
+        _currentTarget = currentTarget;
 }
 
 @end

@@ -20,7 +20,7 @@
 
 @interface SPDelayedInvocationTest : SenTestCase 
 {
-    int mCallCount;
+    int _callCount;
 }
 
 @end
@@ -31,12 +31,12 @@
 
 - (void)setUp
 {
-    mCallCount = 0;
+    _callCount = 0;
 }
 
 - (void)simpleMethod
 {
-    ++mCallCount;
+    ++_callCount;
 }
 
 - (void)testSimpleDelay
@@ -44,19 +44,19 @@
     id delayedInv = [[SPDelayedInvocation alloc] initWithTarget:self delay:1.0f];
     [delayedInv simpleMethod];
     
-    STAssertEquals(0, mCallCount, @"Delayed Invocation triggered too soon");
+    STAssertEquals(0, _callCount, @"Delayed Invocation triggered too soon");
     [delayedInv advanceTime:0.5f];
     
-    STAssertEquals(0, mCallCount, @"Delayed Invocation triggered too soon");
+    STAssertEquals(0, _callCount, @"Delayed Invocation triggered too soon");
     [delayedInv advanceTime:0.49f];
     
-    STAssertEquals(0, mCallCount, @"Delayed Invocation triggered too soon");
+    STAssertEquals(0, _callCount, @"Delayed Invocation triggered too soon");
     
     [delayedInv advanceTime:0.1f];
-    STAssertEquals(1, mCallCount, @"Delayed Invocation did not trigger");
+    STAssertEquals(1, _callCount, @"Delayed Invocation did not trigger");
     
     [delayedInv advanceTime:0.1f];
-    STAssertEquals(1, mCallCount, @"Delayed Invocation triggered too often");
+    STAssertEquals(1, _callCount, @"Delayed Invocation triggered too often");
     
 }
 

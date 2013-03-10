@@ -30,19 +30,19 @@
 
 @implementation SPTextureAtlas
 {
-    SPTexture *mAtlasTexture;
-    NSString *mPath;
-    NSMutableDictionary *mTextureRegions;
-    NSMutableDictionary *mTextureFrames;
+    SPTexture *_atlasTexture;
+    NSString *_path;
+    NSMutableDictionary *_textureRegions;
+    NSMutableDictionary *_textureFrames;
 }
 
 - (id)initWithContentsOfFile:(NSString *)path texture:(SPTexture *)texture
 {
     if ((self = [super init]))
     {
-        mTextureRegions = [[NSMutableDictionary alloc] init];
-        mTextureFrames  = [[NSMutableDictionary alloc] init];
-        mAtlasTexture = texture;
+        _textureRegions = [[NSMutableDictionary alloc] init];
+        _textureFrames  = [[NSMutableDictionary alloc] init];
+        _atlasTexture = texture;
         [self parseAtlasXml:path];
     }
     return self;    
@@ -68,12 +68,12 @@
     if (!path) return;
 
     float scaleFactor = Sparrow.contentScaleFactor;
-    mPath = [SPUtils absolutePathToFile:path withScaleFactor:scaleFactor];    
-    if (!mPath) [NSException raise:SP_EXC_FILE_NOT_FOUND format:@"file not found: %@", path];
+    _path = [SPUtils absolutePathToFile:path withScaleFactor:scaleFactor];    
+    if (!_path) [NSException raise:SP_EXC_FILE_NOT_FOUND format:@"file not found: %@", path];
     
     @autoreleasepool
     {
-        NSData *xmlData = [[NSData alloc] initWithContentsOfFile:mPath];
+        NSData *xmlData = [[NSData alloc] initWithContentsOfFile:_path];
         NSXMLParser *xmlParser = [[NSXMLParser alloc] initWithData:xmlData];
         
         xmlParser.delegate = self;    
@@ -93,7 +93,7 @@
 {
     if ([elementName isEqualToString:@"SubTexture"])
     {
-        float scale = mAtlasTexture.scale;
+        float scale = _atlasTexture.scale;
         
         NSString *name = attributeDict[@"name"];
         SPRectangle *frame = nil;
@@ -113,27 +113,27 @@
         [self addRegion:[SPRectangle rectangleWithX:x y:y width:width height:height] 
                withName:name frame:frame];
     }
-    else if ([elementName isEqualToString:@"TextureAtlas"] && !mAtlasTexture)
+    else if ([elementName isEqualToString:@"TextureAtlas"] && !_atlasTexture)
     {
         // load atlas texture
         NSString *filename = [attributeDict valueForKey:@"imagePath"];        
-        NSString *folder = [mPath stringByDeletingLastPathComponent];
+        NSString *folder = [_path stringByDeletingLastPathComponent];
         NSString *absolutePath = [folder stringByAppendingPathComponent:filename];
-        mAtlasTexture = [[SPTexture alloc] initWithContentsOfFile:absolutePath];
+        _atlasTexture = [[SPTexture alloc] initWithContentsOfFile:absolutePath];
     }
 }
 
 - (int)count
 {
-    return [mTextureRegions count];
+    return [_textureRegions count];
 }
 
 - (SPTexture *)textureByName:(NSString *)name
 {
-    SPRectangle *frame  = mTextureFrames[name];
-    SPRectangle *region = mTextureRegions[name];
+    SPRectangle *frame  = _textureFrames[name];
+    SPRectangle *region = _textureRegions[name];
     
-    if (region) return [[SPTexture alloc] initWithRegion:region frame:frame ofTexture:mAtlasTexture];
+    if (region) return [[SPTexture alloc] initWithRegion:region frame:frame ofTexture:_atlasTexture];
     else        return nil;
 }
 
@@ -141,7 +141,7 @@
 {
     NSMutableArray *textureNames = [[NSMutableArray alloc] init];
     
-    for (NSString *textureName in mTextureRegions)
+    for (NSString *textureName in _textureRegions)
         if ([textureName rangeOfString:name].location == 0)
             [textureNames addObject:textureName];
     
@@ -162,14 +162,14 @@
 
 - (void)addRegion:(SPRectangle *)region withName:(NSString *)name frame:(SPRectangle *)frame
 {
-    mTextureRegions[name] = region;    
-    if (frame) mTextureFrames[name] = frame;
+    _textureRegions[name] = region;    
+    if (frame) _textureFrames[name] = frame;
 }
 
 - (void)removeRegion:(NSString *)name
 {
-    [mTextureRegions removeObjectForKey:name];
-    [mTextureFrames  removeObjectForKey:name];
+    [_textureRegions removeObjectForKey:name];
+    [_textureFrames  removeObjectForKey:name];
 }
 
 + (id)atlasWithContentsOfFile:(NSString *)path

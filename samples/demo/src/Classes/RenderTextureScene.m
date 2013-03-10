@@ -18,8 +18,8 @@
 
 @implementation RenderTextureScene
 {
-    SPRenderTexture *mRenderTexture;
-    SPImage *mBrush;
+    SPRenderTexture *_renderTexture;
+    SPImage *_brush;
 }
 
 - (id)init
@@ -43,14 +43,14 @@
     [self addChild:infoText];
     
     // we load the "brush" image (the sparrow egg) from the texture atlas
-    mBrush = [[SPImage alloc] initWithContentsOfFile:@"benchmark_object.png"];
+    _brush = [[SPImage alloc] initWithContentsOfFile:@"benchmark_object.png"];
     
     // the render texture is a dyanmic texture. We will draw the egg on that texture on
     // every touch event.
-    mRenderTexture = [[SPRenderTexture alloc] initWithWidth:320 height:435];
+    _renderTexture = [[SPRenderTexture alloc] initWithWidth:320 height:435];
     
     // the canvas image will display the render texture
-    SPImage *canvas = [SPImage imageWithTexture:mRenderTexture];
+    SPImage *canvas = [SPImage imageWithTexture:_renderTexture];
     
     // we want to draw on touch events
     [canvas addEventListener:@selector(onTouch:) atObject:self forType:SP_EVENT_TYPE_TOUCH];    
@@ -71,11 +71,11 @@
         SPPoint *currentLocation = [touch locationInSpace:self];                
         
         // center brush over location
-        mBrush.x = currentLocation.x - mBrush.width / 2.0f;
-        mBrush.y = currentLocation.y - mBrush.height / 2.0f;
+        _brush.x = currentLocation.x - _brush.width / 2.0f;
+        _brush.y = currentLocation.y - _brush.height / 2.0f;
         
         // draw brush to render texture
-        [mRenderTexture drawObject:mBrush];        
+        [_renderTexture drawObject:_brush];        
     } 
 }
 

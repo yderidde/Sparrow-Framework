@@ -14,31 +14,31 @@
 
 @implementation SPBitmapChar
 {
-    SPTexture *mTexture;
-    int mCharID;
-    float mXOffset;
-    float mYOffset;
-    float mXAdvance;
-    NSMutableDictionary *mKernings;
+    SPTexture *_texture;
+    int _charID;
+    float _xOffset;
+    float _yOffset;
+    float _xAdvance;
+    NSMutableDictionary *_kernings;
 }
 
-@synthesize charID = mCharID;
-@synthesize xOffset = mXOffset;
-@synthesize yOffset = mYOffset;
-@synthesize xAdvance = mXAdvance;
-@synthesize texture = mTexture;
+@synthesize charID = _charID;
+@synthesize xOffset = _xOffset;
+@synthesize yOffset = _yOffset;
+@synthesize xAdvance = _xAdvance;
+@synthesize texture = _texture;
 
 - (id)initWithID:(int)charID texture:(SPTexture *)texture
          xOffset:(float)xOffset yOffset:(float)yOffset xAdvance:(float)xAdvance;
 {
     if ((self = [super init]))
     {
-        mTexture = texture;
-        mCharID = charID;
-        mXOffset = xOffset;
-        mYOffset = yOffset;
-        mXAdvance = xAdvance;
-		mKernings = nil;
+        _texture = texture;
+        _charID = charID;
+        _xOffset = xOffset;
+        _yOffset = yOffset;
+        _xAdvance = xAdvance;
+		_kernings = nil;
     }
     return self;
 }
@@ -55,21 +55,21 @@
 
 - (void)addKerning:(float)amount toChar:(int)charID
 {
-    if (!mKernings)
-        mKernings = [[NSMutableDictionary alloc] init];    
+    if (!_kernings)
+        _kernings = [[NSMutableDictionary alloc] init];    
 
-	mKernings[@(charID)] = @(amount);
+	_kernings[@(charID)] = @(amount);
 }
 
 - (float)kerningToChar:(int)charID
 {
-	NSNumber *amount = (NSNumber *)mKernings[@(charID)];
+	NSNumber *amount = (NSNumber *)_kernings[@(charID)];
 	return [amount floatValue];
 }
 
 - (SPImage *)createImage
 {
-    return [SPImage imageWithTexture:mTexture];
+    return [SPImage imageWithTexture:_texture];
 }
 
 @end
