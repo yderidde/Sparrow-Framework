@@ -12,8 +12,10 @@
 #import <UIKit/UIKit.h>
 #import <GLKit/GLKit.h>
 
-#import "SPStage.h"
-#import "SPJuggler.h"
+@class SPStage;
+@class SPJuggler;
+@class SPProgram;
+@class SPDisplayObject;
 
 @interface SPViewController : GLKViewController
 
@@ -21,6 +23,10 @@
 - (void)startWithRoot:(Class)rootClass supportHighResolutions:(BOOL)hd;
 - (void)startWithRoot:(Class)rootClass supportHighResolutions:(BOOL)hd doubleOnPad:(BOOL)pad;
 - (void)updateStageSize;
+
+- (void)registerProgram:(SPProgram *)program name:(NSString *)name;
+- (void)unregisterProgram:(NSString *)name;
+- (SPProgram *)programByName:(NSString *)name;
 
 @property (nonatomic, readonly) SPDisplayObject *root;
 @property (nonatomic, readonly) SPStage *stage;

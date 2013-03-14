@@ -13,6 +13,7 @@
 #import "SPTexture.h"
 #import "SPImage.h"
 #import "SPRenderSupport.h"
+#import "SPQuadEffect.h"
 
 #import <GLKit/GLKit.h>
 
@@ -24,7 +25,7 @@
     SPTexture *_texture;
     BOOL _premultipliedAlpha;
     
-    GLKBaseEffect *_baseEffect;
+    SPQuadEffect *_baseEffect;
     SPVertexData *_vertexData;
     uint _vertexBufferName;
     ushort *_indexData;
@@ -40,8 +41,7 @@
         _numQuads = 0;
         _syncRequired = NO;
         _vertexData = [[SPVertexData alloc] init];
-        _baseEffect = [[GLKBaseEffect alloc] init];
-        _baseEffect.transform.projectionMatrix = GLKMatrix4Identity;
+        _baseEffect = [[SPQuadEffect alloc] init];
     }
     
     return self;
@@ -99,13 +99,10 @@
     glGenBuffers(1, &_vertexBufferName);
     glGenBuffers(1, &_indexBufferName);
     
-    glBindBuffer(GL_ARRAY_BUFFER, _vertexBufferName);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(SPVertex) * numVertices, _vertexData.vertices, GL_STATIC_DRAW);
-    
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indexBufferName);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(ushort) * numIndices, _indexData, GL_STATIC_DRAW);
     
-    _syncRequired = NO;
+    _syncRequired = YES;
 }
 
 - (void)syncBuffers
@@ -114,9 +111,13 @@
         [self createBuffers];
     else
     {
-        int numVertices = _numQuads * 4;
+        // don't use 'glBufferSubData'! It's much slower than uploading
+        // everything via 'glBufferData', at least on the iPad 1.
+        
         glBindBuffer(GL_ARRAY_BUFFER, _vertexBufferName);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(SPVertex) * numVertices, _vertexData.vertices);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(SPVertex) * _vertexData.numVertices,
+                     _vertexData.vertices, GL_STATIC_DRAW);
+        
         _syncRequired = NO;
     }
 }
@@ -191,37 +192,39 @@
     if (!_numQuads) return;
     if (_syncRequired) [self syncBuffers];
     
-    // TODO: alpha
+    _baseEffect.texture = _texture;
+    _baseEffect.premultipliedAlpha = _premultipliedAlpha;
+    _baseEffect.mvpMatrix = matrix;
+    _baseEffect.useTinting = YES;
+    _baseEffect.alpha = alpha;
     
-    _baseEffect.texture2d0.enabled = (_texture != nil);
-    _baseEffect.texture2d0.name = _texture.name;
-    _baseEffect.transform.modelviewMatrix = [matrix convertToGLKMatrix4];
-
     [_baseEffect prepareToDraw];
 
     if (_premultipliedAlpha) glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     else                     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
-    glEnableVertexAttribArray(GLKVertexAttribPosition);
-    glEnableVertexAttribArray(GLKVertexAttribColor);
+    int attribPosition  = _baseEffect.attribPosition;
+    int attribColor     = _baseEffect.attribColor;
+    int attribTexCoords = _baseEffect.attribTexCoords;
+    
+    glEnableVertexAttribArray(attribPosition);
+    glEnableVertexAttribArray(attribColor);
     
     if (_texture)
-        glEnableVertexAttribArray(GLKVertexAttribTexCoord0);
-    else
-        glDisableVertexAttribArray(GLKVertexAttribTexCoord0);
+        glEnableVertexAttribArray(attribTexCoords);
     
     glBindBuffer(GL_ARRAY_BUFFER, _vertexBufferName);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indexBufferName);
     
-    glVertexAttribPointer(GLKVertexAttribPosition, 2, GL_FLOAT, GL_FALSE, sizeof(SPVertex),
+    glVertexAttribPointer(attribPosition, 2, GL_FLOAT, GL_FALSE, sizeof(SPVertex),
                           (void *)(offsetof(SPVertex, position)));
     
-    glVertexAttribPointer(GLKVertexAttribColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(SPVertex),
+    glVertexAttribPointer(attribColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(SPVertex),
                           (void *)(offsetof(SPVertex, color)));
     
     if (_texture)
     {
-        glVertexAttribPointer(GLKVertexAttribTexCoord0, 2, GL_FLOAT, GL_FALSE, sizeof(SPVertex),
+        glVertexAttribPointer(attribTexCoords, 2, GL_FLOAT, GL_FALSE, sizeof(SPVertex),
                               (void *)(offsetof(SPVertex, texCoords)));
     }
     

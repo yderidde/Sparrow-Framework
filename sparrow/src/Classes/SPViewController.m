@@ -16,6 +16,9 @@
 #import "SPTouch_Internal.h"
 #import "SPEnterFrameEvent.h"
 #import "SPResizeEvent.h"
+#import "SPStage.h"
+#import "SPJuggler.h"
+#import "SPProgram.h"
 
 // --- private interaface --------------------------------------------------------------------------
 
@@ -36,6 +39,7 @@
     SPJuggler *_juggler;
     SPTouchProcessor *_touchProcessor;
     SPRenderSupport *_support;
+    NSMutableDictionary *_programs;
     
     double _lastTouchTimestamp;
     float _contentScaleFactor;
@@ -60,6 +64,7 @@
         _stage = [[SPStage alloc] init];
         _juggler = [[SPJuggler alloc] init];
         _touchProcessor = [[SPTouchProcessor alloc] initWithRoot:_stage];
+        _programs = [[NSMutableDictionary alloc] init];
         _context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
         _support = [[SPRenderSupport alloc] init];
         
@@ -310,6 +315,23 @@
                                width:newWidth height:newHeight animationTime:duration];
         [_stage broadcastEvent:resizeEvent];
     }
+}
+
+#pragma mark - Program registration
+
+- (void)registerProgram:(SPProgram *)program name:(NSString *)name
+{
+    _programs[name] = program;
+}
+
+- (void)unregisterProgram:(NSString *)name
+{
+    [_programs removeObjectForKey:name];
+}
+
+- (SPProgram *)programByName:(NSString *)name
+{
+    return _programs[name];
 }
 
 #pragma mark - Properties
