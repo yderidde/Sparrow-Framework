@@ -202,10 +202,7 @@ static NSMutableDictionary *bitmapFonts = nil;
     if (color != _color)
     {
         _color = color;
-        if (_isRenderedText) 
-            [(SPImage *)_contents setColor:color];
-        else 
-            _requiresRedraw = YES;
+        _requiresRedraw = YES;
     }
 }
 
@@ -324,24 +321,25 @@ static NSMutableDictionary *bitmapFonts = nil;
     SPTexture *texture = [[SPTexture alloc] initWithWidth:width height:height generateMipmaps:YES
                                                      draw:^(CGContextRef context)
       {
+          float red   = SP_COLOR_PART_RED(_color)   / 255.0f;
+          float green = SP_COLOR_PART_GREEN(_color) / 255.0f;
+          float blue  = SP_COLOR_PART_BLUE(_color)  / 255.0f;
+          
           if (_border)
           {
-              CGContextSetGrayStrokeColor(context, 1.0f, 1.0f);
+              CGContextSetRGBStrokeColor(context, red, green, blue, 1.0f);
               CGContextSetLineWidth(context, 1.0f);
               CGContextStrokeRect(context, CGRectMake(0.5f, 0.5f, width-1, height-1));
           }
           
-          CGContextSetGrayFillColor(context, 1.0f, 1.0f);
+          CGContextSetRGBFillColor(context, red, green, blue, 1.0f);
           
           [_text drawInRect:CGRectMake(0, yOffset, width, height)
                    withFont:[UIFont fontWithName:_fontName size:fontSize] 
               lineBreakMode:lbm alignment:(UITextAlignment)_hAlign];
       }];
     
-    SPImage *image = [SPImage imageWithTexture:texture];
-    image.color = _color;
-    
-    return image;
+    return [SPImage imageWithTexture:texture];
 }
 
 - (SPDisplayObject *)createComposedContents
