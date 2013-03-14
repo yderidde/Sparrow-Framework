@@ -60,9 +60,10 @@
 - (void)addQuad:(SPQuad *)quad texture:(SPTexture *)texture alpha:(float)alpha matrix:(SPMatrix *)matrix;
 
 /// Indicates if specific quads can be added to the batch without causing a state change.
-/// A state change occurs if the quad uses a different base texture, has a different `smoothing`
-/// or `repeat` setting, or if the batch is full (one batch can contain up to 8192 quads).
-- (BOOL)isStateChangeWithQuad:(SPQuad *)quad texture:(SPTexture *)texture numQuads:(int)numQuads;
+/// A state change occurs if the quad uses a different base texture, has a different `smoothing`,
+/// `repeat` or 'tinted' setting, or if the batch is full (one batch can contain up to 8192 quads).
+- (BOOL)isStateChangeWithQuad:(SPQuad *)quad texture:(SPTexture *)texture alpha:(float)alpha
+                     numQuads:(int)numQuads;
 
 /// Renders the batch with custom settings for modelview-projection matrix and alpha.
 /// This makes it possible to render batches that are not part of the display list.
@@ -70,5 +71,8 @@
 
 /// The number of quads that has been added to the batch.
 @property (nonatomic, readonly) int numQuads;
+
+/// Indicates if any vertices have a non-white color or are not fully opaque.
+@property (nonatomic, readonly) BOOL tinted;
 
 @end

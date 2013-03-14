@@ -71,7 +71,6 @@ NSString *getProgramName(BOOL hasTexture, BOOL useTinting)
     if (!_program)
     {
         NSString *programName = getProgramName(hasTexture, useTinting);
-
         _program = [Sparrow.currentController programByName:programName];
         
         if (!_program)
@@ -179,10 +178,10 @@ NSString *getProgramName(BOOL hasTexture, BOOL useTinting)
 
 - (void)setAlpha:(float)value
 {
-    _alpha = value;
-    
     if ((value >= 1.0f && _alpha < 1.0f) || (value < 1.0f && _alpha >= 1.0f))
         _program = nil;
+    
+    _alpha = value;
 }
 
 - (void)setUseTinting:(BOOL)value
@@ -196,10 +195,10 @@ NSString *getProgramName(BOOL hasTexture, BOOL useTinting)
 
 - (void)setTexture:(SPTexture *)value
 {
-    _texture = value;
-    
     if ((_texture && !value) || (!_texture && value))
         _program = nil;
+    
+    _texture = value;
 }
 
 @end

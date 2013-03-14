@@ -52,4 +52,5 @@
 #import "SPSound.h"
 #import "SPSoundChannel.h"
 #import "SPProgram.h"
+#import "SPVertexData.h"
 #import "SparrowClass.h"

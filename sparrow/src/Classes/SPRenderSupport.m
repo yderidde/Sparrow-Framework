@@ -179,7 +179,7 @@
 
 - (void)batchQuad:(SPQuad *)quad texture:(SPTexture *)texture
 {
-    if ([self.currentQuadBatch isStateChangeWithQuad:quad texture:texture numQuads:1])
+    if ([self.currentQuadBatch isStateChangeWithQuad:quad texture:texture alpha:self.alpha numQuads:1])
         [self finishQuadBatch];
     
     [self.currentQuadBatch addQuad:quad texture:texture alpha:self.alpha matrix:_modelviewMatrix];

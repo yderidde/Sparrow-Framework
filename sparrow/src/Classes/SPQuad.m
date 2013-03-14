@@ -17,13 +17,17 @@
 #import "SPVertexData.h"
 
 @implementation SPQuad
+{
+    BOOL _tinted;
+}
 
 - (id)initWithWidth:(float)width height:(float)height color:(uint)color premultipliedAlpha:(BOOL)pma;
 {
     if ((self = [super init]))
     {
-        _vertexData = [[SPVertexData alloc] initWithSize:4 premultipliedAlpha:pma];
+        _tinted = color != 0xffffff;
         
+        _vertexData = [[SPVertexData alloc] initWithSize:4 premultipliedAlpha:pma];
         _vertexData.vertices[1].position.x = width;
         _vertexData.vertices[2].position.y = height;
         _vertexData.vertices[3].position.x = width;
@@ -64,6 +68,9 @@
 {
     [_vertexData setColor:color atIndex:vertexID];
     [self vertexDataDidChange];
+    
+    if (color != 0xffffff) _tinted = YES;
+    else _tinted = (self.alpha != 1.0f) || _vertexData.tinted;
 }
 
 - (uint)colorOfVertex:(int)vertexID
@@ -73,7 +80,13 @@
 
 - (void)setColor:(uint)color
 {
-    for (int i=0; i<4; ++i) [self setColor:color ofVertex:i];
+    for (int i=0; i<4; ++i)
+        [_vertexData setColor:color atIndex:i];
+
+    [self vertexDataDidChange];
+    
+    if (color != 0xffffff) _tinted = YES;
+    else _tinted = (self.alpha != 1.0f) || _vertexData.tinted;
 }
 
 - (uint)color
@@ -85,11 +98,22 @@
 {
     [_vertexData setAlpha:alpha atIndex:vertexID];
     [self vertexDataDidChange];
+    
+    if (alpha != 1.0) _tinted = true;
+    else _tinted = (self.alpha != 1.0f) || _vertexData.tinted;
 }
 
 - (float)alphaOfVertex:(int)vertexID
 {
     return [_vertexData alphaAtIndex:vertexID];
+}
+
+- (void)setAlpha:(float)alpha
+{
+    super.alpha = alpha;
+    
+    if (self.alpha != 1.0f) _tinted = true;
+    else _tinted = _vertexData.tinted;
 }
 
 - (void)vertexDataDidChange
@@ -105,6 +129,11 @@
 - (BOOL)premultipliedAlpha
 {
     return _vertexData.premultipliedAlpha;
+}
+
+- (BOOL)tinted
+{
+    return _tinted;
 }
 
 - (void)render:(SPRenderSupport *)support

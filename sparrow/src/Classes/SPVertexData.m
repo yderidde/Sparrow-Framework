@@ -58,6 +58,11 @@ SPVertexColor unmultiplyAlpha(SPVertexColor color)
         return color;
 }
 
+BOOL isOpaqueWhite(SPVertexColor color)
+{
+    return color.a == 255 && color.r == 255 && color.g == 255 && color.b == 255;
+}
+
 /// --- Class implementation -----------------------------------------------------------------------
 
 @implementation SPVertexData
@@ -215,23 +220,23 @@ SPVertexColor unmultiplyAlpha(SPVertexColor color)
         [NSException raise:SP_EXC_INDEX_OUT_OF_BOUNDS format:@"Invalid index range"];
     
     if (factor == 1.0f) return;
+    int minAlpha = _premultipliedAlpha ? (int)(MIN_ALPHA * 255.0f) : 0;
     
     for (int i=index; i<index+count; ++i)
     {
         SPVertex *vertex = &_vertices[i];
         SPVertexColor vertexColor = vertex->color;
-        float newAlpha = vertexColor.a / 255.0f * factor;
+        unsigned char newAlpha = SP_CLAMP(vertexColor.a * factor, minAlpha, 255);
         
         if (_premultipliedAlpha)
         {
             vertexColor = unmultiplyAlpha(vertexColor);
-            vertexColor.a = (unsigned char)(SP_CLAMP(newAlpha, MIN_ALPHA, 1.0f) * 255.0f);
+            vertexColor.a = newAlpha;
             vertex->color = premultiplyAlpha(vertexColor);
         }
         else
         {
-            vertex->color = SPVertexColorMake(vertexColor.r, vertexColor.g, vertexColor.b,
-                                              SP_CLAMP(newAlpha, 0.0f, 1.0f) * 255.0f);
+            vertex->color = SPVertexColorMake(vertexColor.r, vertexColor.g, vertexColor.b, newAlpha);
         }
     }
 }
@@ -358,6 +363,14 @@ SPVertexColor unmultiplyAlpha(SPVertexColor color)
 - (SPVertex *)vertices
 {
     return _vertices;
+}
+
+- (BOOL)tinted
+{
+    for (int i=0; i<_numVertices; ++i)
+        if (!isOpaqueWhite(_vertices[i].color)) return YES;
+    
+    return NO;
 }
 
 @end

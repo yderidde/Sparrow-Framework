@@ -116,4 +116,8 @@
 /// effect on the rendering. (Most developers don't have to care, though.)
 @property (nonatomic, readonly) BOOL premultipliedAlpha;
 
+/// Indicates if any vertices have a non-white color or are not fully opaque. Any alpha value
+/// other than '1' will also cause tinting.
+@property (nonatomic, readonly) BOOL tinted;
+
 @end

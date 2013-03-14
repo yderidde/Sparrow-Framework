@@ -24,8 +24,9 @@
     
     SPTexture *_texture;
     BOOL _premultipliedAlpha;
+    BOOL _tinted;
     
-    SPQuadEffect *_baseEffect;
+    SPQuadEffect *_quadEffect;
     SPVertexData *_vertexData;
     uint _vertexBufferName;
     ushort *_indexData;
@@ -33,6 +34,7 @@
 }
 
 @synthesize numQuads = _numQuads;
+@synthesize tinted = _tinted;
 
 - (id)init
 {
@@ -41,7 +43,7 @@
         _numQuads = 0;
         _syncRequired = NO;
         _vertexData = [[SPVertexData alloc] init];
-        _baseEffect = [[SPQuadEffect alloc] init];
+        _quadEffect = [[SPQuadEffect alloc] init];
     }
     
     return self;
@@ -145,6 +147,7 @@
     {
         _texture = texture;
         _premultipliedAlpha = quad.premultipliedAlpha;
+        _tinted = quad.tinted || alpha != 1.0f;
         [_vertexData setPremultipliedAlpha:quad.premultipliedAlpha updateVertices:NO];
     }
     
@@ -160,13 +163,15 @@
     ++_numQuads;
 }
 
-- (BOOL)isStateChangeWithQuad:(SPQuad *)quad texture:(SPTexture *)texture numQuads:(int)numQuads
+- (BOOL)isStateChangeWithQuad:(SPQuad *)quad texture:(SPTexture *)texture alpha:(float)alpha
+                     numQuads:(int)numQuads
 {
     if (_numQuads == 0) return NO;
     else if (_numQuads + numQuads > 8192) return YES; // maximum buffer size
     else if (!_texture && !texture) return _premultipliedAlpha != quad.premultipliedAlpha;
     else if (_texture && texture)
-        return _texture.name != texture.name ||
+        return _tinted != (quad.tinted || alpha != 1.0f) ||
+               _texture.name != texture.name ||
                _texture.repeat != texture.repeat ||
                _texture.smoothing != texture.smoothing;
     else return YES;
@@ -192,20 +197,20 @@
     if (!_numQuads) return;
     if (_syncRequired) [self syncBuffers];
     
-    _baseEffect.texture = _texture;
-    _baseEffect.premultipliedAlpha = _premultipliedAlpha;
-    _baseEffect.mvpMatrix = matrix;
-    _baseEffect.useTinting = YES;
-    _baseEffect.alpha = alpha;
+    _quadEffect.texture = _texture;
+    _quadEffect.premultipliedAlpha = _premultipliedAlpha;
+    _quadEffect.mvpMatrix = matrix;
+    _quadEffect.useTinting = _tinted || alpha != 1.0f;
+    _quadEffect.alpha = alpha;
     
-    [_baseEffect prepareToDraw];
+    [_quadEffect prepareToDraw];
 
     if (_premultipliedAlpha) glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     else                     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
-    int attribPosition  = _baseEffect.attribPosition;
-    int attribColor     = _baseEffect.attribColor;
-    int attribTexCoords = _baseEffect.attribTexCoords;
+    int attribPosition  = _quadEffect.attribPosition;
+    int attribColor     = _quadEffect.attribColor;
+    int attribTexCoords = _quadEffect.attribTexCoords;
     
     glEnableVertexAttribArray(attribPosition);
     glEnableVertexAttribArray(attribColor);

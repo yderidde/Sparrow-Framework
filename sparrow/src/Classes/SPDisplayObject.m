@@ -357,7 +357,7 @@ float square(float value) { return value * value; }
 
 - (void)setAlpha:(float)value
 {
-    _alpha = MAX(0.0f, MIN(1.0f, value));
+    _alpha = SP_CLAMP(value, 0.0f, 1.0f);
 }
 
 - (SPDisplayObject *)base
