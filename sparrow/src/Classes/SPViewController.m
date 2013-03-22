@@ -39,6 +39,7 @@
     SPJuggler *_juggler;
     SPTouchProcessor *_touchProcessor;
     SPRenderSupport *_support;
+    SPRootCreatedBlock _onRootCreated;
     NSMutableDictionary *_programs;
     
     double _lastTouchTimestamp;
@@ -55,6 +56,7 @@
 @synthesize supportHighResolutions = _supportHighResolutions;
 @synthesize doubleResolutionOnPad = _doubleResolutionOnPad;
 @synthesize contentScaleFactor = _contentScaleFactor;
+@synthesize onRootCreated = _onRootCreated;
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
@@ -128,12 +130,21 @@
     if (!_root)
     {
         _root = [[_rootClass alloc] init];
-        [_stage addChild:_root atIndex:0];
-    
+        
         if ([_root isKindOfClass:[SPStage class]])
             [NSException raise:SP_EXC_INVALID_OPERATION
                         format:@"Root extends 'SPStage' but is expected to extend 'SPSprite' "
                                @"instead (different to Sparrow 1.x)"];
+        else
+        {
+            [_stage addChild:_root atIndex:0];
+
+            if (_onRootCreated)
+            {
+                _onRootCreated(_root);
+                _onRootCreated = nil;
+            }
+        }
     }
 }
 

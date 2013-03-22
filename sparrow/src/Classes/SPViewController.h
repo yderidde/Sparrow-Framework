@@ -17,6 +17,8 @@
 @class SPProgram;
 @class SPDisplayObject;
 
+typedef void (^SPRootCreatedBlock)(SPDisplayObject *root);
+
 @interface SPViewController : GLKViewController
 
 - (void)startWithRoot:(Class)rootClass;
@@ -37,5 +39,6 @@
 @property (nonatomic, readonly) BOOL supportHighResolutions;
 @property (nonatomic, readonly) BOOL doubleResolutionOnPad;
 @property (nonatomic, readonly) float contentScaleFactor;
+@property (nonatomic, copy) SPRootCreatedBlock onRootCreated;
 
 @end
