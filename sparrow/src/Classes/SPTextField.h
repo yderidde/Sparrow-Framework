@@ -97,6 +97,9 @@ typedef enum
 /// Initialize a text field with default settings (Helvetica, 14pt, black).
 - (id)initWithWidth:(float)width height:(float)height text:(NSString*)text;
 
+/// Initialize a text field with default settings (Helvetica, 14pt, black) and an empty string.
+- (id)initWithWidth:(float)width height:(float)height;
+
 /// Initialize a 128x128 textField (Helvetica, 14pt, black).
 - (id)initWithText:(NSString *)text;
 
