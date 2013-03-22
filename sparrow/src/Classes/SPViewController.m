@@ -96,6 +96,7 @@
     [SPPoint purgePool];
     [SPRectangle purgePool];
     [SPMatrix purgePool];
+    [_support purgeBuffers];
     
     [super didReceiveMemoryWarning];
 }

@@ -78,6 +78,13 @@
     _currentQuadBatchID = 0;
 }
 
+- (void)purgeBuffers
+{
+    [_quadBatches removeAllObjects];
+    [_quadBatches addObject:[[SPQuadBatch alloc] init]];
+     _currentQuadBatchID = 0;
+}
+
 + (void)clearWithColor:(uint)color alpha:(float)alpha;
 {
     float red   = SP_COLOR_PART_RED(color)   / 255.0f;

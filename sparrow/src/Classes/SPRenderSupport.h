@@ -51,6 +51,10 @@
 /// Restores the alpha value that was last pushed to the stack.
 - (float)popAlpha;
 
+/// Clears all vertex and index buffers, releasing the associated memory. Useful in low-memory
+/// situations. Don't call from within a render method!
+- (void)purgeBuffers;
+
 /// Clears OpenGL's color buffer.
 + (void)clearWithColor:(uint)color alpha:(float)alpha;
 
