@@ -41,8 +41,8 @@
 
 - (id)initWithContentsOfFile:(NSString *)path generateMipmaps:(BOOL)mipmaps
 {
-    BOOL isPVR = [SPTexture isPVRFile:path];
-    return [self initWithContentsOfFile:path generateMipmaps:mipmaps premultipliedAlpha:!isPVR];
+    BOOL pma = [SPTexture expectedPmaValueForFile:path];
+    return [self initWithContentsOfFile:path generateMipmaps:mipmaps premultipliedAlpha:pma];
 }
 
 - (id)initWithContentsOfFile:(NSString *)path generateMipmaps:(BOOL)mipmaps
@@ -52,7 +52,7 @@
     NSString *fullPath = [SPUtils absolutePathToFile:path withScaleFactor:contentScaleFactor];
     
     if (!fullPath)
-        [NSException raise:SP_EXC_FILE_NOT_FOUND format:@"file '%@' not found", path];
+        [NSException raise:SP_EXC_FILE_NOT_FOUND format:@"File '%@' not found", path];
     
     NSError *error = NULL;
     NSData *data = [NSData dataWithUncompressedContentsOfFile:fullPath];
@@ -262,7 +262,7 @@
     NSString *osVersion = [[UIDevice currentDevice] systemVersion];
     if ([osVersion isEqualToString:@"6.0"] || [osVersion isEqualToString:@"6.1"])
     {
-        BOOL usePma = pma && ![self isPVRFile:path];
+        BOOL usePma = pma && [self expectedPmaValueForFile:path];
         [options setValue:@(usePma) forKey:GLKTextureLoaderApplyPremultiplication];
     }
     #endif
@@ -272,7 +272,28 @@
 
 + (BOOL)isPVRFile:(NSString *)path
 {
+    path = [path lowercaseString];
     return [path hasSuffix:@".pvr"] || [path hasSuffix:@".pvr.gz"];
+}
+
++ (BOOL)isPNGFile:(NSString *)path
+{
+    path = [path lowercaseString];
+    return [path hasSuffix:@".png"] || [path hasSuffix:@".png.gz"];
+}
+
++ (BOOL)isCompressedFile:(NSString *)path
+{
+    return [[path lowercaseString] hasSuffix:@".gz"];
+}
+
++ (BOOL)expectedPmaValueForFile:(NSString *)path
+{
+    // PVR files typically don't use PMA.
+    // PNG files in the root are preprocessed by Xcode, others not.
+    
+    if ([self isPNGFile:path]) return [path rangeOfString:@"/"].location == NSNotFound;
+    else return NO;
 }
 
 #pragma mark - Asynchronous Texture Loading
@@ -285,8 +306,8 @@
 + (void)loadFromFile:(NSString *)path generateMipmaps:(BOOL)mipmaps
           onComplete:(SPTextureLoadingBlock)callback
 {
-    BOOL isPVR = [SPTexture isPVRFile:path];
-    [self loadFromFile:path generateMipmaps:mipmaps premultipliedAlpha:!isPVR onComplete:callback];
+    BOOL pma = [SPTexture expectedPmaValueForFile:path];
+    [self loadFromFile:path generateMipmaps:mipmaps premultipliedAlpha:pma onComplete:callback];
 }
 
 + (void)loadFromFile:(NSString *)path generateMipmaps:(BOOL)mipmaps premultipliedAlpha:(BOOL)pma
@@ -296,8 +317,12 @@
     NSString *fullPath = [SPUtils absolutePathToFile:path withScaleFactor:contentScaleFactor];
     float actualScaleFactor = [fullPath contentScaleFactor];
     
+    if ([self isCompressedFile:path])
+        [NSException raise:SP_EXC_INVALID_OPERATION
+                    format:@"Async loading of gzip-compressed files is not supported"];
+    
     if (!fullPath)
-        [NSException raise:SP_EXC_FILE_NOT_FOUND format:@"file '%@' not found", path];
+        [NSException raise:SP_EXC_FILE_NOT_FOUND format:@"File '%@' not found", path];
     
     NSDictionary *options = [SPTexture optionsForPath:path mipmaps:mipmaps pma:pma];
     EAGLSharegroup *sharegroup = Sparrow.currentController.context.sharegroup;
@@ -331,6 +356,10 @@
 + (void)loadFromURL:(NSURL *)url generateMipmaps:(BOOL)mipmaps scale:(float)scale
          onComplete:(SPTextureLoadingBlock)callback
 {
+    if ([self isCompressedFile:url.path])
+        [NSException raise:SP_EXC_INVALID_OPERATION
+                    format:@"Async loading of gzip-compressed files is not supported"];
+    
     NSDictionary *options = @{ GLKTextureLoaderGenerateMipmaps: @(mipmaps) };
     EAGLSharegroup *sharegroup = Sparrow.currentController.context.sharegroup;
     GLKTextureLoader *loader = [[GLKTextureLoader alloc] initWithSharegroup:sharegroup];
