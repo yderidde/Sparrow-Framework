@@ -290,9 +290,17 @@
 + (BOOL)expectedPmaValueForFile:(NSString *)path
 {
     // PVR files typically don't use PMA.
-    // PNG files in the root are preprocessed by Xcode, others not.
+    // PNG files in the root are preprocessed by Xcode, others are not.
     
-    if ([self isPNGFile:path]) return [path rangeOfString:@"/"].location == NSNotFound;
+    if ([self isPNGFile:path])
+    {
+        if ([path isAbsolutePath])
+        {
+            NSString *resourcePath = [[NSBundle appBundle] resourcePath];
+            return [[path stringByDeletingLastPathComponent] isEqualToString:resourcePath];
+        }
+        else return [path rangeOfString:@"/"].location == NSNotFound;
+    }
     else return NO;
 }
 
