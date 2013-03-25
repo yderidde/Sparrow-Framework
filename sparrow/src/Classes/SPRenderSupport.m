@@ -184,12 +184,17 @@
 
 #pragma mark - rendering
 
-- (void)batchQuad:(SPQuad *)quad texture:(SPTexture *)texture
+- (void)batchQuad:(SPQuad *)quad
 {
-    if ([self.currentQuadBatch isStateChangeWithQuad:quad texture:texture alpha:self.alpha numQuads:1])
-        [self finishQuadBatch];
+    float alpha = self.alpha;
     
-    [self.currentQuadBatch addQuad:quad texture:texture alpha:self.alpha matrix:_modelviewMatrix];
+    if ([self.currentQuadBatch isStateChangeWithTinted:quad.tinted texture:quad.texture alpha:alpha
+                                    premultipliedAlpha:quad.premultipliedAlpha numQuads:1])
+    {
+        [self finishQuadBatch];
+    }
+    
+    [self.currentQuadBatch addQuad:quad alpha:alpha matrix:_modelviewMatrix];
 }
 
 - (void)finishQuadBatch

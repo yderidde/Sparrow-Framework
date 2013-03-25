@@ -37,12 +37,34 @@
 	
 	// rotate the whole group
 	sprite.rotation = PI;
+
+ **Flattened Sprites**
+ 
+ The `flatten`-method allows you to optimize the rendering of static parts of your display list.
+
+ It analyzes the tree of children attached to the sprite and optimizes the rendering calls
+ in a way that makes rendering extremely fast. The speed-up comes at a price, though: you will
+ no longer see any changes in the properties of the children (position, rotation, alpha, etc).
+ To update the object after changes have happened, simply call `flatten` again, or `unflatten`
+ the object.
  
 ------------------------------------------------------------------------------------------------- */
 
 @interface SPSprite : SPDisplayObjectContainer 
 
+/// Optimizes the sprite for optimal rendering performance. Changes in the children of a flattened
+/// sprite will not be displayed any longer. For this to happen, either call `flatten` again, or
+/// `unflatten` the sprite. Beware that the actual flattening will not happen right away, but right
+/// before the next rendering.
+- (void)flatten;
+
+/// Removes the rendering optimizations that were created when flattening the sprite.
+/// Changes to the sprite's children will immediately become visible again.
+- (void)unflatten;
+
 /// Create a new, empty sprite.
 + (id)sprite;
+
+@property (nonatomic, readonly) BOOL isFlattened;
 
 @end

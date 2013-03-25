@@ -104,15 +104,20 @@ BOOL isOpaqueWhite(SPVertexColor color)
 
 - (void)copyToVertexData:(SPVertexData *)target
 {
-    [self copyToVertexData:target atIndex:0];
+    [self copyToVertexData:target atIndex:0 numVertices:_numVertices];
 }
 
 - (void)copyToVertexData:(SPVertexData *)target atIndex:(int)targetIndex
 {
-    if (target->_numVertices - targetIndex < _numVertices)
+    [self copyToVertexData:target atIndex:targetIndex numVertices:_numVertices];
+}
+
+- (void)copyToVertexData:(SPVertexData *)target atIndex:(int)targetIndex numVertices:(int)count
+{
+    if (targetIndex + count > target->_numVertices)
         [NSException raise:SP_EXC_INDEX_OUT_OF_BOUNDS format:@"Target too small"];
     
-    memcpy(&target->_vertices[targetIndex], _vertices, sizeof(SPVertex) * _numVertices);
+    memcpy(&target->_vertices[targetIndex], _vertices, sizeof(SPVertex) * count);
 }
 
 - (SPVertex)vertexAtIndex:(int)index
@@ -257,6 +262,8 @@ BOOL isOpaqueWhite(SPVertexColor color)
     if (index < 0 || index + count > _numVertices)
         [NSException raise:SP_EXC_INDEX_OUT_OF_BOUNDS format:@"Invalid index range"];
     
+    if (!matrix) return;
+    
     GLKMatrix3 glkMatrix = [matrix convertToGLKMatrix3];
     
     for (int i=index; i<index+count; ++i)
@@ -303,11 +310,13 @@ BOOL isOpaqueWhite(SPVertexColor color)
 
 - (SPRectangle *)boundsAfterTransformation:(SPMatrix *)matrix
 {
+    if (_numVertices == 0) return nil;
+    
     float minX = FLT_MAX, maxX = -FLT_MAX, minY = FLT_MAX, maxY = -FLT_MAX;
     
     if (matrix)
     {
-        for (int i=0; i<4; ++i)
+        for (int i=0; i<_numVertices; ++i)
         {
             GLKVector2 position = _vertices[i].position;
             SPPoint *transformedPoint = [matrix transformPointWithX:position.x y:position.y];
@@ -321,7 +330,7 @@ BOOL isOpaqueWhite(SPVertexColor color)
     }
     else
     {
-        for (int i=0; i<4; ++i)
+        for (int i=0; i<_numVertices; ++i)
         {
             GLKVector2 position = _vertices[i].position;
             minX = MIN(minX, position.x);

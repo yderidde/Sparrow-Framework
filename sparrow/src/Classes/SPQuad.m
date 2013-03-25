@@ -136,9 +136,14 @@
     return _tinted;
 }
 
+- (SPTexture *)texture
+{
+    return nil;
+}
+
 - (void)render:(SPRenderSupport *)support
 {
-    [support batchQuad:self texture:nil];
+    [support batchQuad:self];
 }
 
 + (id)quadWithWidth:(float)width height:(float)height

@@ -17,8 +17,6 @@
 @class SPTextField;
 @class SPSprite;
 
-#define SP_EVENT_TYPE_TRIGGERED @"triggered"
-
 /** ------------------------------------------------------------------------------------------------
 
  An SPButton is a simple button composed of an image and, optionally, text.

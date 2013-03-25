@@ -72,12 +72,14 @@ SPVertexColor SPVertexColorMakeWithColorAndAlpha(uint rgb, float alpha);
 /// property to change its size later.
 - (id)initWithSize:(int)numVertices;
 
-/// Copies the vertex data of this instance to another vertex data object,
-/// starting at a certain index.
-- (void)copyToVertexData:(SPVertexData *)target atIndex:(int)targetIndex;
-
 /// Copies the vertex data of this instance to another vertex data object, starting at element 0.
 - (void)copyToVertexData:(SPVertexData *)target;
+
+/// Copies the vertex data of this instance to another vertex data object, starting at a certain index.
+- (void)copyToVertexData:(SPVertexData *)target atIndex:(int)targetIndex;
+
+/// Copies a range of vertices of this instance to another vertex data object.
+- (void)copyToVertexData:(SPVertexData *)target atIndex:(int)targetIndex numVertices:(int)count;
 
 /// Returns a vertex at a certain position
 - (SPVertex)vertexAtIndex:(int)index;

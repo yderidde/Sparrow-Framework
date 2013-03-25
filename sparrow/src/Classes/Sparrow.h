@@ -53,4 +53,5 @@
 #import "SPSoundChannel.h"
 #import "SPProgram.h"
 #import "SPVertexData.h"
+#import "SPQuadBatch.h"
 #import "SparrowClass.h"

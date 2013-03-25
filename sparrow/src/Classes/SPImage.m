@@ -105,11 +105,6 @@
     [_vertexDataCache copyToVertexData:targetData atIndex:targetIndex];
 }
 
-- (void)render:(SPRenderSupport *)support
-{
-    [support batchQuad:self texture:_texture];
-}
-
 - (void)setTexture:(SPTexture *)value
 {
     if (value == nil)

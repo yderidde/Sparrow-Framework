@@ -10,9 +10,52 @@
 //
 
 #import "SPSprite.h"
-
+#import "SPQuadBatch.h"
+#import "SPRenderSupport.h"
 
 @implementation SPSprite
+{
+    NSMutableArray *_flattenedContents;
+    BOOL _flattenRequested;
+}
+
+- (void)flatten
+{
+    _flattenRequested = YES;
+    [self broadcastEventWithType:SP_EVENT_TYPE_FLATTEN];
+}
+
+- (void)unflatten
+{
+    _flattenRequested = NO;
+    _flattenedContents = nil;
+}
+
+- (BOOL)isFlattened
+{
+    return _flattenedContents || _flattenRequested;
+}
+
+- (void)render:(SPRenderSupport *)support
+{
+    if (_flattenRequested)
+    {
+        _flattenedContents = [SPQuadBatch compileObject:self intoArray:_flattenedContents];
+        _flattenRequested = NO;
+    }
+    
+    if (_flattenedContents)
+    {
+        [support finishQuadBatch];
+        
+        SPMatrix *mvpMatrix = support.mvpMatrix;
+        float alpha = support.alpha;
+        
+        for (SPQuadBatch *quadBatch in _flattenedContents)
+            [quadBatch renderWithAlpha:alpha matrix:mvpMatrix];
+    }
+    else [super render:support];
+}
 
 + (id)sprite
 {

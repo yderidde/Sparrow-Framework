@@ -38,9 +38,9 @@
 /// Resets matrix stack and blend mode.
 - (void)nextFrame;
 
-/// Adds a quad to the current batch of unrendered quads. If there is a state change,
+/// Adds a quad or image to the current batch of unrendered quads. If there is a state change,
 /// all previous quads are rendered at once, and the batch is reset.
-- (void)batchQuad:(SPQuad *)quad texture:(SPTexture *)texture;
+- (void)batchQuad:(SPQuad *)quad;
 
 /// Renders the current quad batch and resets it.
 - (void)finishQuadBatch;

@@ -66,6 +66,7 @@ static NSMutableDictionary *bitmapFonts = nil;
         _vAlign = SPVAlignCenter;
         _border = NO;        
 		_kerning = YES;
+        _requiresRedraw = YES;
         self.fontName = name;
         
         _hitArea = [[SPQuad alloc] initWithWidth:width height:height];
@@ -76,9 +77,7 @@ static NSMutableDictionary *bitmapFonts = nil;
         _textArea.visible = NO;        
         [self addChild:_textArea];
         
-        _requiresRedraw = YES;
-        // TODO: add 'flatten' listener
-        // [self addEventListener:@selector(onCompile:) atObject:self forType:SP_EVENT_TYPE_COMPILE];
+        [self addEventListener:@selector(onFlatten:) atObject:self forType:SP_EVENT_TYPE_FLATTEN];
     }
     return self;
 } 
@@ -104,7 +103,7 @@ static NSMutableDictionary *bitmapFonts = nil;
     return [self initWithText:@""];
 }
 
-- (void)onCompile:(SPEvent *)event
+- (void)onFlatten:(SPEvent *)event
 {
     if (_requiresRedraw) [self redrawContents];
 }
