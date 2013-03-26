@@ -373,4 +373,50 @@ static char encodingTable[64] = {
 
 @end
 
+#pragma mark - NSXMLParser
 
+@interface NSXMLParserHelper : NSObject <NSXMLParserDelegate>
+
+- (id)initWithElementHandler:(SPXMLElementHandler)elementHandler;
+
+@end
+
+@implementation NSXMLParserHelper
+{
+    SPXMLElementHandler _elementHandler;
+}
+
+- (id)initWithElementHandler:(SPXMLElementHandler)elementHandler
+{
+    if ((self = [super init]))
+        _elementHandler = elementHandler;
+    
+    return self;
+}
+
+- (void)parser:(NSXMLParser*)parser didStartElement:(NSString*)elementName
+                                       namespaceURI:(NSString*)namespaceURI
+                                      qualifiedName:(NSString*)qName
+                                         attributes:(NSDictionary*)attributeDict
+{
+    _elementHandler(elementName, attributeDict);
+}
+
+@end
+
+@implementation NSXMLParser (SPNSExtensions)
+
+- (BOOL)parseElementsWithBlock:(SPXMLElementHandler)elementHandler
+{
+    @autoreleasepool
+    {
+        id previousDelegate = self.delegate;
+        id blockDelegate = [[NSXMLParserHelper alloc] initWithElementHandler:elementHandler];
+        self.delegate = blockDelegate;
+        BOOL success = [self parse];
+        self.delegate = previousDelegate;
+        return success;
+    }
+}
+
+@end

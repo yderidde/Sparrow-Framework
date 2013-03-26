@@ -11,6 +11,9 @@
 
 #import <Foundation/Foundation.h>
 
+typedef void (^SPXMLElementHandler)(NSString *elementName, NSDictionary *attributes);
+
+
 /** Sparrow extensions for the NSInvocation class. */
 @interface NSInvocation (SPNSExtensions)
 
@@ -69,7 +72,7 @@
  ------------------------------------------------------------------------------------------------- */
 
 /** Sparrow extensions for the NSData class. */
-@interface NSData (SXNSDataExtensions)
+@interface NSData (SPNSExtensions)
 
 // -------------------------------------------------------------------------------------------------
 // Base64 code copyright 2008 Kaliware, LLC. All rights reserved.
@@ -103,6 +106,16 @@
 
 /// Uncompresses the GZip-compressed contents of this NSData object into a new NSData instance.
 - (NSData *)gzipInflate;
+
+@end
+
+
+/** Sparrow extensions for the NSXMLParser class */
+@interface NSXMLParser (SPNSExtensions)
+
+/// Makes XML parsing a whole lot easier by forwarding each element and its attributes to a block,
+/// which is totally sufficient for Sparrow's file formats. Note that the delegate is not used.
+- (BOOL)parseElementsWithBlock:(SPXMLElementHandler)elementHandler;
 
 @end
 
