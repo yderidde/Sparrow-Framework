@@ -17,6 +17,7 @@
 #import "SPRectangle.h"
 #import "SPUtils.h"
 #import "SparrowClass.h"
+#import "SPNSExtensions.h"
 
 // --- private interface ---------------------------------------------------------------------------
 
@@ -71,56 +72,46 @@
     _path = [SPUtils absolutePathToFile:path withScaleFactor:scaleFactor];    
     if (!_path) [NSException raise:SP_EXC_FILE_NOT_FOUND format:@"file not found: %@", path];
     
-    @autoreleasepool
+    NSData *xmlData = [[NSData alloc] initWithContentsOfFile:_path];
+    NSXMLParser *parser = [[NSXMLParser alloc] initWithData:xmlData];
+    
+    BOOL success = [parser parseElementsWithBlock:^(NSString *elementName, NSDictionary *attributes)
     {
-        NSData *xmlData = [[NSData alloc] initWithContentsOfFile:_path];
-        NSXMLParser *xmlParser = [[NSXMLParser alloc] initWithData:xmlData];
-        
-        xmlParser.delegate = self;    
-        BOOL success = [xmlParser parse];
-        
-        if (!success)    
-            [NSException raise:SP_EXC_FILE_INVALID 
-                        format:@"could not parse texture atlas %@. Error code: %d, domain: %@", 
-                               path, xmlParser.parserError.code, xmlParser.parserError.domain];
-    }
-}
-
-- (void)parser:(NSXMLParser *)parser didStartElement:(NSString *)elementName 
-                                        namespaceURI:(NSString *)namespaceURI 
-                                       qualifiedName:(NSString *)qName 
-                                          attributes:(NSDictionary *)attributeDict 
-{
-    if ([elementName isEqualToString:@"SubTexture"])
-    {
-        float scale = _atlasTexture.scale;
-        
-        NSString *name = attributeDict[@"name"];
-        SPRectangle *frame = nil;
-        
-        float x = [attributeDict[@"x"] floatValue] / scale;
-        float y = [attributeDict[@"y"] floatValue] / scale;
-        float width = [attributeDict[@"width"] floatValue] / scale;
-        float height = [attributeDict[@"height"] floatValue] / scale;
-        float frameX = [attributeDict[@"frameX"] floatValue] / scale;
-        float frameY = [attributeDict[@"frameY"] floatValue] / scale;
-        float frameWidth = [attributeDict[@"frameWidth"] floatValue] / scale;
-        float frameHeight = [attributeDict[@"frameHeight"] floatValue] / scale;
-        
-        if (frameWidth && frameHeight)
-            frame = [SPRectangle rectangleWithX:frameX y:frameY width:frameWidth height:frameHeight];
-        
-        [self addRegion:[SPRectangle rectangleWithX:x y:y width:width height:height] 
-               withName:name frame:frame];
-    }
-    else if ([elementName isEqualToString:@"TextureAtlas"] && !_atlasTexture)
-    {
-        // load atlas texture
-        NSString *filename = [attributeDict valueForKey:@"imagePath"];        
-        NSString *folder = [_path stringByDeletingLastPathComponent];
-        NSString *absolutePath = [folder stringByAppendingPathComponent:filename];
-        _atlasTexture = [[SPTexture alloc] initWithContentsOfFile:absolutePath];
-    }
+        if ([elementName isEqualToString:@"SubTexture"])
+        {
+            float scale = _atlasTexture.scale;
+            
+            NSString *name = attributes[@"name"];
+            SPRectangle *frame = nil;
+            
+            float x = [attributes[@"x"] floatValue] / scale;
+            float y = [attributes[@"y"] floatValue] / scale;
+            float width = [attributes[@"width"] floatValue] / scale;
+            float height = [attributes[@"height"] floatValue] / scale;
+            float frameX = [attributes[@"frameX"] floatValue] / scale;
+            float frameY = [attributes[@"frameY"] floatValue] / scale;
+            float frameWidth = [attributes[@"frameWidth"] floatValue] / scale;
+            float frameHeight = [attributes[@"frameHeight"] floatValue] / scale;
+            
+            if (frameWidth && frameHeight)
+                frame = [SPRectangle rectangleWithX:frameX y:frameY width:frameWidth height:frameHeight];
+            
+            [self addRegion:[SPRectangle rectangleWithX:x y:y width:width height:height]
+                   withName:name frame:frame];
+        }
+        else if ([elementName isEqualToString:@"TextureAtlas"] && !_atlasTexture)
+        {
+            // load atlas texture
+            NSString *filename = [attributes valueForKey:@"imagePath"];
+            NSString *folder = [_path stringByDeletingLastPathComponent];
+            NSString *absolutePath = [folder stringByAppendingPathComponent:filename];
+            _atlasTexture = [[SPTexture alloc] initWithContentsOfFile:absolutePath];
+        }
+    }];
+    
+    if (!success)
+        [NSException raise:SP_EXC_FILE_INVALID format:@"could not parse texture atlas %@. Error: %@",
+                           path, parser.parserError.localizedDescription];
 }
 
 - (int)count
@@ -145,8 +136,7 @@
         if ([textureName rangeOfString:name].location == 0)
             [textureNames addObject:textureName];
     
-    // note: when switching to iOS 4, 'localizedStandardCompare:' would be preferable    
-    [textureNames sortUsingSelector:@selector(localizedCaseInsensitiveCompare:)];
+    [textureNames sortUsingSelector:@selector(localizedStandardCompare:)];
     
     NSMutableArray *textures = [NSMutableArray arrayWithCapacity:textureNames.count];
     for (NSString *textureName in textureNames)

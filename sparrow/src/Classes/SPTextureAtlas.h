@@ -56,7 +56,7 @@
  
 ------------------------------------------------------------------------------------------------- */
 
-@interface SPTextureAtlas : NSObject <NSXMLParserDelegate>
+@interface SPTextureAtlas : NSObject
 
 /// ------------------
 /// @name Initializers
