@@ -154,6 +154,9 @@ static NSMutableDictionary *bitmapFonts = nil;
 {
     if (![fontName isEqualToString:_fontName])
     {
+        if ([fontName isEqualToString:SP_BITMAP_FONT_MINI] && ![bitmapFonts objectForKey:fontName])
+            [SPTextField registerBitmapFont:[[SPBitmapFont alloc] initWithMiniFont]];
+        
         _fontName = [fontName copy];
         _requiresRedraw = YES;        
         _isRenderedText = !bitmapFonts[_fontName];
@@ -231,30 +234,28 @@ static NSMutableDictionary *bitmapFonts = nil;
     return [[self alloc] initWithText:text];
 }
 
-+ (NSString *)registerBitmapFontFromFile:(NSString*)path texture:(SPTexture *)texture name:(NSString *)fontName
++ (NSString *)registerBitmapFont:(SPBitmapFont *)font name:(NSString *)fontName
 {
     if (!bitmapFonts) bitmapFonts = [[NSMutableDictionary alloc] init];
-    
-    SPBitmapFont *bitmapFont = [[SPBitmapFont alloc] initWithContentsOfFile:path texture:texture];
-    if (!fontName) fontName = bitmapFont.name;
-    bitmapFonts[fontName] = bitmapFont;
-    
+    if (!fontName) fontName = font.name;
+    bitmapFonts[fontName] = font;
     return fontName;
 }
 
-+ (NSString *)registerBitmapFontFromFile:(NSString *)path texture:(SPTexture *)texture
++ (NSString *)registerBitmapFont:(SPBitmapFont *)font
 {
-    return [SPTextField registerBitmapFontFromFile:path texture:texture name:nil];
+    return [self registerBitmapFont:font name:nil];
 }
 
 + (NSString *)registerBitmapFontFromFile:(NSString *)path name:(NSString *)fontName
 {
-    return [SPTextField registerBitmapFontFromFile:path texture:nil name:fontName];
+    SPBitmapFont *font = [[SPBitmapFont alloc] initWithContentsOfFile:path];
+    return [self registerBitmapFont:font name:fontName];
 }
 
 + (NSString *)registerBitmapFontFromFile:(NSString *)path
 {
-    return [SPTextField registerBitmapFontFromFile:path texture:nil name:nil];
+    return [self registerBitmapFontFromFile:path name:nil];
 }
 
 + (void)unregisterBitmapFont:(NSString *)name
@@ -265,14 +266,9 @@ static NSMutableDictionary *bitmapFonts = nil;
         bitmapFonts = nil;
 }
 
-+ (SPBitmapFont *)getRegisteredBitmapFont:(NSString *)name
++ (SPBitmapFont *)registeredBitmapFont:(NSString *)name
 {
     return bitmapFonts[name];
-}
-
-- (void)dealloc
-{
-    //[self removeEventListenersAtObject:self forType:SP_EVENT_TYPE_COMPILE];
 }
 
 @end

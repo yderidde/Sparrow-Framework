@@ -117,32 +117,33 @@ typedef enum
 /// @name Methods
 /// -------------
 
-/// Makes a bitmap font available at any text field, manually providing the texture and font name.
-/// 
-/// @return The name of the font that was passed to the method.
-+ (NSString *)registerBitmapFontFromFile:(NSString *)path texture:(SPTexture *)texture name:(NSString *)fontName;
+/// Makes a bitmap font available at any text field, using texture and name as defined in the file.
+///
+/// @return The name of the font as defined in the font XML.
++ (NSString *)registerBitmapFont:(SPBitmapFont *)font;
 
-/// Makes a bitmap font available at any text field, manually providing the texture.
-/// 
-/// @return The name of the font as defined in the font XML. 
-+ (NSString *)registerBitmapFontFromFile:(NSString *)path texture:(SPTexture *)texture;
-
-/// Makes a bitmap font available at any text field, using the texture defined in the file,
+/// Makes a bitmap font available at any text field, using the texture defined in the file
 /// and manually providing the font name.
-/// 
+///
 /// @return The name of the font that was passed to the method.
-+ (NSString *)registerBitmapFontFromFile:(NSString *)path name:(NSString *)fontName;
++ (NSString *)registerBitmapFont:(SPBitmapFont *)font name:(NSString *)fontName;
 
-/// Makes a bitmap font available at any text field, using the texture defined in the file.
+/// Makes a bitmap font available at any text field, using texture and name as defined in the file.
 /// 
 /// @return The name of the font as defined in the font XML. 
 + (NSString *)registerBitmapFontFromFile:(NSString *)path;
 
+/// Makes a bitmap font available at any text field, using the texture defined in the file
+/// and manually providing the font name.
+///
+/// @return The name of the font that was passed to the method.
++ (NSString *)registerBitmapFontFromFile:(NSString *)path name:(NSString *)fontName;
+
 /// Releases the bitmap font.
 + (void)unregisterBitmapFont:(NSString *)name;
 
-/// Get the bitmap font that was registered unter a certain name.
-+ (SPBitmapFont *)getRegisteredBitmapFont:(NSString *)name;
+/// Get the bitmap font that was registered under a certain name.
++ (SPBitmapFont *)registeredBitmapFont:(NSString *)name;
 
 /// ----------------
 /// @name Properties

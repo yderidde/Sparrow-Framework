@@ -131,8 +131,7 @@ typedef void (^SPTextureLoadingBlock)(SPTexture *texture, NSError *outError);
 - (id)initWithContentsOfFile:(NSString *)path generateMipmaps:(BOOL)mipmaps;
 
 /// Initializes a texture with the contents of a file. You can specify if the pixel data contains
-/// premultiplied alpha. (The other methods use the default of the file type - PVR: no pma,
-/// all others: pma.)
+/// premultiplied alpha. (The other methods guess the pma setting from the file type and path.)
 - (id)initWithContentsOfFile:(NSString *)path generateMipmaps:(BOOL)mipmaps
           premultipliedAlpha:(BOOL)pma;
 
