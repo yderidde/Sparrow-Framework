@@ -98,10 +98,10 @@
 /// file; otherwise, returns the unprocessed contents.
 + (NSData *)dataWithUncompressedContentsOfFile:(NSString *)file;
 
-/// Uncompresses the GZip-compressed contents of this NSData object into a new NSData instance.
+/// Gzip-compresses the contents of this NSData object into a new NSData instance.
 - (NSData *)gzipDeflate;
 
-/// Gzip-compresses the contents of this NSData object into a new NSData instance.
+/// Uncompresses the GZip-compressed contents of this NSData object into a new NSData instance.
 - (NSData *)gzipInflate;
 
 @end
