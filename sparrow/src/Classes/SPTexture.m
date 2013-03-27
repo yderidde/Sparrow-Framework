@@ -191,6 +191,11 @@
     return [[self alloc] initWithWidth:width height:height draw:drawingBlock];
 }
 
++ (id)emptyTexture
+{
+    return [[self alloc] init];
+}
+
 - (void)adjustVertexData:(SPVertexData *)vertexData atIndex:(int)index numVertices:(int)count
 {
     // override in subclasses

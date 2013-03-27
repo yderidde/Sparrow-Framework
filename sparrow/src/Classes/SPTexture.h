@@ -164,6 +164,9 @@ typedef void (^SPTextureLoadingBlock)(SPTexture *texture, NSError *outError);
 /// Factory method.
 + (id)textureWithWidth:(float)width height:(float)height draw:(SPTextureDrawingBlock)drawingBlock;
 
+/// Factory method. Creates an empty (transparent) texture.
++ (id)emptyTexture;
+
 /// -------------
 /// @name Methods
 /// -------------
