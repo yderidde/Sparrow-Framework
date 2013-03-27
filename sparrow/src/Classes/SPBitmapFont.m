@@ -240,6 +240,29 @@
     return (SPBitmapChar *)_chars[@(charID)];
 }
 
+- (SPSprite *)createSpriteWithWidth:(float)width height:(float)height
+                               text:(NSString *)text fontSize:(float)size color:(uint)color
+                             hAlign:(SPHAlign)hAlign vAlign:(SPVAlign)vAlign
+                          autoScale:(BOOL)autoScale kerning:(BOOL)kerning
+{
+    NSMutableArray *charLocations = [self arrangeCharsInAreaWithWidth:width height:height
+        text:text fontSize:size hAlign:hAlign vAlign:vAlign autoScale:autoScale kerning:kerning];
+    
+    SPSprite *sprite = [SPSprite sprite];
+    
+    for (SPCharLocation *charLocation in charLocations)
+    {
+        SPImage *charImage = [charLocation.bitmapChar createImage];
+        charImage.x = charLocation.x;
+        charImage.y = charLocation.y;
+        charImage.scaleX = charImage.scaleY = charLocation.scale;
+        charImage.color = color;
+        [sprite addChild:charImage];
+    }
+    
+    return sprite;
+}
+
 - (void)fillQuadBatch:(SPQuadBatch *)quadBatch withWidth:(float)width height:(float)height
                  text:(NSString *)text fontSize:(float)size color:(uint)color
                hAlign:(SPHAlign)hAlign vAlign:(SPVAlign)vAlign

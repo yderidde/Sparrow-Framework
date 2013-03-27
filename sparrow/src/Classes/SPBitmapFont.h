@@ -15,7 +15,7 @@
 #import "SPMacros.h"
 #import "SPTexture.h"
 
-@class SPDisplayObject;
+@class SPSprite;
 @class SPQuadBatch;
 
 #define SP_BITMAP_FONT_MINI @"mini"
@@ -75,6 +75,12 @@
 
 /// Returns a single bitmap char with a certain character ID.
 - (SPBitmapChar *)charByID:(int)charID;
+
+/// Creates a sprite that contains the given text by arranging individual chars.
+- (SPSprite *)createSpriteWithWidth:(float)width height:(float)height
+                               text:(NSString *)text fontSize:(float)size color:(uint)color
+                             hAlign:(SPHAlign)hAlign vAlign:(SPVAlign)vAlign
+                          autoScale:(BOOL)autoScale kerning:(BOOL)kerning;
 
 /// Draws text into a quad batch.
 - (void)fillQuadBatch:(SPQuadBatch *)quadBatch withWidth:(float)width height:(float)height
