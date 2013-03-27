@@ -16,6 +16,7 @@
 #import "SPTexture.h"
 
 @class SPDisplayObject;
+@class SPQuadBatch;
 
 #define SP_BITMAP_FONT_MINI @"mini"
 
@@ -75,11 +76,11 @@
 /// Returns a single bitmap char with a certain character ID.
 - (SPBitmapChar *)charByID:(int)charID;
 
-/// Creates a display object that contains the given text by arranging individual chars.
-- (SPDisplayObject *)createDisplayObjectWithWidth:(float)width height:(float)height
-                                             text:(NSString *)text fontSize:(float)size color:(uint)color 
-                                           hAlign:(SPHAlign)hAlign vAlign:(SPVAlign)vAlign
-                                           border:(BOOL)border kerning:(BOOL)kerning;
+/// Draws text into a quad batch.
+- (void)fillQuadBatch:(SPQuadBatch *)quadBatch withWidth:(float)width height:(float)height
+                 text:(NSString *)text fontSize:(float)size color:(uint)color
+               hAlign:(SPHAlign)hAlign vAlign:(SPVAlign)vAlign
+            autoScale:(BOOL)autoScale kerning:(BOOL)kerning;
 
 /// ----------------
 /// @name Properties
@@ -96,5 +97,8 @@
 
 /// The smoothing filter used for the texture.
 @property (nonatomic, assign) SPTextureSmoothing smoothing;
+
+/// The baseline of the font.
+@property (nonatomic, readonly) float baseline;
 
 @end

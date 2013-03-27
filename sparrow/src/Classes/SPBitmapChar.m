@@ -72,4 +72,14 @@
     return [SPImage imageWithTexture:_texture];
 }
 
+- (float)width
+{
+    return _texture.width;
+}
+
+- (float)height
+{
+    return _texture.height;
+}
+
 @end

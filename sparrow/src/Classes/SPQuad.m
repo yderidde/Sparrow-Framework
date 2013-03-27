@@ -61,7 +61,7 @@
     SPMatrix *transformationMatrix = targetSpace == self ?
         nil : [self transformationMatrixToSpace:targetSpace];
     
-    return [_vertexData boundsAfterTransformation:transformationMatrix];
+    return [_vertexData boundsAfterTransformation:transformationMatrix atIndex:0 numVertices:4];
 }
 
 - (void)setColor:(uint)color ofVertex:(int)vertexID

@@ -60,6 +60,12 @@
 @property (nonatomic, readonly) float xAdvance;
 
 /// The texture of the character.
-@property (nonatomic, strong) SPTexture *texture;
+@property (nonatomic, readonly) SPTexture *texture;
+
+/// The width of the character in points.
+@property (nonatomic, readonly) float width;
+
+/// The height of the character in points.
+@property (nonatomic, readonly) float height;
 
 @end

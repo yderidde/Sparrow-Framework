@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		228579B6157957450086CC08 /* SPTextField_Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 228579B4157957450086CC08 /* SPTextField_Internal.h */; };
 		DE019C391026360B00ECB0AC /* SPTween.m in Sources */ = {isa = PBXBuildFile; fileRef = DE7044760FB62080007F5ECC /* SPTween.m */; };
 		DE019C3A1026361200ECB0AC /* SPDelayedInvocation.m in Sources */ = {isa = PBXBuildFile; fileRef = DEFB1B94100926260022C117 /* SPDelayedInvocation.m */; };
 		DE019C3B1026363D00ECB0AC /* SPNSExtensions.m in Sources */ = {isa = PBXBuildFile; fileRef = DE68EA160FBB5660004DBC95 /* SPNSExtensions.m */; };
@@ -173,7 +172,6 @@
 /* Begin PBXFileReference section */
 		1D30AB110D05D00D00671497 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		1DF5F4DF0D08C38300B7A737 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
-		228579B4157957450086CC08 /* SPTextField_Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SPTextField_Internal.h; sourceTree = "<group>"; };
 		28FD14FF0DC6FC520079059D /* OpenGLES.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGLES.framework; path = System/Library/Frameworks/OpenGLES.framework; sourceTree = SDKROOT; };
 		28FD15070DC6FC5B0079059D /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		DE0456E413882A27005FFBCE /* SPButtonTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SPButtonTest.m; sourceTree = "<group>"; };
@@ -369,6 +367,7 @@
 				DEDCD3C60FADF1870022011C /* Events */,
 				DE82240916EF462700A172EE /* Rendering */,
 				DEDCD3CE0FADF2100022011C /* System */,
+				DEE09D771083647D00ECC896 /* Text */,
 				DEE968F51086553D001D57E9 /* Textures */,
 				DE469D310F93870A00F56E91 /* Utils */,
 			);
@@ -510,7 +509,6 @@
 			isa = PBXGroup;
 			children = (
 				DEDCD44E0FADFFA40022011C /* SPDisplayObject_Internal.h */,
-				228579B4157957450086CC08 /* SPTextField_Internal.h */,
 			);
 			name = Internal;
 			sourceTree = "<group>";
@@ -518,7 +516,6 @@
 		DEDCD3B00FADF1720022011C /* Display */ = {
 			isa = PBXGroup;
 			children = (
-				DEE09D771083647D00ECC896 /* Text */,
 				DED85A940FB49E90000BAA95 /* Internal */,
 				DE2ED8040F6D52080012B6BA /* SPDisplayObject.h */,
 				DE2ED8050F6D52080012B6BA /* SPDisplayObject.m */,
@@ -732,7 +729,6 @@
 				DE61139B134F8FBD00AB742E /* SPPoolObject.h in Headers */,
 				DE61139C134F8FD400AB742E /* Sparrow.h in Headers */,
 				DEC734811386BC1400234D95 /* SPTextureAtlas.h in Headers */,
-				228579B6157957450086CC08 /* SPTextField_Internal.h in Headers */,
 				DE8E6A8216B430C4007EE8BA /* SPViewController.h in Headers */,
 				DE8E6AA616B46C65007EE8BA /* SparrowClass_Internal.h in Headers */,
 				DE85778E16B58E4B00725EC0 /* SparrowClass.h in Headers */,

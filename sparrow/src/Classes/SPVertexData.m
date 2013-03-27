@@ -305,18 +305,27 @@ BOOL isOpaqueWhite(SPVertexColor color)
 
 - (SPRectangle *)bounds
 {
-    return [self boundsAfterTransformation:nil];
+    return [self boundsAfterTransformation:nil atIndex:0 numVertices:_numVertices];
 }
 
 - (SPRectangle *)boundsAfterTransformation:(SPMatrix *)matrix
 {
-    if (_numVertices == 0) return nil;
+    return [self boundsAfterTransformation:matrix atIndex:0 numVertices:_numVertices];
+}
+
+- (SPRectangle *)boundsAfterTransformation:(SPMatrix *)matrix atIndex:(int)index numVertices:(int)count
+{
+    if (index < 0 || index + count > _numVertices)
+        [NSException raise:SP_EXC_INDEX_OUT_OF_BOUNDS format:@"Invalid index range"];
+    
+    if (!count) return nil;
     
     float minX = FLT_MAX, maxX = -FLT_MAX, minY = FLT_MAX, maxY = -FLT_MAX;
+    int endIndex = index + count;
     
     if (matrix)
     {
-        for (int i=0; i<_numVertices; ++i)
+        for (int i=index; i<endIndex; ++i)
         {
             GLKVector2 position = _vertices[i].position;
             SPPoint *transformedPoint = [matrix transformPointWithX:position.x y:position.y];
@@ -330,7 +339,7 @@ BOOL isOpaqueWhite(SPVertexColor color)
     }
     else
     {
-        for (int i=0; i<_numVertices; ++i)
+        for (int i=index; i<endIndex; ++i)
         {
             GLKVector2 position = _vertices[i].position;
             minX = MIN(minX, position.x);

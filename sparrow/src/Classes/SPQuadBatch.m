@@ -239,7 +239,7 @@
 - (SPRectangle *)boundsInSpace:(SPDisplayObject *)targetSpace
 {
     SPMatrix *matrix = targetSpace == self ? nil : [self transformationMatrixToSpace:targetSpace];
-    return [_vertexData boundsAfterTransformation:matrix];
+    return [_vertexData boundsAfterTransformation:matrix atIndex:0 numVertices:_numQuads*4];
 }
 
 - (void)render:(SPRenderSupport *)support

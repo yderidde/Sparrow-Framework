@@ -136,6 +136,9 @@ SPVertexColor SPVertexColorMakeWithColorAndAlpha(uint rgb, float alpha);
 /// Calculates the bounding rectangle of all vertices after being transformed by a matrix.
 - (SPRectangle *)boundsAfterTransformation:(SPMatrix *)matrix;
 
+/// Calculates the bounding rectangle of subsequent vertices after being transformed by a matrix.
+- (SPRectangle *)boundsAfterTransformation:(SPMatrix *)matrix atIndex:(int)index numVertices:(int)count;
+
 /// Returns a pointer to the raw vertex data.
 @property (nonatomic, readonly) SPVertex* vertices;
 

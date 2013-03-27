@@ -22,10 +22,46 @@
 #import "SPUtils.h"
 #import "SparrowClass.h"
 #import "SPNSExtensions.h"
+#import "SPQuadBatch.h"
 
-#define CHAR_SPACE   32
-#define CHAR_TAB      9
-#define CHAR_NEWLINE 10
+#define CHAR_SPACE           32
+#define CHAR_TAB              9
+#define CHAR_NEWLINE         10
+#define CHAR_CARRIAGE_RETURN 13
+
+// --- helper class --------------------------------------------------------------------------------
+
+@interface SPCharLocation : SPPoolObject
+
+@property (nonatomic) SPBitmapChar* bitmapChar;
+@property (nonatomic) float scale;
+@property (nonatomic) float x;
+@property (nonatomic) float y;
+
+- (id)initWithChar:(SPBitmapChar *)bitmapChar;
+
+@end
+
+@implementation SPCharLocation
+
+- (id)initWithChar:(SPBitmapChar *)bitmapChar
+{
+    if ((self = [super init]))
+        _bitmapChar = bitmapChar;
+    
+    return self;
+}
+
++ (SPPoolInfo *)poolInfo
+{
+    static SPPoolInfo *poolInfo = nil;
+    if (!poolInfo) poolInfo = [[SPPoolInfo alloc] init];
+    return poolInfo;
+}
+
+@end
+
+// --- class implementation ------------------------------------------------------------------------
 
 @implementation SPBitmapFont
 {
@@ -34,6 +70,8 @@
     NSMutableDictionary *_chars;
     float _size;
     float _lineHeight;
+    float _baseline;
+    SPImage *_helperImage;
 }
 
 @synthesize name = _name;
@@ -44,10 +82,19 @@
 {
     if ((self = [super init]))
     {
+        // if no data is passed in, we create the minimal, embedded font
+        if (!data)
+        {
+            NSData *imgData =  [NSData dataWithBase64EncodedString:MiniFontImgDataBase64];
+            texture = [[SPTexture alloc] initWithContentsOfImage:[UIImage imageWithData:imgData]];
+            data = [[NSData dataWithBase64EncodedString:MiniFontXmlDataBase64] gzipInflate];
+        }
+        
         _name = @"unknown";
-        _lineHeight = _size = SP_DEFAULT_FONT_SIZE;
+        _lineHeight = _size = _baseline = SP_DEFAULT_FONT_SIZE;
         _chars = [[NSMutableDictionary alloc] init];
         _fontTexture = texture ? texture : [self textureReferencedByXmlData:data];
+        _helperImage = [[SPImage alloc] initWithTexture:_fontTexture];
         
         [self parseFontData:data];
     }
@@ -83,7 +130,12 @@
 
 - (id)init
 {
-    return [self initWithMiniFont];
+    return [self initWithContentsOfData:nil texture:nil];
+}
+
+- (id)initWithMiniFont
+{
+    return [self init];
 }
 
 - (SPTexture *)textureReferencedByXmlData:(NSData *)data
@@ -126,13 +178,17 @@
 
 - (BOOL)parseFontData:(NSData *)data
 {
+    if (!_fontTexture)
+        [NSException raise:SP_EXC_INVALID_OPERATION format:@"Font parsing requires texture to be set"];
+    
     NSXMLParser *parser = [[NSXMLParser alloc] initWithData:data];
     BOOL success = [parser parseElementsWithBlock:^(NSString *elementName, NSDictionary *attributes)
     {
+        float scale = _fontTexture.scale;
+        
         if ([elementName isEqualToString:@"char"])
         {
             int charID = [[attributes valueForKey:@"id"] intValue];
-            float scale = _fontTexture.scale;
             
             SPRectangle *region = [[SPRectangle alloc] init];
             region.x = [[attributes valueForKey:@"x"] floatValue] / scale + _fontTexture.frame.x;
@@ -154,20 +210,21 @@
         {
             int first  = [[attributes valueForKey:@"first"] intValue];
             int second = [[attributes valueForKey:@"second"] intValue];
-            float amount = [[attributes valueForKey:@"amount"] floatValue] / _fontTexture.scale;
+            float amount = [[attributes valueForKey:@"amount"] floatValue] / scale;
             [[self charByID:second] addKerning:amount toChar:first];
         }
         else if ([elementName isEqualToString:@"info"])
         {
             _name = [[attributes valueForKey:@"face"] copy];
-            _size = [[attributes valueForKey:@"size"] floatValue] / _fontTexture.scale;
+            _size = [[attributes valueForKey:@"size"] floatValue] / scale;
             
             if ([[attributes valueForKey:@"smooth"] isEqualToString:@"0"])
                 self.smoothing = SPTextureSmoothingNone;
         }
         else if ([elementName isEqualToString:@"common"])
         {
-            _lineHeight = [[attributes valueForKey:@"lineHeight"] floatValue] / _fontTexture.scale;
+            _lineHeight = [[attributes valueForKey:@"lineHeight"] floatValue] / scale;
+            _baseline = [[attributes valueForKey:@"base"] floatValue] / scale;
         }
     }];
     
@@ -183,138 +240,180 @@
     return (SPBitmapChar *)_chars[@(charID)];
 }
 
-- (SPDisplayObject *)createDisplayObjectWithWidth:(float)width height:(float)height
-                                             text:(NSString *)text fontSize:(float)size color:(uint)color 
-                                           hAlign:(SPHAlign)hAlign vAlign:(SPVAlign)vAlign
-                                           border:(BOOL)border kerning:(BOOL)kerning
-{    
-    SPSprite *lineContainer = [SPSprite sprite];
+- (void)fillQuadBatch:(SPQuadBatch *)quadBatch withWidth:(float)width height:(float)height
+                 text:(NSString *)text fontSize:(float)size color:(uint)color
+               hAlign:(SPHAlign)hAlign vAlign:(SPVAlign)vAlign
+               autoScale:(BOOL)autoScale kerning:(BOOL)kerning
+{
+    NSMutableArray *charLocations = [self arrangeCharsInAreaWithWidth:width height:height
+        text:text fontSize:size hAlign:hAlign vAlign:vAlign autoScale:autoScale kerning:kerning];
     
+    _helperImage.color = color;
+    
+    if (charLocations.count > 8192)
+        [NSException raise:SP_EXC_INVALID_OPERATION
+                    format:@"Bitmap font text is limited to 8192 characters"];
+    
+    for (SPCharLocation *charLocation in charLocations)
+    {
+        _helperImage.texture = charLocation.bitmapChar.texture;
+        _helperImage.x = charLocation.x;
+        _helperImage.y = charLocation.y;
+        _helperImage.scaleX = _helperImage.scaleY = charLocation.scale;
+        [_helperImage readjustSize];
+        [quadBatch addQuad:_helperImage];
+    }
+}
+
+- (NSMutableArray *)arrangeCharsInAreaWithWidth:(float)width height:(float)height
+                                           text:(NSString *)text fontSize:(float)size
+                                         hAlign:(SPHAlign)hAlign vAlign:(SPVAlign)vAlign
+                                      autoScale:(BOOL)autoScale kerning:(BOOL)kerning
+
+{
+    if (text.length == 0) return [NSMutableArray array];
     if (size < 0) size *= -_size;
     
-    float scale = size / _size;
-    lineContainer.scaleX = lineContainer.scaleY = scale;        
-    float containerWidth = width / scale;
-    float containerHeight = height / scale;    
+    NSMutableArray *lines;
+    float scale;
+    float containerWidth;
+    float containerHeight;
+    BOOL finished = NO;
     
-    int lastWhiteSpace = -1;
-    int lastCharID = -1;
-    float currentX = 0;
-    SPSprite *currentLine = [SPSprite sprite];
-    
-    for (int i=0; i<text.length; i++)
-    {        
-        BOOL lineFull = NO;
-
-        int charID = [text characterAtIndex:i];    
-        if (charID == CHAR_NEWLINE)        
-        {
-            lineFull = YES;
-        }            
-        else 
-        {        
-            if (charID == CHAR_SPACE || charID == CHAR_TAB)        
-                lastWhiteSpace = i;        
-            
-            SPBitmapChar *bitmapChar = [self charByID:charID];
-            if (!bitmapChar) bitmapChar = [self charByID:CHAR_SPACE];
-            SPImage *charImage = [bitmapChar createImage];
-            
-            if (kerning) 
-                currentX += [bitmapChar kerningToChar:lastCharID];
-            
-            charImage.x = currentX + bitmapChar.xOffset;
-            charImage.y = bitmapChar.yOffset;
-
-            charImage.color = color;
-            [currentLine addChild:charImage];
-            
-            currentX += bitmapChar.xAdvance;
-			lastCharID = charID;
-            
-            if (currentX > containerWidth)        
-            {
-                // remove characters and add them again to next line
-                int numCharsToRemove = lastWhiteSpace == -1 ? 1 : i - lastWhiteSpace;
-                int removeIndex = currentLine.numChildren - numCharsToRemove;
-                
-                for (int i=0; i<numCharsToRemove; ++i)
-                    [currentLine removeChildAtIndex:removeIndex];
-                
-                if (currentLine.numChildren == 0)
-                    break;
-                
-                SPDisplayObject *lastChar = [currentLine childAtIndex:currentLine.numChildren-1];
-                currentX = lastChar.x + lastChar.width;
-                
-                i -= numCharsToRemove;
-                lineFull = YES;
-            }
-        }
+    while (!finished)
+    {
+        lines = [NSMutableArray array];
+        scale = size / _size;
+        containerWidth  = width  / scale;
+        containerHeight = height / scale;
         
-        if (lineFull || i == text.length - 1)
+        if (_lineHeight <= containerHeight)
         {
-            float nextLineY = currentLine.y + _lineHeight;             
-            [lineContainer addChild:currentLine];                        
+            int lastWhiteSpace = -1;
+            int lastCharID = -1;
+            int numChars = text.length;
+            float currentX = 0;
+            float currentY = 0;
+            NSMutableArray *currentLine = [NSMutableArray array];
             
-            if (nextLineY + _lineHeight <= containerHeight)
+            for (int i=0; i<numChars; i++)
             {
-                currentLine = [SPSprite sprite];
-                currentLine.y = nextLineY;            
-                currentX = 0;
-                lastWhiteSpace = -1;
-                lastCharID = -1;
-            }
-            else
-            {
-                break;
-            }
+                BOOL lineFull = NO;
+                int charID = [text characterAtIndex:i];
+                SPBitmapChar *bitmapChar = [self charByID:charID];
+                
+                if (charID == CHAR_NEWLINE || charID == CHAR_CARRIAGE_RETURN)
+                {
+                    lineFull = YES;
+                }
+                else if (!bitmapChar)
+                {
+                    NSLog(@"Missing character: %d", charID);
+                }
+                else
+                {
+                    if (charID == CHAR_SPACE || charID == CHAR_TAB)
+                        lastWhiteSpace = i;
+                    
+                    if (kerning)
+                        currentX += [bitmapChar kerningToChar:lastCharID];
+                    
+                    SPCharLocation *charLocation = [[SPCharLocation alloc] initWithChar:bitmapChar];
+                    charLocation.x = currentX + bitmapChar.xOffset;
+                    charLocation.y = currentY + bitmapChar.yOffset;
+                    [currentLine addObject:charLocation];
+                    
+                    currentX += bitmapChar.xAdvance;
+                    lastCharID = charID;
+                    
+                    if (charLocation.x + bitmapChar.width > containerWidth)
+                    {
+                        // remove characters and add them again to next line
+                        int numCharsToRemove = lastWhiteSpace == -1 ? 1 : i - lastWhiteSpace;
+                        int removeIndex = currentLine.count - numCharsToRemove;
+                        
+                        [currentLine removeObjectsInRange:NSMakeRange(removeIndex, numCharsToRemove)];
+                        
+                        if (currentLine.count == 0)
+                            break;
+                        
+                        i -= numCharsToRemove;
+                        lineFull = YES;
+                    }
+                }
+                
+                if (i == numChars - 1)
+                {
+                    [lines addObject:currentLine];
+                    finished = YES;
+                }
+                else if (lineFull)
+                {
+                    [lines addObject:currentLine];
+                    
+                    if (lastWhiteSpace == i)
+                        [currentLine removeLastObject];
+                    
+                    if (currentY + 2*_lineHeight <= containerHeight)
+                    {
+                        currentLine = [NSMutableArray array];
+                        currentX = 0.0f;
+                        currentY += _lineHeight;
+                        lastWhiteSpace = -1;
+                        lastCharID = -1;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            } // for each char
+        } // if (_lineHeight < containerHeight)
+        
+        if (autoScale && !finished)
+        {
+            size -= 1;
+            [lines removeAllObjects];
+        }
+        else
+        {
+            finished = YES;
+        }
+    } // while (!finished)
+    
+    NSMutableArray *finalLocations = [NSMutableArray array];
+    int numLines = lines.count;
+    float bottom = numLines * _lineHeight;
+    int yOffset = 0;
+    
+    if (vAlign == SPVAlignBottom)      yOffset =  containerHeight - bottom;
+    else if (vAlign == SPVAlignCenter) yOffset = (containerHeight - bottom) / 2;
+    
+    for (NSArray *line in lines)
+    {
+        int numChars = line.count;
+        if (!numChars) continue;
+        
+        int xOffset = 0;
+        SPCharLocation *lastLocation = [line lastObject];
+        float right = lastLocation.x - lastLocation.bitmapChar.xOffset
+                                     + lastLocation.bitmapChar.xAdvance;
+        
+        if (hAlign == SPHAlignRight)       xOffset =  containerWidth - right;
+        else if (hAlign == SPHAlignCenter) xOffset = (containerWidth - right) / 2;
+        
+        for (SPCharLocation *charLocation in line)
+        {
+            charLocation.x = scale * (charLocation.x + xOffset);
+            charLocation.y = scale * (charLocation.y + yOffset);
+            charLocation.scale = scale;
+            
+            if (charLocation.bitmapChar.width > 0 && charLocation.bitmapChar.height > 0)
+                [finalLocations addObject:charLocation];
         }
     }
     
-    // hAlign
-    if (hAlign != SPHAlignLeft)
-    {
-        for (SPSprite *line in lineContainer)
-        {
-            if (line.numChildren == 0) continue;
-            SPDisplayObject *lastChar = [line childAtIndex:line.numChildren-1];
-            float lineWidth = lastChar.x + lastChar.width;
-            float widthDiff = containerWidth - lineWidth;
-            line.x = (int) (hAlign == SPHAlignRight ? widthDiff : widthDiff / 2);
-        }
-    }
-    
-    SPSprite *outerContainer = [SPSprite sprite];
-    [outerContainer addChild:lineContainer];
-    
-    if (vAlign != SPVAlignTop)
-    {
-        float contentHeight = lineContainer.numChildren * _lineHeight * scale;
-        float heightDiff = height - contentHeight;
-        lineContainer.y = (int)(vAlign == SPVAlignBottom ? heightDiff : heightDiff / 2.0f);
-    }
-    
-    if (border)
-    {
-        SPQuad *topBorder = [SPQuad quadWithWidth:width height:1];
-        SPQuad *bottomBorder = [SPQuad quadWithWidth:width height:1];
-        SPQuad *leftBorder = [SPQuad quadWithWidth:1 height:height-2];
-        SPQuad *rightBorder = [SPQuad quadWithWidth:1 height:height-2];
-        
-        topBorder.color = bottomBorder.color = leftBorder.color = rightBorder.color = color;
-        bottomBorder.y = height - 1;
-        leftBorder.y = rightBorder.y = 1;
-        rightBorder.x = width - 1;
-        
-        [outerContainer addChild:topBorder];
-        [outerContainer addChild:bottomBorder];
-        [outerContainer addChild:leftBorder];
-        [outerContainer addChild:rightBorder];        
-    }    
-    
-    [outerContainer flatten];
-    return outerContainer;
+    return finalLocations;
 }
 
 - (SPTextureSmoothing)smoothing
@@ -370,13 +469,5 @@ NSString *MiniFontImgDataBase64 =
     "53wHuAOtUcDBh5uWkw39GgS4PSTglLI6EJyn9ggxMy/MZqJFJ7XIYNJwdJKzFgCfHiBcTDM6/tenFL8GOiW8oUUQjlWiCC"
     "DEyOB+MGkAHYiW5hqTBi053pQKYYmXAX/dD1GNEJmxOc+xJGg+OILAlOgb6HqTHaEm2dmvLTHyRJiM7T2Kr9hp5BOmcrjH"
     "wXwvv3ujr2dcijOSoMA1BCXLL+E5M5NT/sh/2v9idsZLc1sYX4WAAAAABJRU5ErkJggg==";
-
-- (id)initWithMiniFont
-{
-    NSData *xmlData = [[NSData dataWithBase64EncodedString:MiniFontXmlDataBase64] gzipInflate];
-    NSData *imgData =  [NSData dataWithBase64EncodedString:MiniFontImgDataBase64];
-    SPTexture *texture = [[SPTexture alloc] initWithContentsOfImage:[UIImage imageWithData:imgData]];
-    return [self initWithContentsOfData:xmlData texture:texture];
-}
 
 @end
