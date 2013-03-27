@@ -36,6 +36,7 @@ static NSMutableDictionary *bitmapFonts = nil;
     NSString *_fontName;
     SPHAlign _hAlign;
     SPVAlign _vAlign;
+    BOOL _autoScale;
     BOOL _kerning;
     BOOL _requiresRedraw;
     BOOL _isRenderedText;
@@ -53,6 +54,7 @@ static NSMutableDictionary *bitmapFonts = nil;
 @synthesize vAlign = _vAlign;
 @synthesize color = _color;
 @synthesize kerning = _kerning;
+@synthesize autoScale = _autoScale;
 
 - (id)initWithWidth:(float)width height:(float)height text:(NSString*)text fontName:(NSString*)name 
           fontSize:(float)size color:(uint)color 
@@ -64,6 +66,7 @@ static NSMutableDictionary *bitmapFonts = nil;
         _color = color;
         _hAlign = SPHAlignCenter;
         _vAlign = SPVAlignCenter;
+        _autoScale = NO;
         _border = NO;        
 		_kerning = YES;
         _requiresRedraw = YES;
@@ -212,6 +215,15 @@ static NSMutableDictionary *bitmapFonts = nil;
 	}
 }
 
+- (void)setAutoScale:(BOOL)autoScale
+{
+    if (_autoScale != autoScale)
+    {
+        _autoScale = autoScale;
+        _requiresRedraw = YES;
+    }
+}
+
 + (id)textFieldWithWidth:(float)width height:(float)height text:(NSString*)text
                           fontName:(NSString*)name fontSize:(float)size color:(uint)color
 {
@@ -287,8 +299,26 @@ static NSMutableDictionary *bitmapFonts = nil;
   #else
     UILineBreakMode lbm = UILineBreakModeTailTruncation;
   #endif
-    CGSize textSize = [_text sizeWithFont:[UIFont fontWithName:_fontName size:fontSize]
-                        constrainedToSize:CGSizeMake(width, height) lineBreakMode:lbm];
+
+    CGSize textSize;
+    
+    if (_autoScale)
+    {
+        CGSize maxSize = CGSizeMake(width, FLT_MAX);
+        fontSize += 1.0f;
+        
+        do
+        {
+            fontSize -= 1.0f;
+            textSize = [_text sizeWithFont:[UIFont fontWithName:_fontName size:fontSize]
+                         constrainedToSize:maxSize lineBreakMode:lbm];
+        } while (textSize.height > height);
+    }
+    else
+    {
+        textSize = [_text sizeWithFont:[UIFont fontWithName:_fontName size:fontSize]
+                     constrainedToSize:CGSizeMake(width, height) lineBreakMode:lbm];
+    }
     
     float xOffset = 0;
     if (_hAlign == SPHAlignCenter)      xOffset = (width - textSize.width) / 2.0f;
@@ -325,12 +355,10 @@ static NSMutableDictionary *bitmapFonts = nil;
     if (!bitmapFont)
         [NSException raise:SP_EXC_INVALID_OPERATION 
                     format:@"bitmap font %@ not registered!", _fontName];
-
-    // TODO: add autoScale!
     
     [bitmapFont fillQuadBatch:_contents withWidth:_hitArea.width height:_hitArea.height
                          text:_text fontSize:_fontSize color:_color hAlign:_hAlign vAlign:_vAlign
-                    autoScale:NO kerning:_kerning];
+                    autoScale:_autoScale kerning:_kerning];
     
     _textBounds = nil; // will be created on demand
 }

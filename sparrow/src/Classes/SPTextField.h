@@ -176,4 +176,8 @@ typedef enum
 /// Allows using kerning information with a bitmap font (where available). Default is YES.
 @property (nonatomic, assign) BOOL kerning;
 
+/// Indicates whether the font size is scaled down so that the complete text fits into the
+/// text field. Default is NO.
+@property (nonatomic, assign) BOOL autoScale;
+
 @end
