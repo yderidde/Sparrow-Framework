@@ -29,6 +29,7 @@
 + (float)randomFloat;
 
 /// Returns a Boolean value that indicates whether a file or directory exists at a specified path.
+/// If you pass a relative path, the resource folder of the application bundle will be searched.
 + (BOOL)fileExistsAtPath:(NSString *)path;
 
 /// Finds the full path for a file with a certain scale factor (a file with a suffix like '@2x')

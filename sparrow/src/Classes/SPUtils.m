@@ -40,6 +40,9 @@
 
 + (BOOL)fileExistsAtPath:(NSString *)path
 {
+    if (![path isAbsolutePath])
+        path = [[NSBundle appBundle] pathForResource:path];
+    
     struct stat buffer;   
     return stat([path UTF8String], &buffer) == 0;
 }
