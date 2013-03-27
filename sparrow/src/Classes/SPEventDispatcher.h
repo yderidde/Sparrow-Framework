@@ -12,7 +12,7 @@
 #import <Foundation/Foundation.h>
 #import "SPEvent.h"
 
-typedef void (^SPEventBlock)(SPEvent *event);
+typedef void (^SPEventBlock)(id event);
 
 /** ------------------------------------------------------------------------------------------------
 
