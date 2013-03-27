@@ -17,7 +17,7 @@
 @class SPProgram;
 @class SPDisplayObject;
 
-typedef void (^SPRootCreatedBlock)(SPDisplayObject *root);
+typedef void (^SPRootCreatedBlock)(id root);
 
 @interface SPViewController : GLKViewController
 
