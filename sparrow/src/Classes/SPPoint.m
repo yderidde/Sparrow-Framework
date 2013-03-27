@@ -114,6 +114,12 @@
     _y = point->_y;
 }
 
+- (void)setX:(float)x y:(float)y
+{
+    _x = x;
+    _y = y;
+}
+
 - (GLKVector2)convertToGLKVector
 {
     return GLKVector2Make(_x, _y);

@@ -67,6 +67,9 @@
 /// Copies the values from another point into the current point.
 - (void)copyFromPoint:(SPPoint *)point;
 
+/// Sets the members of the point to the specified values.
+- (void)setX:(float)x y:(float)y;
+
 /// Creates a GLKit vector that is equivalent to this instance.
 - (GLKVector2)convertToGLKVector;
 

@@ -107,6 +107,14 @@
     return [SPRectangle rectangleWithX:left y:top width:right-left height:bottom-top];
 }
 
+- (void)setX:(float)x y:(float)y width:(float)width height:(float)height
+{
+    _x = x;
+    _y = y;
+    _width = width;
+    _height = height;
+}
+
 - (void)setEmpty
 {
     _x = _y = _width = _height = 0;

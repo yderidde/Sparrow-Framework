@@ -51,6 +51,9 @@
 /// the two rectangles).
 - (SPRectangle*)uniteWithRectangle:(SPRectangle*)rectangle;
 
+/// Sets the members of the rectangle to the specified values.
+- (void)setX:(float)x y:(float)y width:(float)width height:(float)height;
+
 /// Sets width and height components to zero.
 - (void)setEmpty;
 
