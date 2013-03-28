@@ -19,6 +19,7 @@
 #import "SPStage.h"
 #import "SPJuggler.h"
 #import "SPProgram.h"
+#import "SPStatsDisplay.h"
 
 // --- private interaface --------------------------------------------------------------------------
 
@@ -40,6 +41,7 @@
     SPTouchProcessor *_touchProcessor;
     SPRenderSupport *_support;
     SPRootCreatedBlock _onRootCreated;
+    SPStatsDisplay *_statsDisplay;
     NSMutableDictionary *_programs;
     
     double _lastTouchTimestamp;
@@ -156,6 +158,22 @@
     _stage.height = viewSize.height * _viewScaleFactor / _contentScaleFactor;
 }
 
+- (BOOL)showStats
+{
+    return _statsDisplay.visible;
+}
+
+- (void)setShowStats:(BOOL)showStats
+{
+    if (showStats && !_statsDisplay)
+    {
+        _statsDisplay = [[SPStatsDisplay alloc] init];
+        [_stage addChild:_statsDisplay];
+    }
+    
+    _statsDisplay.visible = showStats;
+}
+
 #pragma mark - GLKViewDelegate
 
 - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect
@@ -181,6 +199,9 @@
         [_support nextFrame];
         [_stage render:_support];
         [_support finishQuadBatch];
+        
+        if (_statsDisplay)
+            _statsDisplay.numDrawCalls = _support.numDrawCalls - 2; // stats display requires 2 itself
         
         #if DEBUG
         [SPRenderSupport checkForOpenGLError];

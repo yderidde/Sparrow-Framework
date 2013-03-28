@@ -61,6 +61,10 @@
 /// Checks for an OpenGL error. If there is one, it is logged an the error code is returned.
 + (uint)checkForOpenGLError;
 
+/// Raises the number of draw calls by a specific value. Call this method in custom render methods
+/// to keep the statistics display in sync.
+- (void)addDrawCalls:(int)count;
+
 /// -------------------------
 /// @name Matrix Manipulation
 /// -------------------------
@@ -105,5 +109,8 @@
 
 /// Returns the current (accumulated) alpha value.
 @property (nonatomic, readonly) float alpha;
+
+/// Indicates the number of OpenGL ES draw calls.
+@property (nonatomic, readonly) int numDrawCalls;
 
 @end

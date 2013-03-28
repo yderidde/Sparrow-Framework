@@ -114,6 +114,9 @@ BOOL isOpaqueWhite(SPVertexColor color)
 
 - (void)copyToVertexData:(SPVertexData *)target atIndex:(int)targetIndex numVertices:(int)count
 {
+    if (count < 0 || count > _numVertices)
+        [NSException raise:SP_EXC_INDEX_OUT_OF_BOUNDS format:@"Invalid vertex count"];
+    
     if (targetIndex + count > target->_numVertices)
         [NSException raise:SP_EXC_INDEX_OUT_OF_BOUNDS format:@"Target too small"];
     

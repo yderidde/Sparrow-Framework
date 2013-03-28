@@ -247,6 +247,7 @@
     if (_numQuads)
     {
         [support finishQuadBatch];
+        [support addDrawCalls:1];
         [self renderWithAlpha:support.alpha matrix:support.mvpMatrix];
     }
 }

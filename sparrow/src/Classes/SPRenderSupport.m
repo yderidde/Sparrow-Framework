@@ -24,14 +24,14 @@
     SPMatrix *_projectionMatrix;
     SPMatrix *_modelviewMatrix;
     SPMatrix *_mvpMatrix;
+    GLKBaseEffect *_baseEffect;
+    int _numDrawCalls;
+    
     NSMutableArray *_matrixStack;
     int _matrixStackSize;
     
     float *_alphaStack;
     int _alphaStackSize;
-    
-    GLKBaseEffect *_baseEffect;
-    uint _boundTextureName;
     
     NSMutableArray *_quadBatches;
     int _currentQuadBatchID;
@@ -40,6 +40,7 @@
 @synthesize usingPremultipliedAlpha = _premultipliedAlpha;
 @synthesize modelviewMatrix = _modelviewMatrix;
 @synthesize projectionMatrix = _projectionMatrix;
+@synthesize numDrawCalls = _numDrawCalls;
 
 - (id)init
 {
@@ -76,6 +77,7 @@
 {
     [self resetMatrix];
     _currentQuadBatchID = 0;
+    _numDrawCalls = 0;
 }
 
 - (void)purgeBuffers
@@ -100,6 +102,11 @@
     GLenum error = glGetError();
     if (error != 0) NSLog(@"There was an OpenGL error: 0x%x", error);
     return error;
+}
+
+- (void)addDrawCalls:(int)count
+{
+    _numDrawCalls += count;
 }
 
 #pragma mark - alpha stack
@@ -207,6 +214,7 @@
         [currentBatch reset];
         
         ++_currentQuadBatchID;
+        ++_numDrawCalls;
         
         if (_quadBatches.count <= _currentQuadBatchID)
             [_quadBatches addObject:[[SPQuadBatch alloc] init]];

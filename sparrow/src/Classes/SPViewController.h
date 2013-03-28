@@ -36,6 +36,7 @@ typedef void (^SPRootCreatedBlock)(id root);
 @property (nonatomic, readonly) EAGLContext *context;
 
 @property (nonatomic, assign) BOOL multitouchEnabled;
+@property (nonatomic, assign) BOOL showStats;
 @property (nonatomic, readonly) BOOL supportHighResolutions;
 @property (nonatomic, readonly) BOOL doubleResolutionOnPad;
 @property (nonatomic, readonly) float contentScaleFactor;

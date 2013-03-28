@@ -13,6 +13,8 @@
 		DE019C3C1026364800ECB0AC /* SPJuggler.m in Sources */ = {isa = PBXBuildFile; fileRef = DE7044270FB61506007F5ECC /* SPJuggler.m */; };
 		DE02408D13819FAD008A91B9 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = DE5A7ED513805C2B00C6CBBC /* libz.dylib */; };
 		DE0456E813882B4E005FFBCE /* SPButtonTest.m in Sources */ = {isa = PBXBuildFile; fileRef = DE0456E413882A27005FFBCE /* SPButtonTest.m */; };
+		DE0BA5D81703513D00637533 /* SPStatsDisplay.h in Headers */ = {isa = PBXBuildFile; fileRef = DE0BA5D61703513D00637533 /* SPStatsDisplay.h */; };
+		DE0BA5D91703513D00637533 /* SPStatsDisplay.m in Sources */ = {isa = PBXBuildFile; fileRef = DE0BA5D71703513D00637533 /* SPStatsDisplay.m */; };
 		DE13D18B12AADBF6000C77E6 /* SPRenderTexture.h in Headers */ = {isa = PBXBuildFile; fileRef = DE13D18912AADBF6000C77E6 /* SPRenderTexture.h */; settings = {ATTRIBUTES = (); }; };
 		DE13D18C12AADBF6000C77E6 /* SPRenderTexture.m in Sources */ = {isa = PBXBuildFile; fileRef = DE13D18A12AADBF6000C77E6 /* SPRenderTexture.m */; };
 		DE14412E12421EA600FFA95A /* SPNSExtensionsTest.m in Sources */ = {isa = PBXBuildFile; fileRef = DE05748611E915A900F3A8A4 /* SPNSExtensionsTest.m */; };
@@ -181,6 +183,8 @@
 		DE0853A40FEC286900DAF53C /* SPImageTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SPImageTest.m; sourceTree = "<group>"; };
 		DE0853F80FEC2CFF00DAF53C /* SPTexture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SPTexture.h; sourceTree = "<group>"; };
 		DE0853F90FEC2CFF00DAF53C /* SPTexture.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SPTexture.m; sourceTree = "<group>"; };
+		DE0BA5D61703513D00637533 /* SPStatsDisplay.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SPStatsDisplay.h; sourceTree = "<group>"; };
+		DE0BA5D71703513D00637533 /* SPStatsDisplay.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SPStatsDisplay.m; sourceTree = "<group>"; };
 		DE13D18912AADBF6000C77E6 /* SPRenderTexture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SPRenderTexture.h; sourceTree = "<group>"; };
 		DE13D18A12AADBF6000C77E6 /* SPRenderTexture.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SPRenderTexture.m; sourceTree = "<group>"; };
 		DE18FE4411B083B200D01F04 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
@@ -569,6 +573,8 @@
 				DEAAF3DA16BC0E46004EB9D5 /* SPOverlayView.m */,
 				DE8E6A8016B430C4007EE8BA /* SPViewController.h */,
 				DE8E6A8116B430C4007EE8BA /* SPViewController.m */,
+				DE0BA5D61703513D00637533 /* SPStatsDisplay.h */,
+				DE0BA5D71703513D00637533 /* SPStatsDisplay.m */,
 			);
 			name = System;
 			sourceTree = "<group>";
@@ -739,6 +745,7 @@
 				DEC87D0716E0CDD80050EA95 /* SPQuadBatch.h in Headers */,
 				DE82240C16EF468E00A172EE /* SPQuadEffect.h in Headers */,
 				DE97B93016F1EA5E00DC1077 /* SPProgram.h in Headers */,
+				DE0BA5D81703513D00637533 /* SPStatsDisplay.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -922,6 +929,7 @@
 				DEC87D0816E0CDD80050EA95 /* SPQuadBatch.m in Sources */,
 				DE82240D16EF468E00A172EE /* SPQuadEffect.m in Sources */,
 				DE97B93116F1EA5E00DC1077 /* SPProgram.m in Sources */,
+				DE0BA5D91703513D00637533 /* SPStatsDisplay.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
