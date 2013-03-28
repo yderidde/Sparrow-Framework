@@ -149,7 +149,7 @@
     __block SPTexture *texture = nil;
     NSXMLParser *parser = [[NSXMLParser alloc] initWithData:data];
     
-    BOOL success = [parser parseElementsWithBlock:^(NSString *elementName, NSDictionary *attributes)
+    [parser parseElementsWithBlock:^(NSString *elementName, NSDictionary *attributes)
     {
         if ([elementName isEqualToString:@"page"])
         {
@@ -165,10 +165,6 @@
             [parser abortParsing];
         }
     }];
-    
-    if (!success)
-        [NSException raise:SP_EXC_DATA_INVALID format:@"Error parsing font XML: %@",
-         parser.parserError.localizedDescription];
     
     if (!texture)
         [NSException raise:SP_EXC_DATA_INVALID format:@"Font XML did not contain path to texture"];
