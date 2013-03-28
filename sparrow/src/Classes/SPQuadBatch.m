@@ -202,7 +202,7 @@
     int numVertices = numQuads * 4;
     
     if (!matrix) matrix = quadBatch.transformationMatrix;
-    if (_numQuads + numQuads > self.capacity) [self expand];
+    if (_numQuads + numQuads > self.capacity) self.capacity = _numQuads + numQuads;
     if (_numQuads == 0)
     {
         _texture = quadBatch.texture;
