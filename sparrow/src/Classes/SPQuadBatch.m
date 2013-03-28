@@ -125,6 +125,9 @@
     glGenBuffers(1, &_vertexBufferName);
     glGenBuffers(1, &_indexBufferName);
     
+    if (!_vertexBufferName || !_indexBufferName)
+        [NSException raise:SP_EXC_DATA_INVALID format:@"could not create vertex buffers"];
+    
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indexBufferName);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(ushort) * numIndices, _indexData, GL_STATIC_DRAW);
     
@@ -135,17 +138,15 @@
 {
     if (!_vertexBufferName)
         [self createBuffers];
-    else
-    {
-        // don't use 'glBufferSubData'! It's much slower than uploading
-        // everything via 'glBufferData', at least on the iPad 1.
-        
-        glBindBuffer(GL_ARRAY_BUFFER, _vertexBufferName);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(SPVertex) * _vertexData.numVertices,
-                     _vertexData.vertices, GL_STATIC_DRAW);
-        
-        _syncRequired = NO;
-    }
+    
+    // don't use 'glBufferSubData'! It's much slower than uploading
+    // everything via 'glBufferData', at least on the iPad 1.
+    
+    glBindBuffer(GL_ARRAY_BUFFER, _vertexBufferName);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(SPVertex) * _vertexData.numVertices,
+                 _vertexData.vertices, GL_STATIC_DRAW);
+    
+    _syncRequired = NO;
 }
 
 - (void)addQuad:(SPQuad *)quad
