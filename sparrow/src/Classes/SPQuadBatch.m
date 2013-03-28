@@ -89,6 +89,8 @@
 
 - (void)setCapacity:(int)newCapacity
 {
+    NSAssert(newCapacity > 0, @"capacity must not be zero");
+    
     int oldCapacity = self.capacity;
     int numVertices = newCapacity * 4;
     int numIndices  = newCapacity * 6;
@@ -97,8 +99,6 @@
     
     if (!_indexData) _indexData = malloc(sizeof(ushort) * numIndices);
     else             _indexData = realloc(_indexData, sizeof(ushort) * numIndices);
-    
-    // TODO: check that loop is not entered when we're getting smaller
     
     for (int i=oldCapacity; i<newCapacity; ++i)
     {
