@@ -131,6 +131,12 @@
     return _vertexData.premultipliedAlpha;
 }
 
+- (void)setPremultipliedAlpha:(BOOL)premultipliedAlpha
+{
+    if (premultipliedAlpha != self.premultipliedAlpha)
+        _vertexData.premultipliedAlpha = premultipliedAlpha;
+}
+
 - (BOOL)tinted
 {
     return _tinted;

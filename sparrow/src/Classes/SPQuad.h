@@ -115,7 +115,7 @@
 
 /// Indicates if the rgb values are stored premultiplied with the alpha value. This can have
 /// effect on the rendering. (Most developers don't have to care, though.)
-@property (nonatomic, readonly) BOOL premultipliedAlpha;
+@property (nonatomic, assign) BOOL premultipliedAlpha;
 
 /// Indicates if any vertices have a non-white color or are not fully opaque. Any alpha value
 /// other than '1' will also cause tinting.
