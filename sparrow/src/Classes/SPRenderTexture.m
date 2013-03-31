@@ -16,14 +16,6 @@
 #import "SPStage.h"
 #import "SparrowClass.h"
 
-@interface SPRenderTexture ()
-
-- (void)createFramebuffer;
-- (void)destroyFramebuffer;
-- (void)renderToFramebuffer:(SPDrawingBlock)block;
-
-@end
-
 @implementation SPRenderTexture
 {
     GLuint _framebuffer;
@@ -42,7 +34,7 @@
                                                         height:legalHeight
                                                generateMipmaps:NO
                                                          scale:scale
-                                            premultipliedAlpha:NO];
+                                            premultipliedAlpha:YES];
 
     if ((self = [super initWithRegion:region ofTexture:glTexture]))
     {
@@ -154,7 +146,7 @@
      }];
 }
 
-- (void)bundleDrawCalls:(SPDrawingBlock)block
+- (void)drawBundled:(SPDrawingBlock)block
 {
     [self renderToFramebuffer:block];
 }

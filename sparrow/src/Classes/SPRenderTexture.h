@@ -78,7 +78,7 @@ typedef void (^SPDrawingBlock)();
 - (void)drawObject:(SPDisplayObject *)object;
 
 /// Bundles several calls to `drawObject:` together in a block. This avoids framebuffer switches.
-- (void)bundleDrawCalls:(SPDrawingBlock)block;
+- (void)drawBundled:(SPDrawingBlock)block;
 
 /// Clears the texture with a certain color and alpha value.
 - (void)clearWithColor:(uint)color alpha:(float)alpha;
