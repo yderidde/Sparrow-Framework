@@ -177,4 +177,11 @@
     return [_attributes[name] intValue];
 }
 
+- (NSString *)description
+{
+    return [NSString stringWithFormat:
+            @"[Program %d\n## VERTEX SHADER: ##\n%@\n## FRAGMENT SHADER: ##\n%@]",
+            _name, _vertexShader, _fragmentShader];
+}
+
 @end

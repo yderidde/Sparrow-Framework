@@ -13,6 +13,7 @@
 #import "SPMatrix.h"
 #import "SPTexture.h"
 #import "SPProgram.h"
+#import "SPNSExtensions.h"
 #import "SparrowClass.h"
 
 NSString *getProgramName(BOOL hasTexture, BOOL useTinting)
@@ -113,23 +114,23 @@ NSString *getProgramName(BOOL hasTexture, BOOL useTinting)
     
     // variables
     
-    [source appendString:@"attribute vec4 aPosition;"];
-    if (useTinting) [source appendString:@"attribute vec4 aColor;"];
-    if (hasTexture) [source appendString:@"attribute vec2 aTexCoords;"];
+    [source appendLine:@"attribute vec4 aPosition;"];
+    if (useTinting) [source appendLine:@"attribute vec4 aColor;"];
+    if (hasTexture) [source appendLine:@"attribute vec2 aTexCoords;"];
 
-    [source appendString:@"uniform mat4 uMvpMatrix;"];
-    if (useTinting) [source appendString:@"uniform vec4 uAlpha;"];
+    [source appendLine:@"uniform mat4 uMvpMatrix;"];
+    if (useTinting) [source appendLine:@"uniform vec4 uAlpha;"];
     
-    if (useTinting) [source appendString:@"varying lowp vec4 vColor;"];
-    if (hasTexture) [source appendString:@"varying lowp vec2 vTexCoords;"];
+    if (useTinting) [source appendLine:@"varying lowp vec4 vColor;"];
+    if (hasTexture) [source appendLine:@"varying lowp vec2 vTexCoords;"];
     
     // main
     
-    [source appendString:@"void main()\n{"];
+    [source appendLine:@"void main() {"];
     
-    [source appendString:@"  gl_Position = uMvpMatrix * aPosition;"];
-    if (useTinting) [source appendString:@"  vColor = aColor * uAlpha;"];
-    if (hasTexture) [source appendString:@"  vTexCoords  = aTexCoords;"];
+    [source appendLine:@"  gl_Position = uMvpMatrix * aPosition;"];
+    if (useTinting) [source appendLine:@"  vColor = aColor * uAlpha;"];
+    if (hasTexture) [source appendLine:@"  vTexCoords  = aTexCoords;"];
     
     [source appendString:@"}"];
     
@@ -144,27 +145,27 @@ NSString *getProgramName(BOOL hasTexture, BOOL useTinting)
     // variables
     
     if (useTinting)
-        [source appendString:@"varying lowp vec4 vColor;"];
+        [source appendLine:@"varying lowp vec4 vColor;"];
     
     if (hasTexture)
     {
-        [source appendString:@"varying lowp vec2 vTexCoords;"];
-        [source appendString:@"uniform sampler2D uTexture;"];
+        [source appendLine:@"varying lowp vec2 vTexCoords;"];
+        [source appendLine:@"uniform sampler2D uTexture;"];
     }
     
     // main
     
-    [source appendString:@"void main()\n{"];
+    [source appendLine:@"void main() {"];
     
     if (hasTexture)
     {
         if (useTinting)
-            [source appendString:@"gl_FragColor = texture2D(uTexture, vTexCoords) * vColor;"];
+            [source appendLine:@"  gl_FragColor = texture2D(uTexture, vTexCoords) * vColor;"];
         else
-            [source appendString:@"gl_FragColor = texture2D(uTexture, vTexCoords);"];
+            [source appendLine:@"  gl_FragColor = texture2D(uTexture, vTexCoords);"];
     }
     else
-        [source appendString:@"gl_FragColor = vColor;"];
+        [source appendLine:@"  gl_FragColor = vColor;"];
     
     [source appendString:@"}"];
     

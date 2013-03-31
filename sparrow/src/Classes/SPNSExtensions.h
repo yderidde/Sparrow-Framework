@@ -45,6 +45,15 @@ typedef void (^SPXMLElementHandler)(NSString *elementName, NSDictionary *attribu
 @end
 
 
+/** Sparrow extensions for the NSMutableString class. */
+@interface NSMutableString (SPNSExtensions)
+
+/// Appends another string and starts a new line.
+- (void)appendLine:(NSString *)line;
+
+@end
+
+
 /** Sparrow extensions for the NSBundle class. */
 @interface NSBundle (SPNSExtensions)
 

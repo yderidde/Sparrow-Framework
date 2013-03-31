@@ -93,6 +93,17 @@ static char encodingTable[64] = {
 
 @end
 
+#pragma mark - NSMutableString
+
+@implementation NSMutableString (SPNSExtensions)
+
+- (void)appendLine:(NSString *)line
+{
+    [self appendFormat:@"%@\n", line];
+}
+
+@end
+
 #pragma mark - NSBundle
 
 @implementation NSBundle (SPNSExtensions)
