@@ -38,6 +38,9 @@
 		DE33072512D2EBCD009CC5E7 /* SPUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = DE33072312D2EBCD009CC5E7 /* SPUtils.h */; settings = {ATTRIBUTES = (); }; };
 		DE33072612D2EBCD009CC5E7 /* SPUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = DE33072412D2EBCD009CC5E7 /* SPUtils.m */; };
 		DE33072B12D2ED1A009CC5E7 /* SPUtilsTest.m in Sources */ = {isa = PBXBuildFile; fileRef = DE33072812D2ECB1009CC5E7 /* SPUtilsTest.m */; };
+		DE574D5F1705B83D008B03D7 /* SPBlendMode.h in Headers */ = {isa = PBXBuildFile; fileRef = DE574D5D1705B83D008B03D7 /* SPBlendMode.h */; };
+		DE574D601705B83D008B03D7 /* SPBlendMode.m in Sources */ = {isa = PBXBuildFile; fileRef = DE574D5E1705B83D008B03D7 /* SPBlendMode.m */; };
+		DE574D631705BA5B008B03D7 /* SPBlendModeTest.m in Sources */ = {isa = PBXBuildFile; fileRef = DE574D621705BA5B008B03D7 /* SPBlendModeTest.m */; };
 		DE57B32314E8F789002BD1A8 /* SPMacrosTest.m in Sources */ = {isa = PBXBuildFile; fileRef = DE57B32014E8F71F002BD1A8 /* SPMacrosTest.m */; };
 		DE57B32914E90397002BD1A8 /* image_only_sd.png in Resources */ = {isa = PBXBuildFile; fileRef = DE57B32814E90397002BD1A8 /* image_only_sd.png */; };
 		DE57B32B14E90647002BD1A8 /* image_only_hd@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = DE57B32A14E90647002BD1A8 /* image_only_hd@2x.png */; };
@@ -215,6 +218,9 @@
 		DE4D6AEA0F75913D0045CBF7 /* SPSprite.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SPSprite.h; sourceTree = "<group>"; };
 		DE4D6AEB0F75913D0045CBF7 /* SPSprite.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SPSprite.m; sourceTree = "<group>"; };
 		DE5286BA11F77C6200F916E8 /* SPDelayedInvocationTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SPDelayedInvocationTest.m; sourceTree = "<group>"; };
+		DE574D5D1705B83D008B03D7 /* SPBlendMode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SPBlendMode.h; sourceTree = "<group>"; };
+		DE574D5E1705B83D008B03D7 /* SPBlendMode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SPBlendMode.m; sourceTree = "<group>"; };
+		DE574D621705BA5B008B03D7 /* SPBlendModeTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SPBlendModeTest.m; sourceTree = "<group>"; };
 		DE57B32014E8F71F002BD1A8 /* SPMacrosTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SPMacrosTest.m; sourceTree = "<group>"; };
 		DE57B32814E90397002BD1A8 /* image_only_sd.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = image_only_sd.png; sourceTree = "<group>"; };
 		DE57B32A14E90647002BD1A8 /* image_only_hd@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "image_only_hd@2x.png"; sourceTree = "<group>"; };
@@ -492,6 +498,7 @@
 				DE75E8660FBDC57E00C64495 /* SPTweenTest.m */,
 				DE33072812D2ECB1009CC5E7 /* SPUtilsTest.m */,
 				DEB9E80916D3B26300D2C8C7 /* SPVertexDataTest.m */,
+				DE574D621705BA5B008B03D7 /* SPBlendModeTest.m */,
 			);
 			path = UnitTests;
 			sourceTree = "<group>";
@@ -521,24 +528,26 @@
 			isa = PBXGroup;
 			children = (
 				DED85A940FB49E90000BAA95 /* Internal */,
+				DE574D5D1705B83D008B03D7 /* SPBlendMode.h */,
+				DE574D5E1705B83D008B03D7 /* SPBlendMode.m */,
+				DED85311100BC9DA0014F729 /* SPButton.h */,
+				DED85312100BC9DA0014F729 /* SPButton.m */,
 				DE2ED8040F6D52080012B6BA /* SPDisplayObject.h */,
 				DE2ED8050F6D52080012B6BA /* SPDisplayObject.m */,
 				DE2ED8080F6D53020012B6BA /* SPDisplayObjectContainer.h */,
 				DE2ED8090F6D53020012B6BA /* SPDisplayObjectContainer.m */,
+				DE08535C0FEC21F500DAF53C /* SPImage.h */,
+				DE08535D0FEC21F500DAF53C /* SPImage.m */,
+				DEE94E8011B43DE60000FE20 /* SPMovieClip.h */,
+				DEE94E8111B43DE60000FE20 /* SPMovieClip.m */,
+				DE2ED8550F6D54900012B6BA /* SPQuad.h */,
+				DE2ED8560F6D54900012B6BA /* SPQuad.m */,
+				DEC87D0516E0CDD80050EA95 /* SPQuadBatch.h */,
+				DEC87D0616E0CDD80050EA95 /* SPQuadBatch.m */,
 				DE4D6AEA0F75913D0045CBF7 /* SPSprite.h */,
 				DE4D6AEB0F75913D0045CBF7 /* SPSprite.m */,
 				DE2ED8580F6D54AC0012B6BA /* SPStage.h */,
 				DE2ED8590F6D54AC0012B6BA /* SPStage.m */,
-				DE2ED8550F6D54900012B6BA /* SPQuad.h */,
-				DE2ED8560F6D54900012B6BA /* SPQuad.m */,
-				DE08535C0FEC21F500DAF53C /* SPImage.h */,
-				DE08535D0FEC21F500DAF53C /* SPImage.m */,
-				DED85311100BC9DA0014F729 /* SPButton.h */,
-				DED85312100BC9DA0014F729 /* SPButton.m */,
-				DEE94E8011B43DE60000FE20 /* SPMovieClip.h */,
-				DEE94E8111B43DE60000FE20 /* SPMovieClip.m */,
-				DEC87D0516E0CDD80050EA95 /* SPQuadBatch.h */,
-				DEC87D0616E0CDD80050EA95 /* SPQuadBatch.m */,
 			);
 			name = Display;
 			sourceTree = "<group>";
@@ -746,6 +755,7 @@
 				DE82240C16EF468E00A172EE /* SPQuadEffect.h in Headers */,
 				DE97B93016F1EA5E00DC1077 /* SPProgram.h in Headers */,
 				DE0BA5D81703513D00637533 /* SPStatsDisplay.h in Headers */,
+				DE574D5F1705B83D008B03D7 /* SPBlendMode.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -872,6 +882,7 @@
 				DE0456E813882B4E005FFBCE /* SPButtonTest.m in Sources */,
 				DE57B32314E8F789002BD1A8 /* SPMacrosTest.m in Sources */,
 				DEB9E80A16D3B26300D2C8C7 /* SPVertexDataTest.m in Sources */,
+				DE574D631705BA5B008B03D7 /* SPBlendModeTest.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -930,6 +941,7 @@
 				DE82240D16EF468E00A172EE /* SPQuadEffect.m in Sources */,
 				DE97B93116F1EA5E00DC1077 /* SPProgram.m in Sources */,
 				DE0BA5D91703513D00637533 /* SPStatsDisplay.m in Sources */,
+				DE574D601705B83D008B03D7 /* SPBlendMode.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

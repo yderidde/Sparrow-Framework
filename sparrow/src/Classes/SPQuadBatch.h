@@ -51,15 +51,21 @@
 /// Resets the batch. The vertex- and index-buffers keep their size, so that they can be reused.
 - (void)reset;
 
-/// Adds a quad or image.
+/// Adds a quad or image. Make sure you only add quads with an equal state.
 - (void)addQuad:(SPQuad *)quad;
 
 /// Adds a quad or image using a custom alpha value (ignoring the quad's original alpha).
+/// Make sure you only add quads with an equal state.
 - (void)addQuad:(SPQuad *)quad alpha:(float)alpha;
 
-/// Adds a quad or image to the batch, using a custom alpha value and transforming each vertex by
-/// a certain transformation matrix. Make sure you only add quads with an equal state.
-- (void)addQuad:(SPQuad *)quad alpha:(float)alpha matrix:(SPMatrix *)matrix;
+/// Adds a quad or image to the batch, using custom alpha and blend mode values (ignoring the
+/// quad's original values). Make sure you only add quads with an equal state.
+- (void)addQuad:(SPQuad *)quad alpha:(float)alpha blendMode:(uint)blendMode;
+
+/// Adds a quad or image to the batch, using custom alpha and blend mode values (ignoring the
+/// quad's original values) and transforming each vertex by a certain transformation matrix.
+/// Make sure you only add quads with an equal state.
+- (void)addQuad:(SPQuad *)quad alpha:(float)alpha blendMode:(uint)blendMode matrix:(SPMatrix *)matrix;
 
 /// Adds another quad batch to this batch.
 - (void)addQuadBatch:(SPQuadBatch *)quadBatch;
@@ -68,19 +74,28 @@
 /// original alpha).
 - (void)addQuadBatch:(SPQuadBatch *)quadBatch alpha:(float)alpha;
 
-/// Adds another quad batch to this batch. Just like the `addQuad:` method, you have to
-/// make sure that you only add batches with an equal state.
-- (void)addQuadBatch:(SPQuadBatch *)quadBatch alpha:(float)alpha matrix:(SPMatrix *)matrix;
+/// Adds another quad batch to this batch, using custom alpha and blend mode values (ignoring the
+/// batch's original values). Just like the `addQuad:` method, you have to make sure that you only
+/// add batches with an equal state.
+- (void)addQuadBatch:(SPQuadBatch *)quadBatch alpha:(float)alpha blendMode:(uint)blendMode;
+
+/// Adds another quad batch to this batch, using custom alpha and blend mode values (ignoring the
+/// batch's original values) and transforming each vertex by a certain transformation matrix. Just
+/// like the `addQuad:` method, you have to make sure that you only add batches with an equal state.
+- (void)addQuadBatch:(SPQuadBatch *)quadBatch alpha:(float)alpha blendMode:(uint)blendMode
+              matrix:(SPMatrix *)matrix;
 
 /// Indicates if specific quads can be added to the batch without causing a state change.
 /// A state change occurs if the quad uses a different base texture, has a different `smoothing`,
 /// `repeat` or 'tinted' setting, or if the batch is full (one batch can contain up to 8192 quads).
 - (BOOL)isStateChangeWithTinted:(BOOL)tinted texture:(SPTexture *)texture alpha:(float)alpha
-             premultipliedAlpha:(BOOL)pma numQuads:(int)numQuads;
+             premultipliedAlpha:(BOOL)pma blendMode:(uint)blendMode numQuads:(int)numQuads;
 
-/// Renders the batch with custom settings for modelview-projection matrix and alpha.
-/// This makes it possible to render batches that are not part of the display list.
-- (void)renderWithAlpha:(float)alpha matrix:(SPMatrix *)matrix;
+/// Renders the batch with custom alpha and blend mode values, as well as a custom mvp matrix.
+- (void)renderWithMvpMatrix:(SPMatrix *)matrix alpha:(float)alpha blendMode:(uint)blendMode;
+
+/// Renders the batch with a custom mvp matrix.
+- (void)renderWithMvpMatrix:(SPMatrix *)matrix;
 
 /// Analyses an object that is made up exclusively of quads (or other containers) and creates an
 /// array of `SPQuadBatch` objects representing it. This can be used to render the container very

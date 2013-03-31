@@ -12,6 +12,7 @@
 #import "SPSprite.h"
 #import "SPQuadBatch.h"
 #import "SPRenderSupport.h"
+#import "SPBlendMode.h"
 
 @implementation SPSprite
 {
@@ -51,9 +52,15 @@
         
         SPMatrix *mvpMatrix = support.mvpMatrix;
         float alpha = support.alpha;
+        uint supportBlendMode = support.blendMode;
         
         for (SPQuadBatch *quadBatch in _flattenedContents)
-            [quadBatch renderWithAlpha:alpha matrix:mvpMatrix];
+        {
+            uint blendMode = quadBatch.blendMode;
+            if (blendMode == SP_BLEND_MODE_AUTO) blendMode = supportBlendMode;
+            
+            [quadBatch renderWithMvpMatrix:mvpMatrix alpha:alpha blendMode:blendMode];
+        }
     }
     else [super render:support];
 }

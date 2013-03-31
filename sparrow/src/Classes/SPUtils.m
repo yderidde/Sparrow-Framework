@@ -12,9 +12,12 @@
 #import "SPUtils.h"
 #import "SPNSExtensions.h"
 
+#import <GLKit/GLKit.h>
 #import <sys/stat.h>
 
 @implementation SPUtils
+
+#pragma mark - Math Utils
 
 + (int)nextPowerOfTwo:(int)number
 {    
@@ -37,6 +40,8 @@
 {
     return (float) arc4random() / UINT_MAX;
 }
+
+#pragma mark - File Utils
 
 + (BOOL)fileExistsAtPath:(NSString *)path
 {

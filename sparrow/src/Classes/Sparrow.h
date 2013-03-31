@@ -54,4 +54,5 @@
 #import "SPProgram.h"
 #import "SPVertexData.h"
 #import "SPQuadBatch.h"
+#import "SPBlendMode.h"
 #import "SparrowClass.h"

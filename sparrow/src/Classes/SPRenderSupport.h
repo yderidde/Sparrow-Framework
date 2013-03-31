@@ -35,21 +35,16 @@
 /// @name Methods
 /// -------------
 
-/// Resets matrix stack and blend mode.
+/// Resets the render state stack to the default.
 - (void)nextFrame;
 
 /// Adds a quad or image to the current batch of unrendered quads. If there is a state change,
-/// all previous quads are rendered at once, and the batch is reset.
+/// all previous quads are rendered at once, and the batch is reset. Note that the values for
+/// alpha and blend mode are taken from the current render state, not the quad.
 - (void)batchQuad:(SPQuad *)quad;
 
 /// Renders the current quad batch and resets it.
 - (void)finishQuadBatch;
-
-/// Adds a new alpha value to the alpha stack, multiplying it with the current alpha value.
-- (float)pushAlpha:(float)alpha;
-
-/// Restores the alpha value that was last pushed to the stack.
-- (float)popAlpha;
 
 /// Clears all vertex and index buffers, releasing the associated memory. Useful in low-memory
 /// situations. Don't call from within a render method!
@@ -65,42 +60,32 @@
 /// to keep the statistics display in sync.
 - (void)addDrawCalls:(int)count;
 
-/// -------------------------
-/// @name Matrix Manipulation
-/// -------------------------
-
-/// Changes the modelview matrix to the identity matrix.
-- (void)loadIdentity;
-
-/// Empties the matrix stack, resets the modelview matrix to the identity matrix.
-- (void)resetMatrix;
-
-/// Pushes the current modelview matrix to a stack from which it can be restored later.
-- (void)pushMatrix;
-
-/// Restores the modelview matrix that was last pushed to the stack.
-- (void)popMatrix;
-
-/// Prepends a matrix to the modelview matrix by multiplying it with another matrix.
-- (void)prependMatrix:(SPMatrix *)matrix;
-
 /// Sets up the projection matrix for ortographic 2D rendering.
 - (void)setupOrthographicProjectionWithLeft:(float)left right:(float)right
                                         top:(float)top bottom:(float)bottom;
 
+/// -------------------------
+/// @name State Manipulation
+/// -------------------------
+
+/// Adds a new render state to the stack. The passed matrix is prepended to the modelview matrix;
+/// the alpha value is multiplied with the current alpha; the blend mode replaces the existing
+/// mode (except `BLEND_MODE_AUTO`, which will cause the current mode to prevail).
+- (void)pushStateWithMatrix:(SPMatrix *)matrix alpha:(float)alpha blendMode:(uint)blendMode;
+
+/// Restores the previous render state.
+- (void)popState;
+
 /// ----------------
 /// @name Properties
 /// ----------------
-
-/// Indicates if the bound texture has its alpha channel premultiplied.
-@property (nonatomic, readonly) BOOL usingPremultipliedAlpha;
 
 /// Calculates the product of modelview and projection matrix.
 /// CAUTION: Use with care! Each call returns the same instance.
 @property (nonatomic, readonly) SPMatrix *mvpMatrix;
 
 /// Returns the current modelview matrix.
-/// CAUTION: Use with care! Each call returns the same instance.
+/// CAUTION: Use with care! Returns not a copy, but the internally used instance.
 @property (nonatomic, readonly) SPMatrix *modelviewMatrix;
 
 /// Returns the current projection matrix.
@@ -110,7 +95,10 @@
 /// Returns the current (accumulated) alpha value.
 @property (nonatomic, readonly) float alpha;
 
-/// Indicates the number of OpenGL ES draw calls.
+/// Returns the current blend mode.
+@property (nonatomic, readonly) uint blendMode;
+
+/// Indicates the number of OpenGL ES draw calls since the last call to `nextFrame`.
 @property (nonatomic, readonly) int numDrawCalls;
 
 @end

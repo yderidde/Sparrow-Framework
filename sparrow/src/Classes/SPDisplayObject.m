@@ -15,6 +15,7 @@
 #import "SPStage.h"
 #import "SPMacros.h"
 #import "SPTouchEvent.h"
+#import "SPBlendMode.h"
 
 float square(float value) { return value * value; }
 
@@ -32,6 +33,7 @@ float square(float value) { return value * value; }
     float _skewY;
     float _rotation;
     float _alpha;
+    uint _blendMode;
     BOOL _visible;
     BOOL _touchable;
     BOOL _orientationChanged;
@@ -56,6 +58,7 @@ float square(float value) { return value * value; }
 @synthesize visible = _visible;
 @synthesize touchable = _touchable;
 @synthesize name = _name;
+@synthesize blendMode = _blendMode;
 
 - (id)init
 {    
@@ -77,6 +80,7 @@ float square(float value) { return value * value; }
         _touchable = YES;
         _transformationMatrix = [[SPMatrix alloc] init];
         _orientationChanged = NO;
+        _blendMode = SP_BLEND_MODE_AUTO;
     }
     return self;
 }
@@ -394,7 +398,7 @@ float square(float value) { return value * value; }
         [_transformationMatrix identity];
     
         if (_scaleX != 1.0f || _scaleY != 1.0f) [_transformationMatrix scaleXBy:_scaleX yBy:_scaleY];
-        if (_skewX  != 1.0f || _skewY  != 1.0f) [_transformationMatrix skewXBy:_skewX yBy:_skewY];
+        if (_skewX  != 0.0f || _skewY  != 0.0f) [_transformationMatrix skewXBy:_skewX yBy:_skewY];
         if (_rotation != 0.0f)                  [_transformationMatrix rotateBy:_rotation];
         if (_x != 0.0f || _y != 0.0f)           [_transformationMatrix translateXBy:_x yBy:_y];
         

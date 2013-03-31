@@ -16,6 +16,10 @@
 
 @interface SPUtils : NSObject 
 
+/// ----------------
+/// @name Math Utils
+/// ----------------
+
 /// Finds the next power of two equal to or above the specified number.
 + (int)nextPowerOfTwo:(int)number;
 
@@ -27,6 +31,10 @@
 
 /// Returns a random float number between 0.0 and 1.0
 + (float)randomFloat;
+
+/// ----------------
+/// @name File Utils
+/// ----------------
 
 /// Returns a Boolean value that indicates whether a file or directory exists at a specified path.
 /// If you pass a relative path, the resource folder of the application bundle will be searched.

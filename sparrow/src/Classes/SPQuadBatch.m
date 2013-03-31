@@ -16,6 +16,7 @@
 #import "SPQuadEffect.h"
 #import "SPDisplayObjectContainer.h"
 #import "SPMacros.h"
+#import "SPBlendMode.h"
 
 #import <GLKit/GLKit.h>
 
@@ -151,15 +152,20 @@
 
 - (void)addQuad:(SPQuad *)quad
 {
-    [self addQuad:quad alpha:quad.alpha matrix:nil];
+    [self addQuad:quad alpha:quad.alpha blendMode:quad.blendMode matrix:nil];
 }
 
 - (void)addQuad:(SPQuad *)quad alpha:(float)alpha
 {
-    [self addQuad:quad alpha:alpha matrix:nil];
+    [self addQuad:quad alpha:alpha blendMode:quad.blendMode matrix:nil];
 }
 
-- (void)addQuad:(SPQuad *)quad alpha:(float)alpha matrix:(SPMatrix *)matrix
+- (void)addQuad:(SPQuad *)quad alpha:(float)alpha blendMode:(uint)blendMode
+{
+    [self addQuad:quad alpha:alpha blendMode:blendMode matrix:nil];
+}
+
+- (void)addQuad:(SPQuad *)quad alpha:(float)alpha blendMode:(uint)blendMode matrix:(SPMatrix *)matrix
 {
     if (!matrix) matrix = quad.transformationMatrix;
     if (_numQuads + 1 > self.capacity) [self expand];
@@ -167,6 +173,7 @@
     {
         _texture = quad.texture;
         _premultipliedAlpha = quad.premultipliedAlpha;
+        self.blendMode = blendMode;
         [_vertexData setPremultipliedAlpha:_premultipliedAlpha updateVertices:NO];
     }
     
@@ -187,15 +194,21 @@
 
 - (void)addQuadBatch:(SPQuadBatch *)quadBatch
 {
-    [self addQuadBatch:quadBatch alpha:quadBatch.alpha matrix:nil];
+    [self addQuadBatch:quadBatch alpha:quadBatch.alpha blendMode:quadBatch.blendMode matrix:nil];
 }
 
 - (void)addQuadBatch:(SPQuadBatch *)quadBatch alpha:(float)alpha
 {
-    [self addQuadBatch:quadBatch alpha:alpha matrix:nil];
+    [self addQuadBatch:quadBatch alpha:alpha blendMode:quadBatch.blendMode matrix:nil];
 }
 
-- (void)addQuadBatch:(SPQuadBatch *)quadBatch alpha:(float)alpha matrix:(SPMatrix *)matrix
+- (void)addQuadBatch:(SPQuadBatch *)quadBatch alpha:(float)alpha blendMode:(uint)blendMode
+{
+    [self addQuadBatch:quadBatch alpha:alpha blendMode:blendMode matrix:nil];
+}
+
+- (void)addQuadBatch:(SPQuadBatch *)quadBatch alpha:(float)alpha blendMode:(uint)blendMode
+              matrix:(SPMatrix *)matrix
 {
     int vertexID = _numQuads * 4;
     int numQuads = quadBatch.numQuads;
@@ -207,6 +220,7 @@
     {
         _texture = quadBatch.texture;
         _premultipliedAlpha = quadBatch.premultipliedAlpha;
+        self.blendMode = blendMode;
         [_vertexData setPremultipliedAlpha:_premultipliedAlpha updateVertices:NO];
     }
     
@@ -224,7 +238,7 @@
 }
 
 - (BOOL)isStateChangeWithTinted:(BOOL)tinted texture:(SPTexture *)texture alpha:(float)alpha
-             premultipliedAlpha:(BOOL)pma numQuads:(int)numQuads
+             premultipliedAlpha:(BOOL)pma blendMode:(uint)blendMode numQuads:(int)numQuads
 {
     if (_numQuads == 0) return NO;
     else if (_numQuads + numQuads > 8192) return YES; // maximum buffer size
@@ -233,7 +247,8 @@
         return _tinted != (tinted || alpha != 1.0f) ||
                _texture.name != texture.name ||
                _texture.repeat != texture.repeat ||
-               _texture.smoothing != texture.smoothing;
+               _texture.smoothing != texture.smoothing ||
+               self.blendMode != blendMode;
     else return YES;
 }
 
@@ -249,14 +264,22 @@
     {
         [support finishQuadBatch];
         [support addDrawCalls:1];
-        [self renderWithAlpha:support.alpha matrix:support.mvpMatrix];
+        [self renderWithMvpMatrix:support.mvpMatrix alpha:support.alpha blendMode:support.blendMode];
     }
 }
 
-- (void)renderWithAlpha:(float)alpha matrix:(SPMatrix *)matrix
+- (void)renderWithMvpMatrix:(SPMatrix *)matrix
+{
+    [self renderWithMvpMatrix:matrix alpha:1.0f blendMode:self.blendMode];
+}
+
+- (void)renderWithMvpMatrix:(SPMatrix *)matrix alpha:(float)alpha blendMode:(uint)blendMode;
 {
     if (!_numQuads) return;
     if (_syncRequired) [self syncBuffers];
+    if (blendMode == SP_BLEND_MODE_AUTO)
+        [NSException raise:SP_EXC_INVALID_OPERATION
+                    format:@"cannot render object with blend mode AUTO"];
     
     _quadEffect.texture = _texture;
     _quadEffect.premultipliedAlpha = _premultipliedAlpha;
@@ -266,8 +289,7 @@
     
     [_quadEffect prepareToDraw];
 
-    if (_premultipliedAlpha) glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-    else                     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    [SPBlendMode applyBlendFactorsForBlendMode:blendMode premultipliedAlpha:_premultipliedAlpha];
     
     int attribPosition  = _quadEffect.attribPosition;
     int attribColor     = _quadEffect.attribColor;
@@ -315,14 +337,14 @@
     if (!quadBatches) quadBatches = [[NSMutableArray alloc] init];
     
     [self compileObject:object intoArray:quadBatches atPosition:-1
-             withMatrix:[SPMatrix matrixWithIdentity] alpha:1.0f];
+             withMatrix:[SPMatrix matrixWithIdentity] alpha:1.0f blendMode:SP_BLEND_MODE_AUTO];
 
     return quadBatches;
 }
 
 + (int)compileObject:(SPDisplayObject *)object intoArray:(NSMutableArray *)quadBatches
           atPosition:(int)quadBatchID withMatrix:(SPMatrix *)transformationMatrix
-               alpha:(float)alpha
+               alpha:(float)alpha blendMode:(uint)blendMode
 {
     BOOL isRootObject = NO;
     float objectAlpha = object.alpha;
@@ -336,6 +358,7 @@
         isRootObject = YES;
         quadBatchID = 0;
         objectAlpha = 1.0f;
+        blendMode = object.blendMode;
         if (quadBatches.count == 0) [quadBatches addObject:[SPQuadBatch quadBatch]];
         else [quadBatches[0] reset];
     }
@@ -349,10 +372,14 @@
         {
             if ([child hasVisibleArea])
             {
+                uint childBlendMode = child.blendMode;
+                if (childBlendMode == SP_BLEND_MODE_AUTO) childBlendMode = blendMode;
+                
                 [childMatrix copyFromMatrix:transformationMatrix];
                 [childMatrix prependMatrix:child.transformationMatrix];
                 quadBatchID = [self compileObject:child intoArray:quadBatches atPosition:quadBatchID
-                                       withMatrix:childMatrix alpha:alpha * objectAlpha];
+                                       withMatrix:childMatrix alpha:alpha * objectAlpha
+                                        blendMode:childBlendMode];
             }
         }
     }
@@ -366,7 +393,7 @@
         SPQuadBatch *currentBatch = quadBatches[quadBatchID];
         
         if ([currentBatch isStateChangeWithTinted:tinted texture:texture alpha:alpha * objectAlpha
-                               premultipliedAlpha:pma numQuads:numQuads])
+                               premultipliedAlpha:pma blendMode:blendMode numQuads:numQuads])
         {
             quadBatchID++;
             if (quadBatches.count <= quadBatchID) [quadBatches addObject:[SPQuadBatch quadBatch]];
@@ -375,9 +402,11 @@
         }
         
         if (quad)
-            [currentBatch addQuad:quad alpha:alpha * objectAlpha matrix:transformationMatrix];
+            [currentBatch addQuad:quad alpha:alpha * objectAlpha blendMode:blendMode
+                           matrix:transformationMatrix];
         else
-            [currentBatch addQuadBatch:batch alpha:alpha * objectAlpha matrix:transformationMatrix];
+            [currentBatch addQuadBatch:batch alpha:alpha * objectAlpha blendMode:blendMode
+                                matrix:transformationMatrix];
     }
     else
     {

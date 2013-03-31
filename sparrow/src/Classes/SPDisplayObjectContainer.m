@@ -259,14 +259,13 @@ static void getChildEventListeners(SPDisplayObject *object, NSString *eventType,
     {
         if (child.hasVisibleArea)
         {
-            [support pushAlpha:child.alpha];
-            [support pushMatrix];
-            [support prependMatrix:child.transformationMatrix];
+            [support pushStateWithMatrix:child.transformationMatrix
+                                   alpha:child.alpha
+                               blendMode:child.blendMode];
             
             [child render:support];
             
-            [support popMatrix];
-            [support popAlpha];
+            [support popState];
         }
     }
 }

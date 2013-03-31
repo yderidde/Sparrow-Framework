@@ -144,12 +144,13 @@
 {
     [self renderToFramebuffer:^
      {
-         [_renderSupport pushMatrix];
+         [_renderSupport pushStateWithMatrix:object.transformationMatrix
+                                       alpha:object.alpha
+                                   blendMode:object.blendMode];
          
-         [_renderSupport prependMatrix:object.transformationMatrix];
          [object render:_renderSupport];
          
-         [_renderSupport popMatrix];
+         [_renderSupport popState];
      }];
 }
 

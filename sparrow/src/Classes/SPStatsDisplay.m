@@ -58,7 +58,7 @@
     
     if (_totalTime > 1.0)
     {
-        _framesPerSecond = _frameCount / _totalTime;
+        _framesPerSecond = roundf(_frameCount / _totalTime);
         _frameCount = _totalTime = 0;
         [self update];
     }

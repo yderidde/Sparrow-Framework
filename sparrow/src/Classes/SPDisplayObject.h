@@ -178,6 +178,9 @@
 /// The name of the display object (default: nil). Used by `childByName:` of display object containers.
 @property (nonatomic, copy) NSString *name;
 
+/// The blend mode determines how the object is blended with the objects underneath. Default: AUTO
+@property (nonatomic, assign) uint blendMode;
+
 /// Indicates if an object occupies any visible area. (Which is the case when its `alpha`,
 /// `scaleX` and `scaleY` values are not zero, and its `visible` property is enabled.)
 @property (nonatomic, readonly) BOOL hasVisibleArea;

@@ -50,16 +50,10 @@
     if (isTouch && (!self.visible || !self.touchable)) 
         return nil;
     
+    // if nothing else is hit, the stage returns itself as target
     SPDisplayObject *target = [super hitTestPoint:localPoint forTouch:isTouch];
+    if (!target) target = self;
     
-    // different to other containers, the stage should acknowledge touches even in empty parts.
-    if (!target)
-    {
-        SPRectangle *bounds = [SPRectangle rectangleWithX:self.x y:self.y 
-                                                    width:self.width height:self.height];
-        if ([bounds containsPoint:localPoint])      
-            target = self;
-    }
     return target;
 }
 
