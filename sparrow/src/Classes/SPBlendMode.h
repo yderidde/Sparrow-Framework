@@ -19,8 +19,12 @@
 /// A helper class for working with Sparrow's blend modes.
 @interface SPBlendMode : NSObject
 
-/// Encodes a set of blend factors into a single unsigned integer as it is used by the `blendMode`
-/// property of `SPDisplayObject`.
+/// Encodes a set of blend factors into a single unsigned integer, using the same factors regardless
+/// of the premultiplied alpha state active on rendering.
++ (uint)encodeBlendModeWithSourceFactor:(uint)sFactor destFactor:(uint)dFactor;
+
+/// Encodes a set of blend factors into a single unsigned integer, using different factors depending
+/// on the premultiplied alpha state active on rendering.
 + (uint)encodeBlendModeWithSourceFactor:(uint)sFactor destFactor:(uint)dFactor
                         sourceFactorPMA:(uint)sFactorPMA destFactorPMA:(uint)dFactorPMA;
 

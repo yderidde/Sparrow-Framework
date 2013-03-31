@@ -53,7 +53,7 @@ static NSString *getNameOfMode(uint mode)
         case SP_BLEND_MODE_MULTIPLY: return @"multiply"; break;
         case SP_BLEND_MODE_SCREEN:   return @"screen";   break;
         case SP_BLEND_MODE_ERASE:    return @"erase";    break;
-        default:                     return @"unknown";  break;
+        default:                     return nil;         break;
     }
 }
 
@@ -68,6 +68,12 @@ static NSString *getNameOfMode(uint mode)
 
 // OpenGL blend factors are either 0, 1, or something between 0x0300 and 0x0308.
 // We can use this to encode 4 blend factors in a single unsigned integer.
+
++ (uint)encodeBlendModeWithSourceFactor:(uint)sFactor destFactor:(uint)dFactor
+{
+    return [self encodeBlendModeWithSourceFactor:sFactor destFactor:dFactor
+                                 sourceFactorPMA:sFactor destFactorPMA:dFactor];
+}
 
 + (uint)encodeBlendModeWithSourceFactor:(uint)sFactor destFactor:(uint)dFactor
                         sourceFactorPMA:(uint)sFactorPMA destFactorPMA:(uint)dFactorPMA
@@ -105,7 +111,23 @@ static NSString *getNameOfMode(uint mode)
 
 + (NSString *)describeBlendMode:(uint)blendMode
 {
-    return getNameOfMode(blendMode);
+    NSString *modeName = getNameOfMode(blendMode);
+    
+    if (modeName) return [NSString stringWithFormat:@"[BlendMode: %@]", modeName];
+    else
+    {
+        uint src, dst, srcPMA, dstPMA;
+        [self decodeBlendMode:blendMode premultipliedAlpha:NO  intoSourceFactor:&src destFactor:&dst];
+        [self decodeBlendMode:blendMode premultipliedAlpha:YES intoSourceFactor:&srcPMA destFactor:&dstPMA];
+        
+        if (src == srcPMA && dst == dstPMA)
+            return [NSString stringWithFormat:@"[BlendMode: src=%@, dst=%@]",
+                    getNameOfFactor(src), getNameOfFactor(dst)];
+        else
+            return [NSString stringWithFormat:@"[BlendMode: src=%@, dst=%@, srcPMA=%@, dstPMA=%@]",
+                getNameOfFactor(src),    getNameOfFactor(dst),
+                getNameOfFactor(srcPMA), getNameOfFactor(dstPMA)];
+    }
 }
 
 @end
