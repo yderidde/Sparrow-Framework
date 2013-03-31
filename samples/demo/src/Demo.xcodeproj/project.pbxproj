@@ -79,6 +79,8 @@
 		DEF1720011B010E500A11DD7 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DEF171FF11B010E500A11DD7 /* UIKit.framework */; };
 		DEF1721811B0110200A11DD7 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DEF1721711B0110200A11DD7 /* AudioToolbox.framework */; };
 		DEF1726911B017AA00A11DD7 /* SoundScene.m in Sources */ = {isa = PBXBuildFile; fileRef = DEF1726811B017AA00A11DD7 /* SoundScene.m */; };
+		DEF7B29817088C170014E542 /* brush@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = DEF7B29717088C170014E542 /* brush@2x.png */; };
+		DEF7B29B17088C2B0014E542 /* brush.png in Resources */ = {isa = PBXBuildFile; fileRef = DEF7B29A17088C2B0014E542 /* brush.png */; };
 		DEFE4CF0101B684B00E22471 /* Game.m in Sources */ = {isa = PBXBuildFile; fileRef = DEFE4CEB101B684B00E22471 /* Game.m */; };
 		DEFE4CF1101B684B00E22471 /* TouchScene.m in Sources */ = {isa = PBXBuildFile; fileRef = DEFE4CED101B684B00E22471 /* TouchScene.m */; };
 		DEFE4CF2101B684B00E22471 /* TouchSheet.m in Sources */ = {isa = PBXBuildFile; fileRef = DEFE4CEF101B684B00E22471 /* TouchSheet.m */; };
@@ -197,6 +199,8 @@
 		DEF1721711B0110200A11DD7 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		DEF1726711B017AA00A11DD7 /* SoundScene.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SoundScene.h; sourceTree = "<group>"; };
 		DEF1726811B017AA00A11DD7 /* SoundScene.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SoundScene.m; sourceTree = "<group>"; };
+		DEF7B29717088C170014E542 /* brush@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "brush@2x.png"; sourceTree = "<group>"; };
+		DEF7B29A17088C2B0014E542 /* brush.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = brush.png; sourceTree = "<group>"; };
 		DEFE4CEA101B684B00E22471 /* Game.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Game.h; sourceTree = "<group>"; };
 		DEFE4CEB101B684B00E22471 /* Game.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Game.m; sourceTree = "<group>"; };
 		DEFE4CEC101B684B00E22471 /* TouchScene.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TouchScene.h; sourceTree = "<group>"; };
@@ -256,6 +260,7 @@
 				25C23AFF11EC7FE200A25DF7 /* atlas.xml */,
 				DE91023C16242DA1001FD950 /* background.jpg */,
 				DE8055BC1506531B006A9426 /* benchmark_object.png */,
+				DEF7B29A17088C2B0014E542 /* brush.png */,
 				25C23A5511EC631500A25DF7 /* button_back.png */,
 				25C23A5611EC631500A25DF7 /* button_big.png */,
 				25C23A5711EC631500A25DF7 /* button_normal.png */,
@@ -282,6 +287,7 @@
 				25C23AFB11EC7FC400A25DF7 /* atlas@2x.xml */,
 				DE91023E16242DA8001FD950 /* background@2x.jpg */,
 				DE8055BE15065323006A9426 /* benchmark_object@2x.png */,
+				DEF7B29717088C170014E542 /* brush@2x.png */,
 				25C23A6411EC632400A25DF7 /* button_back@2x.png */,
 				25C23A6511EC632400A25DF7 /* button_big@2x.png */,
 				25C23A6611EC632400A25DF7 /* button_normal@2x.png */,
@@ -560,6 +566,8 @@
 				DE5C627216CBE1F800999006 /* async_local@2x.png in Resources */,
 				DEC46A451700B56400742800 /* Icon~ipad.png in Resources */,
 				DEC46A481700B57000742800 /* Icon@2x~ipad.png in Resources */,
+				DEF7B29817088C170014E542 /* brush@2x.png in Resources */,
+				DEF7B29B17088C2B0014E542 /* brush.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
