@@ -102,7 +102,7 @@
         [_texture adjustVertexData:_vertexDataCache atIndex:0 numVertices:4];
     }
     
-    [_vertexDataCache copyToVertexData:targetData atIndex:targetIndex];
+    [_vertexDataCache copyToVertexData:targetData atIndex:targetIndex numVertices:4];
 }
 
 - (void)setTexture:(SPTexture *)value

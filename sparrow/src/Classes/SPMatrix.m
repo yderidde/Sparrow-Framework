@@ -23,7 +23,7 @@
 
 // --- c functions ---
 
-static void setValues(SPMatrix *matrix, float a, float b, float c, float d, float tx, float ty)
+static inline void setValues(SPMatrix *matrix, float a, float b, float c, float d, float tx, float ty)
 {
     matrix->_a = a;
     matrix->_b = b;
