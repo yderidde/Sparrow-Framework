@@ -68,8 +68,7 @@
 {
     if (!path) return;
 
-    float scaleFactor = Sparrow.contentScaleFactor;
-    _path = [SPUtils absolutePathToFile:path withScaleFactor:scaleFactor];    
+    _path = [SPUtils absolutePathToFile:path];
     if (!_path) [NSException raise:SP_EXC_FILE_NOT_FOUND format:@"file not found: %@", path];
     
     NSData *xmlData = [[NSData alloc] initWithContentsOfFile:_path];

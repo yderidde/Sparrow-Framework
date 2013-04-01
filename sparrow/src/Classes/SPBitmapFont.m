@@ -109,8 +109,7 @@
 
 - (id)initWithContentsOfFile:(NSString *)path texture:(SPTexture *)texture
 {
-    float scaleFactor = Sparrow.contentScaleFactor;
-    NSString *absolutePath = [SPUtils absolutePathToFile:path withScaleFactor:scaleFactor];
+    NSString *absolutePath = [SPUtils absolutePathToFile:path];
     if (!absolutePath) [NSException raise:SP_EXC_FILE_NOT_FOUND format:@"file not found: %@", path];
     NSData *xmlData = [[NSData alloc] initWithContentsOfFile:absolutePath];
 

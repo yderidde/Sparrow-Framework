@@ -11,6 +11,7 @@
 
 #import "SPUtils.h"
 #import "SPNSExtensions.h"
+#import "SparrowClass.h"
 
 #import <GLKit/GLKit.h>
 #import <sys/stat.h>
@@ -59,6 +60,8 @@
     // SD: <ImageName><device_modifier>.<filename_extension>
     // HD: <ImageName>@2x<device_modifier>.<filename_extension>
     
+    if (factor < 1.0f) factor = 1.0f;
+    
     NSString *originalPath = path;
     NSString *pathWithScale = [path stringByAppendingScaleSuffixToFilename:factor];
     NSString *idiomSuffix = (idiom == UIUserInterfaceIdiomPad) ? @"~ipad" : @"~iphone";
@@ -86,7 +89,7 @@
 
 + (NSString *)absolutePathToFile:(NSString *)path
 {
-    return [SPUtils absolutePathToFile:path withScaleFactor:1.0f];
+    return [SPUtils absolutePathToFile:path withScaleFactor:Sparrow.contentScaleFactor];
 }
 
 @end

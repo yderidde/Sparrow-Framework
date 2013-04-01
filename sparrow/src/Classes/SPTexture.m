@@ -48,8 +48,7 @@
 - (id)initWithContentsOfFile:(NSString *)path generateMipmaps:(BOOL)mipmaps
           premultipliedAlpha:(BOOL)pma
 {
-    float contentScaleFactor = Sparrow.contentScaleFactor;
-    NSString *fullPath = [SPUtils absolutePathToFile:path withScaleFactor:contentScaleFactor];
+    NSString *fullPath = [SPUtils absolutePathToFile:path];
     
     if (!fullPath)
         [NSException raise:SP_EXC_FILE_NOT_FOUND format:@"File '%@' not found", path];
@@ -326,8 +325,7 @@
 + (void)loadFromFile:(NSString *)path generateMipmaps:(BOOL)mipmaps premultipliedAlpha:(BOOL)pma
           onComplete:(SPTextureLoadingBlock)callback;
 {
-    float contentScaleFactor = Sparrow.contentScaleFactor;
-    NSString *fullPath = [SPUtils absolutePathToFile:path withScaleFactor:contentScaleFactor];
+    NSString *fullPath = [SPUtils absolutePathToFile:path];
     float actualScaleFactor = [fullPath contentScaleFactor];
     
     if ([self isCompressedFile:path])

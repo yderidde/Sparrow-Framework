@@ -90,7 +90,7 @@
 
 - (void)testAbsolutePathToFile
 {
-    NSString *absolutePath1x = [SPUtils absolutePathToFile:@"pvrtc_image.pvr"];
+    NSString *absolutePath1x = [SPUtils absolutePathToFile:@"pvrtc_image.pvr" withScaleFactor:1.0f];
     NSString *absolutePath2x = [SPUtils absolutePathToFile:@"pvrtc_image.pvr" withScaleFactor:2.0f];
     
     STAssertNotNil(absolutePath1x, @"resource not found (1x)");
