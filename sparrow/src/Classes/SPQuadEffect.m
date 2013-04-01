@@ -150,7 +150,7 @@ NSString *getProgramName(BOOL hasTexture, BOOL useTinting)
     if (hasTexture)
     {
         [source appendLine:@"varying lowp vec2 vTexCoords;"];
-        [source appendLine:@"uniform sampler2D uTexture;"];
+        [source appendLine:@"uniform lowp sampler2D uTexture;"];
     }
     
     // main
