@@ -84,7 +84,8 @@
 
 + (NSString *)absolutePathToFile:(NSString *)path withScaleFactor:(float)factor
 {
-    return [SPUtils absolutePathToFile:path withScaleFactor:factor idiom:UI_USER_INTERFACE_IDIOM()];
+    UIUserInterfaceIdiom currentIdiom = [[UIDevice currentDevice] userInterfaceIdiom];
+    return [SPUtils absolutePathToFile:path withScaleFactor:factor idiom:currentIdiom];
 }
 
 + (NSString *)absolutePathToFile:(NSString *)path

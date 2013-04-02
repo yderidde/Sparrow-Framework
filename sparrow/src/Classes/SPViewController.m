@@ -113,17 +113,17 @@
     [self startWithRoot:rootClass supportHighResolutions:hd doubleOnPad:NO];
 }
 
-- (void)startWithRoot:(Class)rootClass supportHighResolutions:(BOOL)hd doubleOnPad:(BOOL)pad
+- (void)startWithRoot:(Class)rootClass supportHighResolutions:(BOOL)hd doubleOnPad:(BOOL)doubleOnPad
 {
     if (_rootClass)
         [NSException raise:SP_EXC_INVALID_OPERATION
                     format:@"Sparrow has already been started"];
 
-    BOOL isPad = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad;
+    BOOL isPad = ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad);
     
     _rootClass = rootClass;
     _supportHighResolutions = hd;
-    _doubleResolutionOnPad = pad;
+    _doubleResolutionOnPad = doubleOnPad;
     _viewScaleFactor = _supportHighResolutions ? [[UIScreen mainScreen] scale] : 1.0f;
     _contentScaleFactor = (_doubleResolutionOnPad && isPad) ? _viewScaleFactor * 2.0f : _viewScaleFactor;
 }

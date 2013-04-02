@@ -48,7 +48,7 @@ void onUncaughtException(NSException *exception)
     //
     // (Beware: to support autorotation, this would need a little more work.)
     
-    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
+    if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad)
     {
         _viewController.view.frame = CGRectMake(64, 32, 640, 960);
         _viewController.stage.width = 320;

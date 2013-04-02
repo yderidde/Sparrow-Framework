@@ -23,7 +23,7 @@ typedef void (^SPRootCreatedBlock)(id root);
 
 - (void)startWithRoot:(Class)rootClass;
 - (void)startWithRoot:(Class)rootClass supportHighResolutions:(BOOL)hd;
-- (void)startWithRoot:(Class)rootClass supportHighResolutions:(BOOL)hd doubleOnPad:(BOOL)pad;
+- (void)startWithRoot:(Class)rootClass supportHighResolutions:(BOOL)hd doubleOnPad:(BOOL)doubleOnPad;
 - (void)updateStageSize;
 
 - (void)registerProgram:(SPProgram *)program name:(NSString *)name;
