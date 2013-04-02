@@ -210,18 +210,21 @@
 - (void)batchQuad:(SPQuad *)quad
 {
     SPRenderState *currentState = CURRENT_STATE();
+    SPQuadBatch *currentBatch = CURRENT_BATCH();
+    
     float alpha = currentState.alpha;
     uint blendMode = currentState.blendMode;
     SPMatrix *modelviewMatrix = currentState.modelviewMatrix;
     
-    if ([CURRENT_BATCH() isStateChangeWithTinted:quad.tinted texture:quad.texture alpha:alpha
-                              premultipliedAlpha:quad.premultipliedAlpha blendMode:blendMode
-                                        numQuads:1])
+    if ([currentBatch isStateChangeWithTinted:quad.tinted texture:quad.texture alpha:alpha
+                           premultipliedAlpha:quad.premultipliedAlpha blendMode:blendMode
+                                     numQuads:1])
     {
         [self finishQuadBatch];
+        currentBatch = CURRENT_BATCH();
     }
     
-    [CURRENT_BATCH() addQuad:quad alpha:alpha blendMode:blendMode matrix:modelviewMatrix];
+    [currentBatch addQuad:quad alpha:alpha blendMode:blendMode matrix:modelviewMatrix];
 }
 
 - (void)finishQuadBatch

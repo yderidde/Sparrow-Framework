@@ -269,7 +269,7 @@ BOOL isOpaqueWhite(SPVertexColor color)
     
     GLKMatrix3 glkMatrix = [matrix convertToGLKMatrix3];
     
-    for (int i=index; i<index+count; ++i)
+    for (int i=index, end=index+count; i<end; ++i)
     {
         GLKVector2 pos = _vertices[i].position;
         _vertices[i].position.x = glkMatrix.m00 * pos.x + glkMatrix.m10 * pos.y + glkMatrix.m20;
