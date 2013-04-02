@@ -12,6 +12,10 @@
 #import <Foundation/Foundation.h>
 #import <math.h>
 
+// typedefs
+
+typedef void (^SPCallbackBlock)();
+
 // constants
 
 #define PI       3.14159265359f

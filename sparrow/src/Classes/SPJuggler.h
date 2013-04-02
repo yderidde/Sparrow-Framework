@@ -78,6 +78,9 @@
 /// instead. Execution will be delayed until `time` has passed.
 - (id)delayInvocationAtTarget:(id)target byTime:(double)time;
 
+/// Delays the execution of a block by a certain time in seconds.
+- (id)delayInvocationByTime:(double)time block:(SPCallbackBlock)block;
+
 /// ----------------
 /// @name Properties
 /// ----------------

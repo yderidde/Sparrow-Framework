@@ -13,8 +13,7 @@
 #import "SPEventDispatcher.h"
 #import "SPAnimatable.h"
 #import "SPTransitions.h"
-
-typedef void (^SPCallbackBlock)();
+#import "SPMacros.h"
 
 /** ------------------------------------------------------------------------------------------------
  

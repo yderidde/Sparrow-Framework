@@ -15,26 +15,42 @@
 @implementation SPDelayedInvocation
 {
     id _target;
-    NSMutableSet *_invocations;
     double _totalTime;
     double _currentTime;
+    
+    SPCallbackBlock _block;
+    NSMutableArray *_invocations;
 }
 
 @synthesize totalTime = _totalTime;
 @synthesize currentTime = _currentTime;
 @synthesize target = _target;
 
-- (id)initWithTarget:(id)target delay:(double)time
+- (id)initWithTarget:(id)target delay:(double)time block:(SPCallbackBlock)block
 {
-    if (!target) return nil;
-    else if ((self = [super init]))
+    if ((self = [super init]))
     {
         _totalTime = MAX(0.0001, time); // zero is not allowed
         _currentTime = 0;
-        _target = target;
-        _invocations = [[NSMutableSet alloc] init];
+        _block = block;
+        
+        if (target)
+        {
+            _target = target;
+            _invocations = [[NSMutableArray alloc] init];
+        }
     }
     return self;
+}
+
+- (id)initWithTarget:(id)target delay:(double)time
+{
+    return [self initWithTarget:target delay:time block:NULL];
+}
+
+- (id)initWithDelay:(double)time block:(SPCallbackBlock)block
+{
+    return [self initWithTarget:nil delay:time block:block];
 }
 
 - (id)init
@@ -71,7 +87,9 @@
     
     if (previousTime < _totalTime && _currentTime >= _totalTime)
     {
-        [_invocations makeObjectsPerformSelector:@selector(invoke)];
+        if (_invocations) [_invocations makeObjectsPerformSelector:@selector(invoke)];
+        if (_block) _block();
+        
         [self dispatchEventWithType:SP_EVENT_TYPE_REMOVE_FROM_JUGGLER];
     }
 }
@@ -84,6 +102,11 @@
 + (id)invocationWithTarget:(id)target delay:(double)time
 {
     return [[self alloc] initWithTarget:target delay:time];
+}
+
++ (id)invocationWithDelay:(double)time block:(SPCallbackBlock)block
+{
+    return [[self alloc] initWithDelay:time block:block];
 }
 
 @end

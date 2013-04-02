@@ -121,6 +121,24 @@
     STAssertEquals(100.0f, quad.x, @"delayed invocation not executed");
 }
 
+- (void)testDelayedBlock
+{
+    __block int callCount = 0;
+    SPJuggler *juggler = [SPJuggler juggler];
+    id proxy = [juggler delayInvocationByTime:1.0 block:^
+    {
+        callCount++;
+    }];
+    
+    [juggler advanceTime:0.5];
+    STAssertEquals(0, callCount, @"block called too early");
+    STAssertTrue([juggler containsObject:proxy], @"Delayed call not found in Juggler");
+    
+    [juggler advanceTime:1.0];
+    STAssertEquals(1, callCount, @"block not called");
+    STAssertFalse([juggler containsObject:proxy], @"Delayed call not removed from Juggler");
+}
+
 @end
 
 #endif

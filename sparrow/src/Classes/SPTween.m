@@ -12,7 +12,6 @@
 #import "SPTween.h"
 #import "SPTransitions.h"
 #import "SPTweenedProperty.h"
-#import "SPMacros.h"
 
 #define TRANS_SUFFIX  @":"
 

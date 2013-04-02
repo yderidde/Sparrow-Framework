@@ -103,9 +103,16 @@
 
 - (id)delayInvocationAtTarget:(id)target byTime:(double)time
 {
-    SPDelayedInvocation *delayedInvoc = [SPDelayedInvocation invocationWithTarget:target delay:time];
-    [self addObject:delayedInvoc];    
-    return delayedInvoc;    
+    SPDelayedInvocation *delayedInv = [SPDelayedInvocation invocationWithTarget:target delay:time];
+    [self addObject:delayedInv];
+    return delayedInv;    
+}
+
+- (id)delayInvocationByTime:(double)time block:(SPCallbackBlock)block
+{
+    SPDelayedInvocation *delayedInv = [SPDelayedInvocation invocationWithDelay:time block:block];
+    [self addObject:delayedInv];
+    return delayedInv;
 }
 
 + (SPJuggler *)juggler
