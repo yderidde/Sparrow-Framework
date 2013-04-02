@@ -45,13 +45,13 @@
     return [self initWithWidth:screenSize.width height:screenSize.height];
 }
 
-- (SPDisplayObject*)hitTestPoint:(SPPoint*)localPoint forTouch:(BOOL)isTouch
+- (SPDisplayObject*)hitTestPoint:(SPPoint*)localPoint
 {
-    if (isTouch && (!self.visible || !self.touchable)) 
+    if (!self.visible || !self.touchable)
         return nil;
     
     // if nothing else is hit, the stage returns itself as target
-    SPDisplayObject *target = [super hitTestPoint:localPoint forTouch:isTouch];
+    SPDisplayObject *target = [super hitTestPoint:localPoint];
     if (!target) target = self;
     
     return target;

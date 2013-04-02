@@ -196,10 +196,10 @@ float square(float value) { return value * value; }
     return [self boundsInSpace:_parent];
 }
 
-- (SPDisplayObject *)hitTestPoint:(SPPoint *)localPoint forTouch:(BOOL)isTouch
+- (SPDisplayObject *)hitTestPoint:(SPPoint *)localPoint
 {
-    // on a touch test, invisible or untouchable objects cause the test to fail
-    if (isTouch && (!_visible || !_touchable)) return nil;
+    // invisible or untouchable objects cause the test to fail
+    if (!_visible || !_touchable) return nil;
     
     // otherwise, check bounding box
     if ([[self boundsInSpace:self] containsPoint:localPoint]) return self; 

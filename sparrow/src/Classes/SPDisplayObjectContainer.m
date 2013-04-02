@@ -210,9 +210,9 @@ static void getChildEventListeners(SPDisplayObject *object, NSString *eventType,
     }
 }
 
-- (SPDisplayObject*)hitTestPoint:(SPPoint*)localPoint forTouch:(BOOL)isTouch
+- (SPDisplayObject*)hitTestPoint:(SPPoint*)localPoint
 {
-    if (isTouch && (!self.visible || !self.touchable)) 
+    if (!self.visible || !self.touchable)
         return nil;
     
     for (int i=[_children count]-1; i>=0; --i) // front to back!
@@ -220,7 +220,7 @@ static void getChildEventListeners(SPDisplayObject *object, NSString *eventType,
         SPDisplayObject *child = _children[i];
         SPMatrix *transformationMatrix = [self transformationMatrixToSpace:child];
         SPPoint  *transformedPoint = [transformationMatrix transformPoint:localPoint];
-        SPDisplayObject *target = [child hitTestPoint:transformedPoint forTouch:isTouch];
+        SPDisplayObject *target = [child hitTestPoint:transformedPoint];
         if (target) return target;
     }
     

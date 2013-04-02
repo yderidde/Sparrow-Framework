@@ -241,34 +241,29 @@
 {
     SPQuad *quad = [[SPQuad alloc] initWithWidth:25 height:10];
     
-    STAssertNotNil([quad hitTestPoint:[SPPoint pointWithX:15 y:5] forTouch:YES], 
+    STAssertNotNil([quad hitTestPoint:[SPPoint pointWithX:15 y:5]], 
                    @"point should be inside");
-    STAssertNotNil([quad hitTestPoint:[SPPoint pointWithX:0 y:0] forTouch:YES],  
+    STAssertNotNil([quad hitTestPoint:[SPPoint pointWithX:0 y:0]],
                    @"point should be inside");
-    STAssertNotNil([quad hitTestPoint:[SPPoint pointWithX:25 y:0] forTouch:YES], 
+    STAssertNotNil([quad hitTestPoint:[SPPoint pointWithX:25 y:0]], 
                    @"point should be inside");
-    STAssertNotNil([quad hitTestPoint:[SPPoint pointWithX:25 y:10] forTouch:YES], 
+    STAssertNotNil([quad hitTestPoint:[SPPoint pointWithX:25 y:10]], 
                    @"point should be inside");
-    STAssertNotNil([quad hitTestPoint:[SPPoint pointWithX:0 y:10] forTouch:YES], 
+    STAssertNotNil([quad hitTestPoint:[SPPoint pointWithX:0 y:10]], 
                    @"point should be inside");
-    STAssertNil([quad hitTestPoint:[SPPoint pointWithX:-1 y:-1] forTouch:YES], 
+    STAssertNil([quad hitTestPoint:[SPPoint pointWithX:-1 y:-1]], 
                 @"point should be outside");    
-    STAssertNil([quad hitTestPoint:[SPPoint pointWithX:26 y:11] forTouch:YES], 
+    STAssertNil([quad hitTestPoint:[SPPoint pointWithX:26 y:11]], 
                 @"point should be outside");
 
     quad.visible = NO;
-    STAssertNil([quad hitTestPoint:[SPPoint pointWithX:15 y:5] forTouch:YES], 
+    STAssertNil([quad hitTestPoint:[SPPoint pointWithX:15 y:5]], 
                 @"hitTest should fail, object invisible");
         
     quad.visible = YES;
     quad.touchable = NO;
-    STAssertNil([quad hitTestPoint:[SPPoint pointWithX:15 y:5] forTouch:YES], 
+    STAssertNil([quad hitTestPoint:[SPPoint pointWithX:15 y:5]], 
                 @"hitTest should fail, object untouchable");    
-
-    quad.visible = NO;
-    quad.touchable = NO;
-    STAssertNotNil([quad hitTestPoint:[SPPoint pointWithX:15 y:5] forTouch:NO], 
-                @"hitTest should succeed, this is no touch test");    
 }
 
 - (void)testRotation
