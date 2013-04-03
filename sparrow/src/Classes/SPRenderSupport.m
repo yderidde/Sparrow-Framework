@@ -120,6 +120,7 @@
     [_quadBatches removeAllObjects];
     [_quadBatches addObject:[[SPQuadBatch alloc] init]];
      _quadBatchIndex = 0;
+     _quadBatchSize = 1;
 }
 
 + (void)clearWithColor:(uint)color alpha:(float)alpha;
