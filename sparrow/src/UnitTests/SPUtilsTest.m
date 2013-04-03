@@ -88,6 +88,12 @@
     STAssertFalse(fileExists, @"found non-existing file");
 }
 
+- (void)testFileExistsAtPath_Null
+{
+    BOOL fileExists = [SPUtils fileExistsAtPath:nil];
+    STAssertFalse(fileExists, @"nil path mistakenly accepted");
+}
+
 - (void)testAbsolutePathToFile
 {
     NSString *absolutePath1x = [SPUtils absolutePathToFile:@"pvrtc_image.pvr" withScaleFactor:1.0f];

@@ -46,7 +46,9 @@
 
 + (BOOL)fileExistsAtPath:(NSString *)path
 {
-    if (![path isAbsolutePath])
+    if (!path)
+        return NO;
+    else if (![path isAbsolutePath])
         path = [[NSBundle appBundle] pathForResource:path];
     
     struct stat buffer;   
