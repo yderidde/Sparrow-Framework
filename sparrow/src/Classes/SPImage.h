@@ -63,6 +63,9 @@
 /// Sets the texture coordinates of a vertex. Coordinates are in the range [0, 1].
 - (void)setTexCoords:(SPPoint*)coords ofVertex:(int)vertexID;
 
+/// Sets the texture coordinates of a vertex. Coordinates are in the range [0, 1].
+- (void)setTexCoordsWithX:(float)x y:(float)y ofVertex:(int)vertexID;
+
 /// Gets the texture coordinates of a vertex.
 - (SPPoint*)texCoordsOfVertex:(int)vertexID;
 
