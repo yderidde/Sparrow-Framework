@@ -54,7 +54,7 @@ typedef enum
    font name to the corresponding property.
  - Bitmap fonts. If you need speed or fancy font effects, use a bitmap font instead. That is a 
    font that has its glyphs rendered to a texture atlas. To use it, first register the font with
-   the method `registerBitmapFontFromFile:`, and then pass the font name to the corresponding 
+   the method `registerBitmapFont:`, and then pass the font name to the corresponding 
    property of the text field.
     
  For the latter, we recommend one of the following tools; both support Sparrow natively.
@@ -139,7 +139,7 @@ typedef enum
 /// @return The name of the font that was passed to the method.
 + (NSString *)registerBitmapFontFromFile:(NSString *)path name:(NSString *)fontName;
 
-/// Releases the bitmap font.
+/// Unregisters the bitmap font of this name.
 + (void)unregisterBitmapFont:(NSString *)name;
 
 /// Get the bitmap font that was registered under a certain name.

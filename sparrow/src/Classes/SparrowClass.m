@@ -43,7 +43,7 @@ static SPViewController *controller = nil;
 
 + (float)contentScaleFactor
 {
-    return controller.contentScaleFactor;
+    return controller ? controller.contentScaleFactor : 1.0f;
 }
 
 @end

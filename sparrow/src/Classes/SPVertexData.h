@@ -37,10 +37,11 @@ SPVertexColor SPVertexColorMakeWithColorAndAlpha(uint rgb, float alpha);
 
 /** ------------------------------------------------------------------------------------------------
  
- The VertexData class manages a raw list of vertex information, allowing direct upload
- to OpenGL vertex buffers. _You only have to work with this class if you create display
- objects with a custom render function. If you don't plan to do that, you can safely
- ignore it._
+ The SPVertexData class manages a raw list of vertex information, allowing direct upload
+ to OpenGL vertex buffers. 
+ 
+ _You only have to work with this class if you create display objects with a custom render 
+ function. If you don't plan to do that, you can safely ignore it._
  
  To render objects with OpenGL, you have to organize vertex data in so-called
  vertex buffers. Those buffers reside in graphics memory and can be accessed very

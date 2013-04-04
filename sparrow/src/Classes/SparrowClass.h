@@ -13,11 +13,25 @@
 #import "SPViewController.h"
 #import "SPJuggler.h"
 
+/** ------------------------------------------------------------------------------------------------
+ 
+ The Sparrow class provides static convenience methods to access certain properties of the current
+ SPViewController.
+ 
+------------------------------------------------------------------------------------------------- */
+
 @interface Sparrow : NSObject
 
+/// The currently active SPViewController.
 + (SPViewController *)currentController;
+
+/// A juggler that is advanced once per frame by the current view controller.
 + (SPJuggler *)juggler;
+
+/// The stage that is managed by the current view controller.
 + (SPStage *)stage;
+
+/// The content scale factor of the current view controller.
 + (float)contentScaleFactor;
 
 @end
