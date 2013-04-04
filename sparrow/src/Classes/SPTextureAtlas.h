@@ -101,7 +101,7 @@
 /// ----------------
 
 /// The number of available subtextures.
-@property (nonatomic, readonly) int count;
+@property (nonatomic, readonly) int numTextures;
 
 /// All texture names of the atlas, sorted alphabetically.
 @property (nonatomic, readonly) NSArray *names;

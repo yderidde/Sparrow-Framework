@@ -113,7 +113,7 @@
                            path, parser.parserError.localizedDescription];
 }
 
-- (int)count
+- (int)numTextures
 {
     return [_textureRegions count];
 }

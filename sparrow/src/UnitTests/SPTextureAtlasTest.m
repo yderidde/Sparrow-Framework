@@ -22,12 +22,12 @@
     SPTexture *texture = [[SPTexture alloc] initWithWidth:100 height:100];
     SPTextureAtlas *atlas = [[SPTextureAtlas alloc] initWithTexture:texture];
 
-    STAssertEquals(0, atlas.count, @"wrong texture count");
+    STAssertEquals(0, atlas.numTextures, @"wrong texture count");
     
     SPRectangle *region0 = [SPRectangle rectangleWithX:50 y:25 width:50 height:75];
     [atlas addRegion:region0 withName:@"region_0"];
     
-    STAssertEquals(1, atlas.count, @"wrong texture count");
+    STAssertEquals(1, atlas.numTextures, @"wrong texture count");
     
     SPSubTexture *subTexture = (SPSubTexture *)[atlas textureByName:@"region_0"];
     
