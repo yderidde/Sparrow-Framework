@@ -52,13 +52,10 @@
     {                
         // one finger touching -> move
         SPTouch *touch = touches[0];
-                 
-        SPPoint *currentPos = [touch locationInSpace:self.parent];
-        SPPoint *previousPos = [touch previousLocationInSpace:self.parent];
-        SPPoint *dist = [currentPos subtractPoint:previousPos];
+        SPPoint *movement = [touch movementInSpace:self.parent];
         
-        self.x += dist.x;
-        self.y += dist.y;
+        self.x += movement.x;
+        self.y += movement.y;
     }
     else if (touches.count >= 2)
     {
@@ -90,19 +87,6 @@
         float sizeDiff = vector.length / prevVector.length;
         self.scaleX = self.scaleY = MAX(0.5f, self.scaleX * sizeDiff);        
     }
-    
-    touches = [[event touchesWithTarget:self andPhase:SPTouchPhaseEnded] allObjects];
-    if (touches.count == 1)
-    {
-        SPTouch *touch = touches[0];
-        if (touch.tapCount == 2)
-        {
-            // bring self to front            
-            SPDisplayObjectContainer *parent = self.parent;
-            [parent removeChild:self];
-            [parent addChild:self];
-        }
-    }    
 }
 
 - (void)dealloc
