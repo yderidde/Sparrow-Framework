@@ -40,7 +40,7 @@
 {
     // SPSound is a class factory! We'll return a subclass, not self.
     
-    NSString *fullPath = [SPUtils absolutePathToFile:path];
+    NSString *fullPath = [SPUtils absolutePathToFile:path withScaleFactor:1.0f];
     if (!fullPath) [NSException raise:SP_EXC_FILE_NOT_FOUND format:@"file %@ not found", path];
     
     NSString *error = nil;
