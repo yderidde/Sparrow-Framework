@@ -24,5 +24,5 @@ quickly as well.
 How to start?
 -------------
 
-* Read through the file 'BUILDING.markdown' for a quick start with Sparrow.
+* Read through the file 'BUILDING.md' for a quick start with Sparrow.
 * Visit <http://www.sparrow-framework.org>
