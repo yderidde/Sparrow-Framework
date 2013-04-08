@@ -420,6 +420,9 @@ float square(float value) { return value * value; }
     _orientationChanged = NO;
     [_transformationMatrix copyFromMatrix:matrix];
     
+    _pivotX = 0.0f;
+    _pivotY = 0.0f;
+    
     _x = matrix.tx;
     _y = matrix.ty;
     
