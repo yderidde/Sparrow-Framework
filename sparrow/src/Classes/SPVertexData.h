@@ -100,6 +100,9 @@ SPVertexColor SPVertexColorMakeWithColorAndAlpha(uint rgb, float alpha);
 /// Updates the position of a vertex.
 - (void)setPosition:(SPPoint *)position atIndex:(int)index;
 
+/// Updates the position of a vertex.
+- (void)setPositionWithX:(float)x y:(float)y atIndex:(int)index;
+
 /// Returns the texture coordinates of a vertex.
 - (SPPoint *)texCoordsAtIndex:(int)index;
 

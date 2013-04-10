@@ -159,6 +159,14 @@ BOOL isOpaqueWhite(SPVertexColor color)
     _vertices[index].position = GLKVector2Make(position.x, position.y);
 }
 
+- (void)setPositionWithX:(float)x y:(float)y atIndex:(int)index
+{
+    if (index < 0 || index >= _numVertices)
+        [NSException raise:SP_EXC_INDEX_OUT_OF_BOUNDS format:@"Invalid vertex index"];
+    
+    _vertices[index].position = GLKVector2Make(x, y);
+}
+
 - (SPPoint *)texCoordsAtIndex:(int)index
 {
     if (index < 0 || index >= _numVertices)
