@@ -55,4 +55,5 @@
 #import "SPVertexData.h"
 #import "SPQuadBatch.h"
 #import "SPBlendMode.h"
+#import "SPBaseEffect.h"
 #import "SparrowClass.h"
