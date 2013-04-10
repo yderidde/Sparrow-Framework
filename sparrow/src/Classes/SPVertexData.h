@@ -66,6 +66,10 @@ SPVertexColor SPVertexColorMakeWithColorAndAlpha(uint rgb, float alpha);
 
 @interface SPVertexData : NSObject
 
+/// ------------------
+/// @name Initializers
+/// ------------------
+
 /// Initializes a VertexData instance with a certain size. _Designated Initializer_.
 - (id)initWithSize:(int)numVertices premultipliedAlpha:(BOOL)pma;
 
@@ -75,6 +79,10 @@ SPVertexColor SPVertexColorMakeWithColorAndAlpha(uint rgb, float alpha);
 /// Initializes an empty VertexData object. Use the `appendVertex:` method and the `numVertices`
 /// property to change its size later.
 - (id)init;
+
+/// -------------
+/// @name Methods
+/// -------------
 
 /// Copies the vertex data of this instance to another vertex data object, starting at element 0.
 - (void)copyToVertexData:(SPVertexData *)target;
@@ -157,6 +165,10 @@ SPVertexColor SPVertexColorMakeWithColorAndAlpha(uint rgb, float alpha);
 
 /// Calculates the bounding rectangle of subsequent vertices after being transformed by a matrix.
 - (SPRectangle *)boundsAfterTransformation:(SPMatrix *)matrix atIndex:(int)index numVertices:(int)count;
+
+/// ----------------
+/// @name Properties
+/// ----------------
 
 /// Returns a pointer to the raw vertex data.
 @property (nonatomic, readonly) SPVertex* vertices;

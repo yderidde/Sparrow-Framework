@@ -27,9 +27,17 @@
 
 @interface SPBaseEffect : NSObject
 
+/// -------------
+/// @name Methods
+/// -------------
+
 /// Activates the optimal shader program for the current settings; alpha and matrix uniforms are
 /// passed to the program right away, and the texture (if available) is bound.
 - (void)prepareToDraw;
+
+/// ----------------
+/// @name Properties
+/// ----------------
 
 /// The modelview-projection matrix used for rendering. Any vertex will be multiplied with this
 /// matrix. (Default: identity matrix)

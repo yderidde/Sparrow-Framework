@@ -23,12 +23,20 @@
 
 @interface SPResizeEvent : SPEvent
 
+/// ------------------
+/// @name Initializers
+/// ------------------
+
 /// Initializes a resize event with the given parameters. _Designated Initializer_.
 - (id)initWithType:(NSString *)type width:(float)width height:(float)height 
      animationTime:(double)time;
 
 /// Initializes a resize event with the given parameters. Animation time will be zero.
 - (id)initWithType:(NSString *)type width:(float)width height:(float)height;
+
+/// ----------------
+/// @name Properties
+/// ----------------
 
 /// The new width of the stage (in points).
 @property (nonatomic, readonly) float width;

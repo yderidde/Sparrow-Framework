@@ -23,15 +23,27 @@
 
 @interface SPProgram : NSObject
 
+/// ------------------
+/// @name Initializers
+/// ------------------
+
 /// Initializes a GLSL program by compiling vertex and fragment shaders from source. In debug
 /// mode, compilation erros are logged into the console. _Designated Initializer_.
 - (id)initWithVertexShader:(NSString *)vertexShader fragmentShader:(NSString *)fragmentShader;
+
+/// -------------
+/// @name Methods
+/// -------------
 
 /// Returns the index of a uniform with a certain name.
 - (int)uniformByName:(NSString *)name;
 
 /// Returns the index of an attribute with a certain name.
 - (int)attributeByName:(NSString *)name;
+
+/// ----------------
+/// @name Properties
+/// ----------------
 
 /// The handle of the program object needed.
 @property (nonatomic, readonly) uint name;

@@ -81,6 +81,10 @@ typedef void (^SPRootCreatedBlock)(id root);
 
 @interface SPViewController : GLKViewController
 
+/// -------------
+/// @name Startup
+/// -------------
+
 /// Sets up Sparrow by instantiating the given class, which has to be a display object.
 /// High resolutions are enabled, iPad content will keep its size (no doubling).
 - (void)startWithRoot:(Class)rootClass;
@@ -94,6 +98,10 @@ typedef void (^SPRootCreatedBlock)(id root);
 /// simplifies the creation of universal apps (see class documentation).
 - (void)startWithRoot:(Class)rootClass supportHighResolutions:(BOOL)hd doubleOnPad:(BOOL)doubleOnPad;
 
+/// ------------------------
+/// @name Program Management
+/// ------------------------
+
 /// Registers a shader program under a certain name.
 - (void)registerProgram:(SPProgram *)program name:(NSString *)name;
 
@@ -102,6 +110,10 @@ typedef void (^SPRootCreatedBlock)(id root);
 
 /// Returns the shader program registered under a certain name.
 - (SPProgram *)programByName:(NSString *)name;
+
+/// ----------------
+/// @name Properties
+/// ----------------
 
 /// The instance of the root class provided in `start:`method.
 @property (nonatomic, readonly) SPDisplayObject *root;
