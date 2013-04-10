@@ -16,34 +16,34 @@
 
 /** ------------------------------------------------------------------------------------------------
  
- An SPQuadEffect simplifies the rendering of Quads.
+ An SPBaseEffect simplifies the rendering of colored and/or textured polygons.
  
- Configure a quad effect by updating its state properties. When you call `prepareToDraw`, it
+ Configure a base effect by updating its state properties. When you call `prepareToDraw`, it
  will choose the optimal shader program for the given settings and will activate that program.
  Alpha and matrix uniforms will be passed to the program automatically, and the texture will be
  bound.
  
 ------------------------------------------------------------------------------------------------- */
 
-@interface SPQuadEffect : NSObject
+@interface SPBaseEffect : NSObject
 
 /// Activates the optimal shader program for the current settings; alpha and matrix uniforms are
 /// passed to the program right away, and the texture (if available) is bound.
 - (void)prepareToDraw;
 
 /// The modelview-projection matrix used for rendering. Any vertex will be multiplied with this
-/// matrix.
+/// matrix. (Default: identity matrix)
 @property (nonatomic, copy) SPMatrix *mvpMatrix;
 
-/// The texture that's projected onto the quad, or `nil` if there is none.
+/// The texture that's projected onto the quad, or `nil` if there is none. (Default: `nil`)
 @property (nonatomic, strong) SPTexture *texture;
 
-/// Indicates if the color values of texture and vertices use premultiplied alpha.
+/// Indicates if the color values of texture and vertices use premultiplied alpha. (Default: `NO`)
 @property (nonatomic, assign) BOOL premultipliedAlpha;
 
 /// Indicates if the colors of the vertices should tint the texture colors. The iPad 1 profits
 /// immensely from the very simple fragment shader that can be used when tinting is deactivated.
-/// Note that an alpha value different to "1" will still force tinting to be used.
+/// Note that an alpha value different to "1" will still force tinting to be used. (Default: `YES`)
 @property (nonatomic, assign) BOOL useTinting;
 
 /// The alpha value with which every vertex color will be multiplied. (Default: 1)

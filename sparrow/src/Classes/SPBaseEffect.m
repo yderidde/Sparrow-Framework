@@ -9,7 +9,7 @@
 //  it under the terms of the Simplified BSD License.
 //
 
-#import "SPQuadEffect.h"
+#import "SPBaseEffect.h"
 #import "SPMatrix.h"
 #import "SPTexture.h"
 #import "SPProgram.h"
@@ -30,7 +30,7 @@ NSString *getProgramName(BOOL hasTexture, BOOL useTinting)
     }
 }
 
-@implementation SPQuadEffect
+@implementation SPBaseEffect
 {
     SPMatrix  *_mvpMatrix;
     SPTexture *_texture;
@@ -59,6 +59,8 @@ NSString *getProgramName(BOOL hasTexture, BOOL useTinting)
     if ((self = [super init]))
     {
         _mvpMatrix = [[SPMatrix alloc] init];
+        _premultipliedAlpha = NO;
+        _useTinting = YES;
         _alpha = 1.0f;
     }
     return self;
