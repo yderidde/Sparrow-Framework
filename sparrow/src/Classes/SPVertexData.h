@@ -69,9 +69,12 @@ SPVertexColor SPVertexColorMakeWithColorAndAlpha(uint rgb, float alpha);
 /// Initializes a VertexData instance with a certain size. _Designated Initializer_.
 - (id)initWithSize:(int)numVertices premultipliedAlpha:(BOOL)pma;
 
+/// Initializes a VertexData instance with a certain size, disabling premultiplied alpha.
+- (id)initWithSize:(int)numVertices;
+
 /// Initializes an empty VertexData object. Use the `appendVertex:` method and the `numVertices`
 /// property to change its size later.
-- (id)initWithSize:(int)numVertices;
+- (id)init;
 
 /// Copies the vertex data of this instance to another vertex data object, starting at element 0.
 - (void)copyToVertexData:(SPVertexData *)target;
@@ -109,17 +112,26 @@ SPVertexColor SPVertexColorMakeWithColorAndAlpha(uint rgb, float alpha);
 /// Updates the RGB color and the alpha value of a vertex.
 - (void)setColor:(uint)color alpha:(float)alpha atIndex:(int)index;
 
+/// Updates the RGB color and the alpha value of all vertices.
+- (void)setColor:(uint)color alpha:(float)alpha;
+
 /// Returns the RGB color of a vertex (without premultiplied alpha).
 - (uint)colorAtIndex:(int)index;
 
-/// Sets the RGB color of a vertex. Don't use premutliplied alpha!
+/// Sets the RGB color of a vertex. The method always expects non-premultiplied alpha values.
 - (void)setColor:(uint)color atIndex:(int)index;
+
+/// Sets the RGB color of all vertices at once. The method always expects non-premultiplied alpha values.
+- (void)setColor:(uint)color;
 
 /// Returns the alpha value of a vertex.
 - (float)alphaAtIndex:(int)index;
 
 /// Updates the alpha value of a vertex.
 - (void)setAlpha:(float)alpha atIndex:(int)index;
+
+/// Updates the alpha value of all vertices.
+- (void)setAlpha:(float)alpha;
 
 /// Multiplies all alpha values with a certain factor.
 - (void)scaleAlphaBy:(float)factor;

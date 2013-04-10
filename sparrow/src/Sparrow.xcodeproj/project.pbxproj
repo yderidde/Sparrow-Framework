@@ -87,8 +87,8 @@
 		DE61139A134F8FBD00AB742E /* SPNSExtensions.h in Headers */ = {isa = PBXBuildFile; fileRef = DE68EA150FBB5660004DBC95 /* SPNSExtensions.h */; settings = {ATTRIBUTES = (); }; };
 		DE61139B134F8FBD00AB742E /* SPPoolObject.h in Headers */ = {isa = PBXBuildFile; fileRef = DED9B51B10629D9F00989853 /* SPPoolObject.h */; settings = {ATTRIBUTES = (); }; };
 		DE61139C134F8FD400AB742E /* Sparrow.h in Headers */ = {isa = PBXBuildFile; fileRef = DEEA9402101E44F10071DD21 /* Sparrow.h */; settings = {ATTRIBUTES = (); }; };
-		DE82240C16EF468E00A172EE /* SPQuadEffect.h in Headers */ = {isa = PBXBuildFile; fileRef = DE82240A16EF468E00A172EE /* SPQuadEffect.h */; };
-		DE82240D16EF468E00A172EE /* SPQuadEffect.m in Sources */ = {isa = PBXBuildFile; fileRef = DE82240B16EF468E00A172EE /* SPQuadEffect.m */; };
+		DE82240C16EF468E00A172EE /* SPBaseEffect.h in Headers */ = {isa = PBXBuildFile; fileRef = DE82240A16EF468E00A172EE /* SPBaseEffect.h */; };
+		DE82240D16EF468E00A172EE /* SPBaseEffect.m in Sources */ = {isa = PBXBuildFile; fileRef = DE82240B16EF468E00A172EE /* SPBaseEffect.m */; };
 		DE85778E16B58E4B00725EC0 /* SparrowClass.h in Headers */ = {isa = PBXBuildFile; fileRef = DE85778C16B58E4B00725EC0 /* SparrowClass.h */; };
 		DE85778F16B58E4B00725EC0 /* SparrowClass.m in Sources */ = {isa = PBXBuildFile; fileRef = DE85778D16B58E4B00725EC0 /* SparrowClass.m */; };
 		DE8E6A7E16B4303E007EE8BA /* GLKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DE8E6A7D16B4303E007EE8BA /* GLKit.framework */; };
@@ -236,8 +236,8 @@
 		DE7044750FB62080007F5ECC /* SPTween.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SPTween.h; sourceTree = "<group>"; };
 		DE7044760FB62080007F5ECC /* SPTween.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SPTween.m; sourceTree = "<group>"; };
 		DE75E8660FBDC57E00C64495 /* SPTweenTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SPTweenTest.m; sourceTree = "<group>"; };
-		DE82240A16EF468E00A172EE /* SPQuadEffect.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SPQuadEffect.h; sourceTree = "<group>"; };
-		DE82240B16EF468E00A172EE /* SPQuadEffect.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SPQuadEffect.m; sourceTree = "<group>"; };
+		DE82240A16EF468E00A172EE /* SPBaseEffect.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SPBaseEffect.h; sourceTree = "<group>"; };
+		DE82240B16EF468E00A172EE /* SPBaseEffect.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SPBaseEffect.m; sourceTree = "<group>"; };
 		DE85778C16B58E4B00725EC0 /* SparrowClass.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SparrowClass.h; sourceTree = "<group>"; };
 		DE85778D16B58E4B00725EC0 /* SparrowClass.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SparrowClass.m; sourceTree = "<group>"; };
 		DE8E6A7D16B4303E007EE8BA /* GLKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLKit.framework; path = System/Library/Frameworks/GLKit.framework; sourceTree = SDKROOT; };
@@ -462,8 +462,8 @@
 			children = (
 				DE97B92E16F1EA5E00DC1077 /* SPProgram.h */,
 				DE97B92F16F1EA5E00DC1077 /* SPProgram.m */,
-				DE82240A16EF468E00A172EE /* SPQuadEffect.h */,
-				DE82240B16EF468E00A172EE /* SPQuadEffect.m */,
+				DE82240A16EF468E00A172EE /* SPBaseEffect.h */,
+				DE82240B16EF468E00A172EE /* SPBaseEffect.m */,
 				DE20D9C910713B0C006658C9 /* SPRenderSupport.h */,
 				DE20D9CA10713B0C006658C9 /* SPRenderSupport.m */,
 			);
@@ -755,7 +755,7 @@
 				DE19443216D27E9E00E5CCD9 /* SPVertexData.h in Headers */,
 				DED29C0716DFB48E000C2BD7 /* SPEventListener.h in Headers */,
 				DEC87D0716E0CDD80050EA95 /* SPQuadBatch.h in Headers */,
-				DE82240C16EF468E00A172EE /* SPQuadEffect.h in Headers */,
+				DE82240C16EF468E00A172EE /* SPBaseEffect.h in Headers */,
 				DE97B93016F1EA5E00DC1077 /* SPProgram.h in Headers */,
 				DE0BA5D81703513D00637533 /* SPStatsDisplay.h in Headers */,
 				DE574D5F1705B83D008B03D7 /* SPBlendMode.h in Headers */,
@@ -942,7 +942,7 @@
 				DE19443316D27E9E00E5CCD9 /* SPVertexData.m in Sources */,
 				DED29C0816DFB48E000C2BD7 /* SPEventListener.m in Sources */,
 				DEC87D0816E0CDD80050EA95 /* SPQuadBatch.m in Sources */,
-				DE82240D16EF468E00A172EE /* SPQuadEffect.m in Sources */,
+				DE82240D16EF468E00A172EE /* SPBaseEffect.m in Sources */,
 				DE97B93116F1EA5E00DC1077 /* SPProgram.m in Sources */,
 				DE0BA5D91703513D00637533 /* SPStatsDisplay.m in Sources */,
 				DE574D601705B83D008B03D7 /* SPBlendMode.m in Sources */,

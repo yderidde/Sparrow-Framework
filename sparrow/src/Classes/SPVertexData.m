@@ -195,6 +195,12 @@ BOOL isOpaqueWhite(SPVertexColor color)
     _vertices[index].color = _premultipliedAlpha ? premultiplyAlpha(vertexColor) : vertexColor;
 }
 
+- (void)setColor:(uint)color alpha:(float)alpha
+{
+    for (int i=0; i<_numVertices; ++i)
+        [self setColor:color alpha:alpha atIndex:i];
+}
+
 - (uint)colorAtIndex:(int)index
 {
     if (index < 0 || index >= _numVertices)
@@ -211,10 +217,22 @@ BOOL isOpaqueWhite(SPVertexColor color)
     [self setColor:color alpha:alpha atIndex:index];
 }
 
+- (void)setColor:(uint)color
+{
+    for (int i=0; i<_numVertices; ++i)
+        [self setColor:color atIndex:i];
+}
+
 - (void)setAlpha:(float)alpha atIndex:(int)index
 {
     uint color = [self colorAtIndex:index];
     [self setColor:color alpha:alpha atIndex:index];
+}
+
+- (void)setAlpha:(float)alpha
+{
+    for (int i=0; i<_numVertices; ++i)
+        [self setAlpha:alpha atIndex:i];
 }
 
 - (float)alphaAtIndex:(int)index
