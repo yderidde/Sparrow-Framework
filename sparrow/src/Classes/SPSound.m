@@ -176,13 +176,13 @@
 
 - (SPSoundChannel *)createChannel
 {
-    [NSException raise:SP_EXC_ABSTRACT_METHOD format:@"Override this method in subclasses."];
+    [NSException raise:SP_EXC_ABSTRACT_METHOD format:@"Override 'createChannel' in subclasses."];
     return nil;
 }
 
 - (double)duration
 {
-    [NSException raise:SP_EXC_ABSTRACT_METHOD format:@"Override this method in subclasses."];
+    [NSException raise:SP_EXC_ABSTRACT_METHOD format:@"Override 'duration' in subclasses."];
     return 0.0;
 }
 
