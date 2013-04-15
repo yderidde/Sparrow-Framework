@@ -28,6 +28,13 @@
 
 + (id)allocWithZone:(NSZone *)zone
 {
+  #if DEBUG
+    // make sure that people don't use pooling from multiple threads
+    static id thread = nil;
+    if (thread) NSAssert(thread == [NSThread currentThread], @"SPPoolObject is NOT thread safe!");
+    else thread = [NSThread currentThread];
+  #endif
+
     SPPoolInfo *poolInfo = [self poolInfo];
     
     if (poolInfo->lastElement)
