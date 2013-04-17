@@ -242,7 +242,8 @@
 {
     if (_numQuads == 0) return NO;
     else if (_numQuads + numQuads > 8192) return YES; // maximum buffer size
-    else if (!_texture && !texture) return _premultipliedAlpha != pma;
+    else if (!_texture && !texture)
+        return _premultipliedAlpha != pma || self.blendMode != blendMode;
     else if (_texture && texture)
         return _tinted != (tinted || alpha != 1.0f) ||
                _texture.name != texture.name ||
