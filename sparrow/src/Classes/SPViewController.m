@@ -64,21 +64,41 @@
 {
     if ((self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil]))
     {
-        _contentScaleFactor = 1.0f;
-        _stage = [[SPStage alloc] init];
-        _juggler = [[SPJuggler alloc] init];
-        _touchProcessor = [[SPTouchProcessor alloc] initWithRoot:_stage];
-        _programs = [[NSMutableDictionary alloc] init];
-        _context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
-        _support = [[SPRenderSupport alloc] init];
-        
-        if (!_context || ![EAGLContext setCurrentContext:_context])
-            NSLog(@"Could not create render context");
-        
-        [Sparrow setCurrentController:self];
+        [self setup];
     }
-    
     return self;
+}
+
+- (id)initWithCoder:(NSCoder *)aDecoder
+{
+    if ((self = [super initWithCoder:aDecoder])) {
+        [self setup];
+    }
+    return self;
+}
+
+- (id)init
+{
+    if ((self = [super init])) {
+        [self setup];
+    }
+    return self;
+}
+
+- (void)setup
+{
+    _contentScaleFactor = 1.0f;
+    _stage = [[SPStage alloc] init];
+    _juggler = [[SPJuggler alloc] init];
+    _touchProcessor = [[SPTouchProcessor alloc] initWithRoot:_stage];
+    _programs = [[NSMutableDictionary alloc] init];
+    _context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
+    _support = [[SPRenderSupport alloc] init];
+    
+    if (!_context || ![EAGLContext setCurrentContext:_context])
+        NSLog(@"Could not create render context");
+    
+    [Sparrow setCurrentController:self];
 }
 
 - (void)viewDidLoad
