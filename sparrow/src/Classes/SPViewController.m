@@ -71,7 +71,8 @@
 
 - (id)initWithCoder:(NSCoder *)aDecoder
 {
-    if ((self = [super initWithCoder:aDecoder])) {
+    if ((self = [super initWithCoder:aDecoder]))
+    {
         [self setup];
     }
     return self;
@@ -79,7 +80,8 @@
 
 - (id)init
 {
-    if ((self = [super init])) {
+    if ((self = [super init]))
+    {
         [self setup];
     }
     return self;
