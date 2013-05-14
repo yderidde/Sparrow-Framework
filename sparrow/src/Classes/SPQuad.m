@@ -16,6 +16,8 @@
 #import "SPRenderSupport.h"
 #import "SPVertexData.h"
 
+#define MIN_SIZE 0.01f
+
 @implementation SPQuad
 {
     BOOL _tinted;
@@ -25,6 +27,9 @@
 {
     if ((self = [super init]))
     {
+        if (width  <= MIN_SIZE) width  = MIN_SIZE;
+        if (height <= MIN_SIZE) height = MIN_SIZE;
+        
         _tinted = color != 0xffffff;
         
         _vertexData = [[SPVertexData alloc] initWithSize:4 premultipliedAlpha:pma];
