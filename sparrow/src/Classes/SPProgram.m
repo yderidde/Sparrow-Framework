@@ -132,7 +132,7 @@
     char rawName[MAX_NAME_LENGTH];
     
     int numUniforms = 0;
-    glGetProgramiv(_name, GL_ACTIVE_ATTRIBUTES, &numUniforms);
+    glGetProgramiv(_name, GL_ACTIVE_UNIFORMS, &numUniforms);
     
     _uniforms = [[NSMutableDictionary alloc] initWithCapacity:numUniforms];
     
