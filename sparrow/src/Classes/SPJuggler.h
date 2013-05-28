@@ -19,14 +19,15 @@
  
  A juggler is a simple object. It does no more than saving a list of objects implementing 
  `SPAnimatable` and advancing their time if it is told to do so (by calling its own `advanceTime:`
- method). When an animation is completed, it throws it away.
+ method). Furthermore, an object can request to be removed from the juggler by dispatching an
+ `SP_EVENT_TYPE_REMOVE_FROM_JUGGLER` event.
  
- There is a default juggler in every stage. You can access it by calling
+ There is a default juggler that you can access from anywhere with the following code:
  
-	SPJuggler *juggler = self.stage.juggler;
+	SPJuggler *juggler = Sparrow.juggler;
  
- in any object that has access to the stage. You can, however, create juggler objects yourself, too.
- That way, you can group your game into logical components that handle their animations independently.
+ You can, however, create juggler objects yourself, too. That way, you can group your game 
+ into logical components that handle their animations independently.
  
  A cool feature of the juggler is to delay method calls. Say you want to remove an object from its
  parent 2 seconds from now. Call:
@@ -37,12 +38,10 @@
 
  	[object removeFromParent];
  
- The Sparrow blog contains three extensive articles about the juggler:
- 
- - http://www.sparrow-framework.org/2010/08/tweens-jugglers-animating-your-stage/
- - http://www.sparrow-framework.org/2010/09/tweens-jugglers-an-in-depth-look-at-the-juggler/
- - http://www.sparrow-framework.org/2010/10/tweens-jugglers-unleashed/
- 
+ Alternatively, you can use the block-based verson of the method:
+
+	[juggler delayInvocationByTime:2.0 block:^{ [object removeFromParent]; };
+
 ------------------------------------------------------------------------------------------------- */
 
 @interface SPJuggler : NSObject <SPAnimatable>
