@@ -1,8 +1,21 @@
 Sparrow: Changelog
 ==================
 
-version 2.0 - 2013-04-08
+version 2.0 - 2013-05-31
 ------------------------
+
+- added bubbling for TRIGGERED events of SPButton (for consistency with Sparrow)
+- added runtime-check that pooled objects are not used from multiple threads (in DEBUG mode)
+- added more convenience methods to 'SPVertexData'
+- added an additional font registration method 
+- added 'Sparrow.root' method
+- renamed 'SPQuadEffect' to 'SPBaseEffect'
+- fixed initialization of SPViewController when 'initWithCoder:' is called (thanks Ariel!)
+- fixed bug when SPProgram populates lists of uniforms (thanks Ariel!)
+- fixed pivot point assignment in transformation matrix setter 
+
+version 2.0rc - 2013-04-08
+--------------------------
 
 - added 'SPViewController', which is now the starting point for all Sparrow games
 - added asynchronous texture loading methods
