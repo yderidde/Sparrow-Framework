@@ -82,6 +82,9 @@ typedef enum
 	SPTextField *textField = [SPTextField textFieldWithWidth:300 height:100 text:@"Hello world!"];
 	textField.fontName = fontName;
  
+ Tip: Sparrow comes with a small bitmap font that is great for debug output. Just assign the 
+ font name `SP_BITMAP_FONT_MINI` to a text field to use it.
+ 
 ------------------------------------------------------------------------------------------------- */
 
 @interface SPTextField : SPDisplayObjectContainer
