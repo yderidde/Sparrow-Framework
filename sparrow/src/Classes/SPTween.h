@@ -13,17 +13,7 @@
 #import "SPEventDispatcher.h"
 #import "SPAnimatable.h"
 #import "SPTransitions.h"
-
-typedef enum 
-{
-    SPLoopTypeNone,
-    SPLoopTypeRepeat,
-    SPLoopTypeReverse
-} SPLoopType;
-
-#define SP_EVENT_TYPE_TWEEN_STARTED   @"tweenStarted"
-#define SP_EVENT_TYPE_TWEEN_UPDATED   @"tweenUpdated"
-#define SP_EVENT_TYPE_TWEEN_COMPLETED @"tweenCompleted"
+#import "SPMacros.h"
 
 /** ------------------------------------------------------------------------------------------------
  
@@ -35,47 +25,31 @@ typedef enum
  (`int`, `uint`, `float`, `double`), the tween can handle it. For a list of available Transition 
  types, see `SPTransitions`. 
  
- Here is an example of a tween that moves an object to the right, rotates it, and fades it out:
+ Here is an example of a tween that moves an object, rotates it, and fades it out:
  
 	SPTween *tween = [SPTween tweenWithTarget:object time:2.0 transition:SP_TRANSITION_EASE_IN_OUT];
-	[tween animateProperty:@"x" targetValue:object.x + 50];
+	[tween moveToX:50.0f y:20.0f];
  	[tween animateProperty:@"rotation" targetValue:object.rotation + SP_D2R(45)];
- 	[tween animateProperty:@"alpha" targetValue:0.0f];
- 	[self.stage.juggler addObject:tween];
+  	[tween fadeTo:0.0f];
+ 	[Sparrow.juggler addObject:tween];
  
  Note that the object is added to a juggler at the end. A tween will only be executed if its
  `advanceTime:` method is executed regularly - the juggler will do that for us, and will release
  the tween when it is finished.
  
- Tweens dispatch events in certain phases of their life time:
+ Tweens provide block-based callbacks that are executed in certain phases of their life time:
  
- - `SP_EVENT_TYPE_TWEEN_STARTED`:   Dispatched once when the tween starts
- - `SP_EVENT_TYPE_TWEEN_UPDATED`:   Dispatched every time it is advanced
- - `SP_EVENT_TYPE_TWEEN_COMPLETED`: Dispatched when it reaches its target value (repeatedly
-                                    dispatched when looping).
+ - `onStart`:    Invoked once when the tween starts.
+ - `onUpdate`:   Invoked every time it is advanced.
+ - `onComplete`: Invoked when it reaches its target value.
+ - `onRepeat`:   Invoked each time the tween finishes one repetition.
  
- Tweens can loop in two ways:
- 
- - `SPLoopTypeRepeat`: Starts the animation from the beginning when it's finished.
- - `SPLoopTypeReverse`: Reverses the animation when it's finished, tweening back to the start value.
+ Use the `repeatCount` property to repeat the tween several times. The `reverse` property defines
+ the way in which the repetitions will be done (ping-pong 
  
 ------------------------------------------------------------------------------------------------- */
 
 @interface SPTween : SPEventDispatcher <SPAnimatable>
-{
-  @private
-    id mTarget;    
-    SEL mTransition;
-    IMP mTransitionFunc;    
-    NSMutableArray *mProperties;
-    
-    double mTotalTime;
-    double mCurrentTime;
-    double mDelay;
-    
-    SPLoopType mLoop;
-    int mLoopCount;
-}
 
 /// ------------------
 /// @name Initializers
@@ -90,10 +64,10 @@ typedef enum
 - (id)initWithTarget:(id)target time:(double)time;
 
 /// Factory method.
-+ (SPTween *)tweenWithTarget:(id)target time:(double)time transition:(NSString *)transition;
++ (id)tweenWithTarget:(id)target time:(double)time transition:(NSString *)transition;
 
 /// Factory method.
-+ (SPTween *)tweenWithTarget:(id)target time:(double)time;
++ (id)tweenWithTarget:(id)target time:(double)time;
 
 /// -------------
 /// @name Methods
@@ -120,18 +94,38 @@ typedef enum
 @property (nonatomic, readonly) id target;
 
 /// The transition method used for the animation.
-@property (nonatomic, readonly) NSString *transition;
+@property (weak, nonatomic, readonly) NSString *transition;
 
 /// The total time the tween will take (in seconds).
-@property (nonatomic, readonly) double time;
+@property (nonatomic, readonly) double totalTime;
 
 /// The time that has passed since the tween was started (in seconds).
 @property (nonatomic, readonly) double currentTime;
 
 /// The delay before the tween is started.
-@property (nonatomic, assign)   double delay;
+@property (nonatomic, assign) double delay;
 
-/// The type of loop. (Default: SPLoopTypeNone)
-@property (nonatomic, assign)   SPLoopType loop;
+/// The number of times the tween will be executed. Set to 0 to tween indefinitely. (Default: 1)
+@property (nonatomic, assign) int repeatCount;
+
+/// The number seconds to wait between repeat cycles. (Default: 0)
+@property (nonatomic, assign) double repeatDelay;
+
+/// Indicates if the tween should be reversed when it is repeating. If enabled,
+/// every second repetition will be reversed. (Default: `NO`)
+@property (nonatomic, assign) BOOL reverse;
+
+/// A block that will be called when the tween starts (after a possible delay).
+@property (nonatomic, copy) SPCallbackBlock onStart;
+
+/// A block that will be called each time the tween is advanced.
+@property (nonatomic, copy) SPCallbackBlock onUpdate;
+
+/// A block that will be called each time the tween finishes one repetition
+/// (except the last, which will trigger 'onComplete').
+@property (nonatomic, copy) SPCallbackBlock onRepeat;
+
+/// A block that will be called when the tween is complete.
+@property (nonatomic, copy) SPCallbackBlock onComplete;
 
 @end

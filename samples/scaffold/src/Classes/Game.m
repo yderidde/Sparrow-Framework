@@ -19,17 +19,14 @@
 // --- class implementation ------------------------------------------------------------------------
 
 @implementation Game
+{
+    SPSprite *_contents;
+}
 
-@synthesize gameWidth  = mGameWidth;
-@synthesize gameHeight = mGameHeight;
-
-- (id)initWithWidth:(float)width height:(float)height
+- (id)init
 {
     if ((self = [super init]))
     {
-        mGameWidth = width;
-        mGameHeight = height;
-        
         [self setup];
     }
     return self;
@@ -38,11 +35,8 @@
 - (void)dealloc
 {
     // release any resources here
-    
     [Media releaseAtlas];
     [Media releaseSound];
-    
-    [super dealloc];
 }
 
 - (void)setup
@@ -62,25 +56,32 @@
     [Media initSound];      // loads all your sounds    -> see Media.h/Media.m
     
     
-    // Create a background image. Since the demo must support all different kinds of orientations,
-    // we center it on the stage with the pivot point.
-    
+    // Create some placeholder content: a background image, the Sparrow logo, and a text field.
+    // The positions are updated when the device is rotated. To make that easy, we put all objects
+    // in one sprite (_contents): it will simply be rotated to be upright when the device rotates.
+
+    _contents = [SPSprite sprite];
+    [self addChild:_contents];
+
     SPImage *background = [[SPImage alloc] initWithContentsOfFile:@"background.jpg"];
-    background.pivotX = background.width / 2;
-    background.pivotY = background.height / 2;
-    background.x = mGameWidth / 2;
-    background.y = mGameHeight / 2;
-    [self addChild:background];
+    [_contents addChild:background];
     
+    NSString *text = @"To find out how to create your own game out of this scaffold, "
+                     @"have a look at the 'First Steps' section of the Sparrow website!";
     
-    // Display the Sparrow egg
-    
+    SPTextField *textField = [[SPTextField alloc] initWithWidth:280 height:80 text:text];
+    textField.x = (background.width - textField.width) / 2;
+    textField.y = (background.height / 2) - 135;
+    [_contents addChild:textField];
+
     SPImage *image = [[SPImage alloc] initWithTexture:[Media atlasTexture:@"sparrow"]];
-    image.pivotX = (int)image.width / 2;
+    image.pivotX = (int)image.width  / 2;
     image.pivotY = (int)image.height / 2;
-    image.x = mGameWidth / 2;
-    image.y = mGameHeight / 2 + 40;
-    [self addChild:image];
+    image.x = background.width  / 2;
+    image.y = background.height / 2 + 40;
+    [_contents addChild:image];
+    
+    [self updateLocations];
     
     // play a sound when the image is touched
     [image addEventListener:@selector(onImageTouched:) atObject:self forType:SP_EVENT_TYPE_TOUCH];
@@ -89,44 +90,20 @@
     SPTween *tween = [SPTween tweenWithTarget:image time:1.5 transition:SP_TRANSITION_EASE_IN_OUT];
     [tween animateProperty:@"y" targetValue:image.y + 30];
     [tween animateProperty:@"rotation" targetValue:0.1];
-    tween.loop = SPLoopTypeReverse;
-    [[SPStage mainStage].juggler addObject:tween];
-    
-    
-    // Create a text field
-    
-    NSString *text = @"To find out how to create your own game out of this scaffold, " \
-                     @"have a look at the 'First Steps' section of the Sparrow website!";
-    
-    SPTextField *textField = [[SPTextField alloc] initWithWidth:280 height:80 text:text];
-    textField.x = (mGameWidth - textField.width) / 2;
-    textField.y = image.y - 175;
-    [self addChild:textField];
+    tween.repeatCount = 0; // repeat indefinitely
+    tween.reverse = YES;
+    [Sparrow.juggler addObject:tween];
     
 
-    // The scaffold autorotates the game to all supported device orientations. 
-    // Choose the orienations you want to support in the Target Settings ("Summary"-tab).
+    // The controller autorotates the game to all supported device orientations. 
+    // Choose the orienations you want to support in the Xcode Target Settings ("Summary"-tab).
     // To update the game content accordingly, listen to the "RESIZE" event; it is dispatched
     // to all game elements (just like an ENTER_FRAME event).
     // 
-    // To force the game to start up in landscape, add the key "Initial Interface Orientation" to
-    // the "App-Info.plist" file and choose any landscape orientation.
+    // To force the game to start up in landscape, add the key "Initial Interface Orientation"
+    // to the "App-Info.plist" file and choose any landscape orientation.
     
     [self addEventListener:@selector(onResize:) atObject:self forType:SP_EVENT_TYPE_RESIZE];
-    
-    
-    // We release the objects, because we don't keep any reference to them.
-    // (Their parent display objects will take care of them.)
-    // 
-    // However, if you don't want to bother with memory management, feel free to convert this
-    // project to ARC (Automatic Reference Counting) by clicking on 
-    // "Edit - Refactor - Convert to Objective-C ARC".
-    // Those lines will then be removed from the project.
-    
-    [background release];
-    [image release];
-    [textField release];
-    
     
     // Per default, this project compiles as a universal application. To change that, enter the 
     // project info screen, and in the "Build"-tab, find the setting "Targeted device family".
@@ -136,22 +113,30 @@
     //   * iPad        -> iPad only App
     //   * iPhone/iPad -> Universal App  
     // 
-    // To support the iPad, the minimum "iOS deployment target" is "iOS 3.2".
+    // Sparrow's minimum deployment target is iOS 5.
+}
+
+- (void)updateLocations
+{
+    int gameWidth  = Sparrow.stage.width;
+    int gameHeight = Sparrow.stage.height;
+    
+    _contents.x = (int) (gameWidth  - _contents.width)  / 2;
+    _contents.y = (int) (gameHeight - _contents.height) / 2;
 }
 
 - (void)onImageTouched:(SPTouchEvent *)event
 {
     NSSet *touches = [event touchesWithTarget:self andPhase:SPTouchPhaseEnded];
-    if ([touches anyObject])
-    {
-        [Media playSound:@"sound.caf"];
-    }
+    if ([touches anyObject]) [Media playSound:@"sound.caf"];
 }
 
 - (void)onResize:(SPResizeEvent *)event
 {
     NSLog(@"new size: %.0fx%.0f (%@)", event.width, event.height, 
           event.isPortrait ? @"portrait" : @"landscape");
+    
+    [self updateLocations];
 }
 
 @end

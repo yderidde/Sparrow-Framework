@@ -17,13 +17,6 @@
 /// its width and height.
 
 @interface SPRectangle : SPPoolObject <NSCopying>
-{
-  @private
-    float mX;
-    float mY;
-    float mWidth;
-    float mHeight;
-}
 
 /// ------------------
 /// @name Initializers
@@ -33,7 +26,7 @@
 - (id)initWithX:(float)x y:(float)y width:(float)width height:(float)height;
 
 /// Factory method.
-+ (SPRectangle*)rectangleWithX:(float)x y:(float)y width:(float)width height:(float)height;
++ (id)rectangleWithX:(float)x y:(float)y width:(float)width height:(float)height;
 
 /// -------------
 /// @name Methods
@@ -56,10 +49,16 @@
 
 /// Adds two rectangles together to create a new Rectangle object (by filling in the space between 
 /// the two rectangles).
-- (SPRectangle*)uniteWithRectangle:(SPRectangle*)rectangle; 
+- (SPRectangle*)uniteWithRectangle:(SPRectangle*)rectangle;
+
+/// Sets the members of the rectangle to the specified values.
+- (void)setX:(float)x y:(float)y width:(float)width height:(float)height;
 
 /// Sets width and height components to zero.
 - (void)setEmpty;
+
+/// Copies the values from another rectangle into the current rectangle.
+- (void)copyFromRectangle:(SPRectangle *)rectangle;
 
 /// Compares two points.
 - (BOOL)isEquivalent:(SPRectangle *)other;

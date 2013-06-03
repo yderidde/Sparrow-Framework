@@ -10,12 +10,9 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <OpenGLES/EAGL.h>
-#import <OpenGLES/ES1/gl.h>
-#import <OpenGLES/ES1/glext.h>
 
 #import "SPDisplayObject.h"
-#import "SPTexture.h"
+#import "SPSubTexture.h"
 #import "SPRenderSupport.h"
 
 typedef void (^SPDrawingBlock)();
@@ -33,33 +30,21 @@ typedef void (^SPDrawingBlock)();
  matter how many objects you have drawn.
  
  If you draw lots of objects at once, it is recommended to bundle the drawing calls in a block
- via the `bundleDrawCalls:` method, like shown below. That will speed it up immensely, allowing
+ via the `drawBundled:` method, like shown below. That will speed it up immensely, allowing
  you to draw hundreds of objects very quickly.
  
-	[renderTexture bundleDrawCalls:^
+	[renderTexture drawBundled:^
 	 {
 	     for (int i=0; i<numDrawings; ++i)
 	     {
 	        image.rotation = (2 * PI / numDrawings) * i;
 	        [renderTexture drawObject:image];            
 	     }             
-	 }]; 
+	 }];
 
- One thing you should be aware of is that calling any of this class' drawing methods from within
- a `render:` method of an `SPDisplayObject` may lead to problems with texture bindings. To
- circumvent this, either move your drawing code into an enter frame event listener or call the
- `reset` method of `SPRenderSupport` after the drawing calls. 
- 
 ------------------------------------------------------------------------------------------------- */
 
-@interface SPRenderTexture : SPTexture 
-{
-  @private
-    GLuint mFramebuffer;
-    BOOL   mFramebufferIsActive;
-    SPTexture *mTexture;
-    SPRenderSupport *mRenderSupport;    
-}
+@interface SPRenderTexture : SPSubTexture
 
 /// ------------------
 /// @name Initializers
@@ -75,10 +60,10 @@ typedef void (^SPDrawingBlock)();
 - (id)initWithWidth:(float)width height:(float)height fillColor:(uint)argb scale:(float)scale;
 
 /// Factory method.
-+ (SPRenderTexture *)textureWithWidth:(float)width height:(float)height;
++ (id)textureWithWidth:(float)width height:(float)height;
 
 /// Factory method.
-+ (SPRenderTexture *)textureWithWidth:(float)width height:(float)height fillColor:(uint)argb;
++ (id)textureWithWidth:(float)width height:(float)height fillColor:(uint)argb;
 
 /// -------------
 /// @name Methods
@@ -88,7 +73,7 @@ typedef void (^SPDrawingBlock)();
 - (void)drawObject:(SPDisplayObject *)object;
 
 /// Bundles several calls to `drawObject:` together in a block. This avoids framebuffer switches.
-- (void)bundleDrawCalls:(SPDrawingBlock)block;
+- (void)drawBundled:(SPDrawingBlock)block;
 
 /// Clears the texture with a certain color and alpha value.
 - (void)clearWithColor:(uint)color alpha:(float)alpha;

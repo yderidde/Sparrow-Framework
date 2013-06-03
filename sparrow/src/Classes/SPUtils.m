@@ -11,16 +11,25 @@
 
 #import "SPUtils.h"
 #import "SPNSExtensions.h"
+#import "SparrowClass.h"
 
+#import <GLKit/GLKit.h>
 #import <sys/stat.h>
 
 @implementation SPUtils
+
+#pragma mark - Math Utils
 
 + (int)nextPowerOfTwo:(int)number
 {    
     int result = 1; 
     while (result < number) result *= 2;
     return result;    
+}
+
++ (BOOL)isPowerOfTwo:(int)number
+{
+    return ((number != 0) && !(number & (number - 1)));
 }
 
 + (int)randomIntBetweenMin:(int)minValue andMax:(int)maxValue
@@ -33,8 +42,15 @@
     return (float) arc4random() / UINT_MAX;
 }
 
+#pragma mark - File Utils
+
 + (BOOL)fileExistsAtPath:(NSString *)path
 {
+    if (!path)
+        return NO;
+    else if (![path isAbsolutePath])
+        path = [[NSBundle appBundle] pathForResource:path];
+    
     struct stat buffer;   
     return stat([path UTF8String], &buffer) == 0;
 }
@@ -46,21 +62,16 @@
     // SD: <ImageName><device_modifier>.<filename_extension>
     // HD: <ImageName>@2x<device_modifier>.<filename_extension>
     
+    if (factor < 1.0f) factor = 1.0f;
+    
     NSString *originalPath = path;
- 
-    if (factor != 1.0f)
-    {
-        NSString *scaleSuffix = [NSString stringWithFormat:@"@%@x", [NSNumber numberWithFloat:factor]];
-        path = [path stringByReplacingOccurrencesOfString:scaleSuffix withString:@""];
-        path = [path stringByAppendingSuffixToFilename:scaleSuffix];
-    }
-
+    NSString *pathWithScale = [path stringByAppendingScaleSuffixToFilename:factor];
     NSString *idiomSuffix = (idiom == UIUserInterfaceIdiomPad) ? @"~ipad" : @"~iphone";
-    NSString *pathWithIdiom = [path stringByAppendingSuffixToFilename:idiomSuffix];
+    NSString *pathWithIdiom = [pathWithScale stringByAppendingSuffixToFilename:idiomSuffix];
     
     BOOL isAbsolute = [path isAbsolutePath];
     NSBundle *appBundle = [NSBundle appBundle];
-    NSString *absolutePath = isAbsolute ? path : [appBundle pathForResource:path];
+    NSString *absolutePath = isAbsolute ? pathWithScale : [appBundle pathForResource:pathWithScale];
     NSString *absolutePathWithIdiom = isAbsolute ? pathWithIdiom : [appBundle pathForResource:pathWithIdiom];
     
     if ([SPUtils fileExistsAtPath:absolutePathWithIdiom])
@@ -75,12 +86,13 @@
 
 + (NSString *)absolutePathToFile:(NSString *)path withScaleFactor:(float)factor
 {
-    return [SPUtils absolutePathToFile:path withScaleFactor:factor idiom:UI_USER_INTERFACE_IDIOM()];
+    UIUserInterfaceIdiom currentIdiom = [[UIDevice currentDevice] userInterfaceIdiom];
+    return [SPUtils absolutePathToFile:path withScaleFactor:factor idiom:currentIdiom];
 }
 
 + (NSString *)absolutePathToFile:(NSString *)path
 {
-    return [SPUtils absolutePathToFile:path withScaleFactor:1.0f];
+    return [SPUtils absolutePathToFile:path withScaleFactor:Sparrow.contentScaleFactor];
 }
 
 @end

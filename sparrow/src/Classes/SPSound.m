@@ -20,26 +20,27 @@
 #import <AudioToolbox/AudioToolbox.h> 
 
 @implementation SPSound
+{
+    NSMutableSet *_playingChannels;
+}
 
 - (id)init
 {
     if ([self isMemberOfClass:[SPSound class]])
     {
-        [self release];
         [NSException raise:SP_EXC_ABSTRACT_CLASS 
                     format:@"Attempting to initialize abstract class SPSound."];        
         return nil;
-    } 
+    }
     
     return [super init];
 }
 
 - (id)initWithContentsOfFile:(NSString *)path
 {
-    // SPSound is a class factory! We'll return a subclass, thus we don't need 'self' anymore.
-    [self release];
+    // SPSound is a class factory! We'll return a subclass, not self.
     
-    NSString *fullPath = [SPUtils absolutePathToFile:path];
+    NSString *fullPath = [SPUtils absolutePathToFile:path withScaleFactor:1.0f];
     if (!fullPath) [NSException raise:SP_EXC_FILE_NOT_FOUND format:@"file %@ not found", path];
     
     NSString *error = nil;
@@ -55,7 +56,7 @@
     {        
         OSStatus result = noErr;        
         
-        result = AudioFileOpenURL((CFURLRef) [NSURL fileURLWithPath:fullPath], 
+        result = AudioFileOpenURL((__bridge CFURLRef) [NSURL fileURLWithPath:fullPath], 
                                   kAudioFileReadPermission, 0, &fileID);
         if (result != noErr)
         {
@@ -159,41 +160,36 @@
 {
     SPSoundChannel *channel = [self createChannel];
     [channel addEventListener:@selector(onSoundCompleted:) atObject:self
-                      forType:SP_EVENT_TYPE_SOUND_COMPLETED];
+                      forType:SP_EVENT_TYPE_COMPLETED];
     [channel play];
     
-    if (!mPlayingChannels) mPlayingChannels = [[NSMutableSet alloc] init];    
-    [mPlayingChannels addObject:channel];
+    if (!_playingChannels) _playingChannels = [[NSMutableSet alloc] init];    
+    [_playingChannels addObject:channel];
 }
 
 - (void)onSoundCompleted:(SPEvent *)event
 {
     SPSoundChannel *channel = (SPSoundChannel *)event.target;
     [channel stop];
-    [mPlayingChannels removeObject:channel];
+    [_playingChannels removeObject:channel];
 }
 
 - (SPSoundChannel *)createChannel
 {
-    [NSException raise:SP_EXC_ABSTRACT_METHOD format:@"Override this method in subclasses."];
+    [NSException raise:SP_EXC_ABSTRACT_METHOD format:@"Override 'createChannel' in subclasses."];
     return nil;
 }
 
 - (double)duration
 {
-    [NSException raise:SP_EXC_ABSTRACT_METHOD format:@"Override this method in subclasses."];
+    [NSException raise:SP_EXC_ABSTRACT_METHOD format:@"Override 'duration' in subclasses."];
     return 0.0;
 }
 
 + (SPSound *)soundWithContentsOfFile:(NSString *)path
 {
-    return [[[SPSound alloc] initWithContentsOfFile:path] autorelease];
+    return [[SPSound alloc] initWithContentsOfFile:path];
 }
 
-- (void)dealloc
-{
-    [mPlayingChannels release];
-    [super dealloc];
-}
 
 @end

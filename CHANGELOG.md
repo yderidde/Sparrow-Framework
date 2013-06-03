@@ -1,6 +1,73 @@
 Sparrow: Changelog
 ==================
 
+version 2.0 - 2013-05-31
+------------------------
+
+- added bubbling for TRIGGERED events of SPButton (for consistency with Sparrow)
+- added runtime-check that pooled objects are not used from multiple threads (in DEBUG mode)
+- added more convenience methods to 'SPVertexData'
+- added an additional font registration method 
+- added 'Sparrow.root' method
+- renamed 'SPQuadEffect' to 'SPBaseEffect'
+- fixed initialization of SPViewController when 'initWithCoder:' is called (thanks Ariel!)
+- fixed bug when SPProgram populates lists of uniforms (thanks Ariel!)
+- fixed pivot point assignment in transformation matrix setter 
+
+version 2.0rc - 2013-04-08
+--------------------------
+
+- added 'SPViewController', which is now the starting point for all Sparrow games
+- added asynchronous texture loading methods
+- added blend modes to display objects
+- added 'setAlpha:ofVertex' and 'alphaOfVertex:' to SPImage
+- added 'SPProgram' class for shader programs
+- added 'SPQuadEffect' class for simple quad rendering
+- added 'SPQuadBatch' class for batched quad rendering
+- added 'SPVertexData' class to simplify vertex buffer data handling
+- added 'Sparrow' class for easy access of stage, juggler, contentScaleFactor, etc.
+- added 'root' property to display objects, pointing to start-up object
+- added 'base' property to display objects, pointing to top-most object
+- added 'dispatchEventWith:(bubbles:)' method for quick event dispatching
+- added block-based event listeners
+- added 'repeatCount', 'repeatDelay' & 'reverse' properties to tween
+- added more 'description' methods
+- added render state stack to SPRenderSupport
+- added 'mini' bitmap font
+- added block-based XML parsing extension
+- added methods to set all point and rectangle members simultaneously
+- added 'autoScale' property to SPTextField
+- added 'createSprite' method to SPBitmapFont
+- added blocks to delayed invocation and juggler
+- added workaround for audio interruption problems in new iOS versions
+- added 'setTexCoordsWithX:y:' to SPImage
+- added 'movementInSpace:' method to SPTouch
+- added more access methods to SPTextureAtlas
+- added transformation matrix setter in SPDisplayObject
+- converted all Sparrow code to ARC
+- converted all rendering code to OpenGL ES 2.0
+- cleaned up 'SPMovieClip' methods
+- changed 'SPAnimatable' interface: removed 'isComplete' and replacing it with event
+- changed prefix of member variables from 'm' to '_' (underscore)
+- now using the same matrix for both rendering and hit test logic
+- now using SPQuadBatch for all quad rendering
+- renamed SPTextureFilter to SPTextureSmoothing
+- renamed 'bundleDrawCalls:' to 'drawBundled:' in SPRenderTexture
+- renamed 'count' to 'numTextures' in SPTextureAtlas
+- replaced MOVIE_COMPLETED and SOUND_COMPLETED with a shared COMPLETED event
+- replaced tween events with callback blocks
+- replaced SPCompiledSprite with new 'flatten'/'unflatten' methods in SPSprite
+- updated scaffold project for new architecture
+- updated factory methods to use 'self' instead of class and return 'id'
+- updated texture loading to use GLKTextureLoader internally
+- updated 'fileExistsAtPath:' of SPUtils to support relative paths
+- optimized bitmap font rendering by using SPQuadBatch
+- optimized output correctness of bitmap font rendering
+- optimized quad bounds calculation
+- removed deprecated methods
+- removed clause 3 of license (now using a pure Simplified BSD license)
+- modernized Objective-C syntax
+
 version 1.4 - 2012-10-10
 ------------------------
 

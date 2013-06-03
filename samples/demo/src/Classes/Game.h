@@ -9,12 +9,6 @@
 #import <Foundation/Foundation.h>
 #import "Scene.h"
 
-@interface Game : SPStage
-{
-  @private
-    Scene *mCurrentScene;
-    SPSprite *mMainMenu;
-    float mOffsetY;
-}
+@interface Game : SPSprite
 
 @end

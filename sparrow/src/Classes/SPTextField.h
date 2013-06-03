@@ -54,7 +54,7 @@ typedef enum
    font name to the corresponding property.
  - Bitmap fonts. If you need speed or fancy font effects, use a bitmap font instead. That is a 
    font that has its glyphs rendered to a texture atlas. To use it, first register the font with
-   the method `registerBitmapFontFromFile:`, and then pass the font name to the corresponding 
+   the method `registerBitmapFont:`, and then pass the font name to the corresponding 
    property of the text field.
     
  For the latter, we recommend one of the following tools; both support Sparrow natively.
@@ -82,26 +82,12 @@ typedef enum
 	SPTextField *textField = [SPTextField textFieldWithWidth:300 height:100 text:@"Hello world!"];
 	textField.fontName = fontName;
  
+ Tip: Sparrow comes with a small bitmap font that is great for debug output. Just assign the 
+ font name `SP_BITMAP_FONT_MINI` to a text field to use it.
+ 
 ------------------------------------------------------------------------------------------------- */
 
 @interface SPTextField : SPDisplayObjectContainer
-{
-  @protected
-    float mFontSize;
-    uint mColor;
-    NSString *mText;
-    NSString *mFontName;    
-    SPHAlign mHAlign;
-    SPVAlign mVAlign;
-    BOOL mBorder;    
-    BOOL mRequiresRedraw;
-    BOOL mIsRenderedText;
-	BOOL mKerning;
-    
-    SPQuad *mHitArea;
-    SPQuad *mTextArea;
-    SPDisplayObject *mContents;
-}
 
 /// ------------------
 /// @name Initializers
@@ -114,49 +100,58 @@ typedef enum
 /// Initialize a text field with default settings (Helvetica, 14pt, black).
 - (id)initWithWidth:(float)width height:(float)height text:(NSString*)text;
 
+/// Initialize a text field with default settings (Helvetica, 14pt, black) and an empty string.
+- (id)initWithWidth:(float)width height:(float)height;
+
 /// Initialize a 128x128 textField (Helvetica, 14pt, black).
 - (id)initWithText:(NSString *)text;
 
 /// Factory method.
-+ (SPTextField *)textFieldWithWidth:(float)width height:(float)height text:(NSString*)text 
++ (id)textFieldWithWidth:(float)width height:(float)height text:(NSString*)text
                           fontName:(NSString*)name fontSize:(float)size color:(uint)color;
 
 /// Factory method.
-+ (SPTextField *)textFieldWithWidth:(float)width height:(float)height text:(NSString*)text;
++ (id)textFieldWithWidth:(float)width height:(float)height text:(NSString*)text;
 
 /// Factory method.
-+ (SPTextField *)textFieldWithText:(NSString *)text;
++ (id)textFieldWithText:(NSString *)text;
 
 /// -------------
 /// @name Methods
 /// -------------
 
-/// Makes a bitmap font available at any text field, manually providing the texture and font name.
-/// 
-/// @return The name of the font that was passed to the method.
-+ (NSString *)registerBitmapFontFromFile:(NSString *)path texture:(SPTexture *)texture name:(NSString *)fontName;
+/// Makes a bitmap font available at any text field, using texture and name as defined in the file.
+///
+/// @return The name of the font as defined in the font XML.
++ (NSString *)registerBitmapFont:(SPBitmapFont *)font;
 
-/// Makes a bitmap font available at any text field, manually providing the texture.
-/// 
-/// @return The name of the font as defined in the font XML. 
-+ (NSString *)registerBitmapFontFromFile:(NSString *)path texture:(SPTexture *)texture;
-
-/// Makes a bitmap font available at any text field, using the texture defined in the file,
+/// Makes a bitmap font available at any text field, using the texture defined in the file
 /// and manually providing the font name.
-/// 
+///
 /// @return The name of the font that was passed to the method.
-+ (NSString *)registerBitmapFontFromFile:(NSString *)path name:(NSString *)fontName;
++ (NSString *)registerBitmapFont:(SPBitmapFont *)font name:(NSString *)fontName;
 
-/// Makes a bitmap font available at any text field, using the texture defined in the file.
+/// Makes a bitmap font available at any text field, using texture and name as defined in the file.
 /// 
 /// @return The name of the font as defined in the font XML. 
 + (NSString *)registerBitmapFontFromFile:(NSString *)path;
 
-/// Releases the bitmap font.
+/// Makes a bitmap font available at any text field, using a custom texture.
+///
+/// @return The name of the font as defined in the font XML.
++ (NSString *)registerBitmapFontFromFile:(NSString *)path texture:(SPTexture *)texture;
+
+/// Makes a bitmap font available at any text field, using a custom texture and font name.
+///
+/// @retrurn The name of the font that was passed to the method.
++ (NSString *)registerBitmapFontFromFile:(NSString *)path texture:(SPTexture *)texture
+                                    name:(NSString *)fontName;
+
+/// Unregisters the bitmap font of this name.
 + (void)unregisterBitmapFont:(NSString *)name;
 
-/// Get the bitmap font that was registered unter a certain name.
-+ (SPBitmapFont *)getRegisteredBitmapFont:(NSString *)name;
+/// Get the bitmap font that was registered under a certain name.
++ (SPBitmapFont *)registeredBitmapFont:(NSString *)name;
 
 /// ----------------
 /// @name Properties
@@ -184,9 +179,13 @@ typedef enum
 @property (nonatomic, assign) uint color;
 
 /// The bounds of the actual characters inside the text field.
-@property (nonatomic, readonly) SPRectangle *textBounds;
+@property (weak, nonatomic, readonly) SPRectangle *textBounds;
 
 /// Allows using kerning information with a bitmap font (where available). Default is YES.
 @property (nonatomic, assign) BOOL kerning;
+
+/// Indicates whether the font size is scaled down so that the complete text fits into the
+/// text field. Default is NO.
+@property (nonatomic, assign) BOOL autoScale;
 
 @end

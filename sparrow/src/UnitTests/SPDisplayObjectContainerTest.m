@@ -28,13 +28,13 @@
 
 @interface SPDisplayObjectContainerTest : SenTestCase 
 {
-    int mAdded;
-    int mAddedToStage;
-    int mRemoved;
-    int mRemovedFromStage;
-    int mEventCount;
-    SPSprite *mTestSprite;
-    SPEventDispatcher *mBroadcastTarget;
+    int _added;
+    int _addedToStage;
+    int _removed;
+    int _removedFromStage;
+    int _eventCount;
+    SPSprite *_testSprite;
+    SPEventDispatcher *_broadcastTarget;
 }
 
 - (void)addQuadToSprite:(SPSprite*)sprite;
@@ -49,13 +49,8 @@
 
 - (void) setUp
 {
-    mAdded = mAddedToStage = mRemoved = mRemovedFromStage = mEventCount = 0;    
-    mTestSprite = [[SPSprite alloc] init];
-}
-
-- (void) tearDown
-{
-    [mTestSprite release];
+    _added = _addedToStage = _removed = _removedFromStage = _eventCount = 0;    
+    _testSprite = [[SPSprite alloc] init];
 }
 
 - (void)testChildParentHandling
@@ -92,10 +87,6 @@
     STAssertFalse([child2 containsChild:child1], @"invalid connection");
     STAssertEqualObjects(child1, [parent childAtIndex:0], @"wrong child");
     STAssertEqualObjects(child2, [parent childAtIndex:1], @"wrong child");    
-    
-    [child2 release];
-    [child1 release];
-    [parent release];
 }
 
 - (void)testSetChildIndex
@@ -152,10 +143,6 @@
     quad1.rotation = PI;
     STAssertTrue(SP_IS_FLOAT_EQUAL(65.0f, sprite.width), @"wrong width: %f", sprite.width);
     STAssertTrue(SP_IS_FLOAT_EQUAL(85.0f, sprite.height), @"wrong height: %f", sprite.height);
-    
-    [quad1 release];
-    [quad2 release];
-    [sprite release];
 }
 
 - (void)testBounds
@@ -179,9 +166,6 @@
     STAssertTrue(SP_IS_FLOAT_EQUAL(10, bounds.y), @"wrong bounds.y: %f", bounds.y);
     STAssertTrue(SP_IS_FLOAT_EQUAL(20, bounds.width), @"wrong bounds.width: %f", bounds.width);
     STAssertTrue(SP_IS_FLOAT_EQUAL(10, bounds.height), @"wrong bounds.height: %f", bounds.height); 
-    
-    [sprite release];
-    [quad release];    
 }
 
 - (void)testBoundsInSpace
@@ -193,7 +177,6 @@
     spriteA.y = 50;
     [self addQuadToSprite:spriteA];
     [root addChild:spriteA];
-    [spriteA release];
     
     SPSprite *spriteA1 = [[SPSprite alloc] init];
     spriteA1.x = 150;
@@ -201,7 +184,6 @@
     spriteA1.scaleX = spriteA1.scaleY = 0.5;
     [self addQuadToSprite:spriteA1];
     [spriteA addChild:spriteA1];
-    [spriteA1 release];
     
     SPSprite *spriteA11 = [[SPSprite alloc] init];
     spriteA11.x = 25;
@@ -209,7 +191,6 @@
     spriteA11.scaleX = spriteA11.scaleY = 0.5;
     [self addQuadToSprite:spriteA11];
     [spriteA1 addChild:spriteA11];
-    [spriteA11 release];
     
     SPSprite *spriteA2 = [[SPSprite alloc] init];
     spriteA2.x = 50;
@@ -217,7 +198,6 @@
     spriteA2.scaleX = spriteA2.scaleY = 0.5;
     [self addQuadToSprite:spriteA2];
     [spriteA addChild:spriteA2];
-    [spriteA2 release];
     
     SPSprite *spriteA21 = [[SPSprite alloc] init];
     spriteA21.x = 50;
@@ -225,7 +205,6 @@
     spriteA21.scaleX = spriteA21.scaleY = 0.5;
     [self addQuadToSprite:spriteA21];
     [spriteA2 addChild:spriteA21];    
-    [spriteA21 release];
     
     // ---
     
@@ -241,8 +220,6 @@
     bounds = [spriteA21 boundsInSpace:spriteA11];
     expectedBounds = [SPRectangle rectangleWithX:0 y:394.974762 width:100 height:100];
     STAssertTrue([bounds isEquivalent:expectedBounds], @"wrong bounds: %@", bounds);
-    
-    [root release];
 }
 
 - (void)testSize
@@ -291,7 +268,6 @@
     SPQuad *quad = [[SPQuad alloc] initWithWidth:100 height:100];
     quad.alpha = 0.2f;
     [sprite addChild:quad];
-    [quad release];
     return;
 }
 
@@ -308,61 +284,56 @@
     
     [sprite addChild:quad];
     
-    STAssertEquals(1, mAdded, @"failure on event 'added'");
-    STAssertEquals(0, mRemoved, @"failure on event 'removed'");
-    STAssertEquals(0, mAddedToStage, @"failure on event 'addedToStage'");
-    STAssertEquals(0, mRemovedFromStage, @"failure on event 'removedFromStage'");
+    STAssertEquals(1, _added, @"failure on event 'added'");
+    STAssertEquals(0, _removed, @"failure on event 'removed'");
+    STAssertEquals(0, _addedToStage, @"failure on event 'addedToStage'");
+    STAssertEquals(0, _removedFromStage, @"failure on event 'removedFromStage'");
     
     [stage addChild:sprite];
     
-    STAssertEquals(1, mAdded, @"failure on event 'added'");
-    STAssertEquals(0, mRemoved, @"failure on event 'removed'");
-    STAssertEquals(1, mAddedToStage, @"failure on event 'addedToStage'");
-    STAssertEquals(0, mRemovedFromStage, @"failure on event 'removedFromStage'");
+    STAssertEquals(1, _added, @"failure on event 'added'");
+    STAssertEquals(0, _removed, @"failure on event 'removed'");
+    STAssertEquals(1, _addedToStage, @"failure on event 'addedToStage'");
+    STAssertEquals(0, _removedFromStage, @"failure on event 'removedFromStage'");
     
     [stage removeChild:sprite];
     
-    STAssertEquals(1, mAdded, @"failure on event 'added'");
-    STAssertEquals(0, mRemoved, @"failure on event 'removed'");
-    STAssertEquals(1, mAddedToStage, @"failure on event 'addedToStage'");
-    STAssertEquals(1, mRemovedFromStage, @"failure on event 'removedFromStage'");
+    STAssertEquals(1, _added, @"failure on event 'added'");
+    STAssertEquals(0, _removed, @"failure on event 'removed'");
+    STAssertEquals(1, _addedToStage, @"failure on event 'addedToStage'");
+    STAssertEquals(1, _removedFromStage, @"failure on event 'removedFromStage'");
     
     [sprite removeChild:quad];
     
-    STAssertEquals(1, mAdded, @"failure on event 'added'");
-    STAssertEquals(1, mRemoved, @"failure on event 'removed'");
-    STAssertEquals(1, mAddedToStage, @"failure on event 'addedToStage'");
-    STAssertEquals(1, mRemovedFromStage, @"failure on event 'removedFromStage'");
+    STAssertEquals(1, _added, @"failure on event 'added'");
+    STAssertEquals(1, _removed, @"failure on event 'removed'");
+    STAssertEquals(1, _addedToStage, @"failure on event 'addedToStage'");
+    STAssertEquals(1, _removedFromStage, @"failure on event 'removedFromStage'");
     
     [quad removeEventListenersAtObject:self forType:SP_EVENT_TYPE_ADDED];
     [quad removeEventListenersAtObject:self forType:SP_EVENT_TYPE_ADDED_TO_STAGE];
     [quad removeEventListenersAtObject:self forType:SP_EVENT_TYPE_REMOVED];
     [quad removeEventListenersAtObject:self forType:SP_EVENT_TYPE_REMOVED_FROM_STAGE];
-    
-    [quad release];
-    [sprite release];    
-    [stage release];    
 }
 
-- (void)onAdded:(SPEvent*)event { mAdded++; }
-- (void)onRemoved:(SPEvent*)event { mRemoved++; }
-- (void)onAddedToStage:(SPEvent*)event { mAddedToStage++; }
-- (void)onRemovedFromStage:(SPEvent*)event { mRemovedFromStage++; }
+- (void)onAdded:(SPEvent*)event { _added++; }
+- (void)onRemoved:(SPEvent*)event { _removed++; }
+- (void)onAddedToStage:(SPEvent*)event { _addedToStage++; }
+- (void)onRemovedFromStage:(SPEvent*)event { _removedFromStage++; }
 
 - (void)testRemovedFromStage
 {
     SPStage *stage = [[SPStage alloc] init];
-    [stage addChild:mTestSprite];    
-    [mTestSprite addEventListener:@selector(onTestSpriteRemovedFromStage:) atObject:self
+    [stage addChild:_testSprite];    
+    [_testSprite addEventListener:@selector(onTestSpriteRemovedFromStage:) atObject:self
                           forType:SP_EVENT_TYPE_REMOVED_FROM_STAGE];    
-    [mTestSprite removeFromParent];
-    [mTestSprite removeEventListenersAtObject:self forType:SP_EVENT_TYPE_REMOVED_FROM_STAGE];        
-    [stage release];
+    [_testSprite removeFromParent];
+    [_testSprite removeEventListenersAtObject:self forType:SP_EVENT_TYPE_REMOVED_FROM_STAGE];        
 }
 
 - (void)onTestSpriteRemovedFromStage:(SPEvent *)event
 {
-    STAssertNotNil(mTestSprite.stage, @"stage not accessible in removed from stage event");
+    STAssertNotNil(_testSprite.stage, @"stage not accessible in removed from stage event");
 }
 
 - (void)testAddExistingChild
@@ -458,7 +429,7 @@
     // removes the children from their parent when it reaches child1. Furthermore, it should
     // not crash.
     
-    STAssertEquals(3, mEventCount, @"not all children received events!");
+    STAssertEquals(3, _eventCount, @"not all children received events!");
 }
 
 - (void)testBroadcastEventTarget
@@ -480,12 +451,12 @@
     [childA2 addEventListener:@selector(onBroadcastEvent:) atObject:self forType:@"test"];
     [parent broadcastEvent:[SPEvent eventWithType:@"test"]];
     
-    STAssertEquals(parent, mBroadcastTarget, @"wrong event.target on broadcast");
+    STAssertEquals(parent, _broadcastTarget, @"wrong event.target on broadcast");
 }
 
 - (void)onBroadcastEvent:(SPEvent *)event
 {
-    mBroadcastTarget = event.target;
+    _broadcastTarget = event.target;
 }
 
 - (void)onChildEvent:(SPEvent *)event
@@ -495,7 +466,7 @@
     if ([target.name isEqualToString:@"trigger"])
         [target.parent removeAllChildren];
     
-    ++mEventCount;
+    ++_eventCount;
 }
 
 - (void)testRemoveWithEventHandler

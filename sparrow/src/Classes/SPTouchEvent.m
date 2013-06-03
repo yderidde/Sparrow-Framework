@@ -15,14 +15,17 @@
 #import "SPEvent_Internal.h"
 
 @implementation SPTouchEvent
+{
+    NSSet *_touches;
+}
 
-@synthesize touches = mTouches;
+@synthesize touches = _touches;
 
 - (id)initWithType:(NSString*)type bubbles:(BOOL)bubbles touches:(NSSet*)touches
 {   
     if ((self = [super initWithType:type bubbles:bubbles]))
     {        
-        mTouches = [touches retain];
+        _touches = touches;
     }
     return self;
 }
@@ -44,13 +47,13 @@
 
 - (double)timestamp
 {
-    return [[mTouches anyObject] timestamp];    
+    return [[_touches anyObject] timestamp];    
 }
 
 - (NSSet*)touchesWithTarget:(SPDisplayObject*)target
 {
     NSMutableSet *touchesFound = [NSMutableSet set];
-    for (SPTouch *touch in mTouches)
+    for (SPTouch *touch in _touches)
     {
         if ([target isEqual:touch.target] ||
             ([target isKindOfClass:[SPDisplayObjectContainer class]] &&
@@ -65,7 +68,7 @@
 - (NSSet*)touchesWithTarget:(SPDisplayObject*)target andPhase:(SPTouchPhase)phase
 {
     NSMutableSet *touchesFound = [NSMutableSet set];
-    for (SPTouch *touch in mTouches)
+    for (SPTouch *touch in _touches)
     {
         if (touch.phase == phase &&
             ([target isEqual:touch.target] || 
@@ -78,15 +81,9 @@
     return touchesFound;    
 }
 
-- (void)dealloc
++ (id)eventWithType:(NSString*)type touches:(NSSet*)touches
 {
-    [mTouches release];
-    [super dealloc];
-}
-
-+ (SPTouchEvent*)eventWithType:(NSString*)type touches:(NSSet*)touches
-{
-    return [[[SPTouchEvent alloc] initWithType:type touches:touches] autorelease];
+    return [[self alloc] initWithType:type touches:touches];
 }
 
 @end

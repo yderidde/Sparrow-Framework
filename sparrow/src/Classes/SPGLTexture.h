@@ -10,79 +10,49 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <GLKit/GLKit.h>
 
 #import "SPTexture.h"
 #import "SPMacros.h"
 
 @class SPRectangle;
 
-typedef enum 
-{
-    SPTextureFormatRGBA,
-    SPTextureFormatAlpha,
-    SPTextureFormatPvrtcRGB2,
-    SPTextureFormatPvrtcRGBA2,
-    SPTextureFormatPvrtcRGB4,
-    SPTextureFormatPvrtcRGBA4,
-    SPTextureFormat565,
-    SPTextureFormat888,
-    SPTextureFormat5551,
-    SPTextureFormat4444,
-    SPTextureFormatAI88,
-    SPTextureFormatI8
-} SPTextureFormat;
-
-typedef struct
-{
-    SPTextureFormat format;
-    int width;
-    int height;
-    int numMipmaps;
-    BOOL generateMipmaps;
-    BOOL premultipliedAlpha;
-} SPTextureProperties;
-
 /** ------------------------------------------------------------------------------------------------
 
  The SPGLTexture class is a concrete implementation of the abstract class SPTexture,
  containing a standard 2D OpenGL texture. 
  
- Don't use this class directly, but load textures with the init-methods of SPTexture instead.
+ In most cases, you don't have to use this class directly (the init-methods of the SPTexture class
+ should suffice for most needs). However, you can use this class in combination with a
+ GLKTextureLoader to load types that Sparrow doesn't support itself.
  
 ------------------------------------------------------------------------------------------------- */
 
 @interface SPGLTexture : SPTexture
-{
-  @private
-    uint mTextureID;
-    float mWidth;
-    float mHeight;
-    float mScale;
-    BOOL mRepeat;
-    BOOL mPremultipliedAlpha;
-    BOOL mMipmaps;
-    SPTextureFilter mFilter;
-}
 
 /// ------------------
 /// @name Initializers
 /// ------------------
 
-/// Initializes a texture with raw pixel data and a set of properties.
-- (id)initWithData:(const void *)imgData properties:(SPTextureProperties)properties;
+/// Initializes a texture with the given properties. Width and height are expected pixel dimensions.
+/// _Designated Initializer_.
+- (id)initWithName:(uint)name width:(float)width height:(float)height
+   containsMipmaps:(BOOL)mipmaps scale:(float)scaleFactor premultipliedAlpha:(BOOL)pma;
 
-/// Factory method.
-+ (SPGLTexture*)textureWithData:(const void *)imgData properties:(SPTextureProperties)properties;
+/// Initializes an uncompressed texture with with raw pixel data and a set of properties.
+/// Width and height are expected pixel dimensions.
+- (id)initWithData:(const void *)imgData width:(float)width height:(float)height
+   generateMipmaps:(BOOL)mipmaps scale:(float)scale premultipliedAlpha:(BOOL)pma;
 
-/// ----------------
-/// @name Properties
-/// ----------------
+/// Initializes a texture with a GLKit texture info object and a certain scale factor.
+- (id)initWithTextureInfo:(GLKTextureInfo *)info scale:(float)scale;
 
-/// The filter type influences how the texture appears when it is scaled up or down. 
-/// Default: `SPTextureFilterLinear`.
-@property (nonatomic, assign) SPTextureFilter filter;
+/// Initializes a texture with a GLKit texture info object and a certain scale factor.
+/// Since the `alphaState` of the texture info only indicates if the alpha value was multiplied
+/// during the loading process (not the actual state), you can override that value.
+- (id)initWithTextureInfo:(GLKTextureInfo *)info scale:(float)scale premultipliedAlpha:(BOOL)pma;
 
-/// The scale factor, which influences `width` and `height` properties.
-@property (nonatomic, assign) float scale;
+/// Initializes a texture with a GLKit texture info object and a scale factor of 1.
+- (id)initWithTextureInfo:(GLKTextureInfo *)info;
 
 @end

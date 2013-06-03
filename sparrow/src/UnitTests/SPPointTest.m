@@ -24,8 +24,8 @@
 
 @interface SPPointTest :  SenTestCase  
 {
-    SPPoint *mP1;
-    SPPoint *mP2;
+    SPPoint *_p1;
+    SPPoint *_p2;
 }
 
 @end
@@ -36,14 +36,8 @@
 
 - (void) setUp
 {
-    mP1 = [[SPPoint alloc] initWithX:2 y:3];
-    mP2 = [[SPPoint alloc] initWithX:4 y:1];    
-}
-
-- (void) tearDown
-{
-    [mP1 release];
-    [mP2 release];
+    _p1 = [[SPPoint alloc] initWithX:2 y:3];
+    _p2 = [[SPPoint alloc] initWithX:4 y:1];    
 }
 
 - (void)testInit
@@ -51,7 +45,6 @@
     SPPoint *point = [[SPPoint alloc] init];
     STAssertEquals(0.0f, point.x, @"x is not zero");
     STAssertEquals(0.0f, point.y, @"y is not zero");
-    [point release];
 }
 
 - (void)testInitWithXandY
@@ -59,7 +52,6 @@
     SPPoint *point = [[SPPoint alloc] initWithX:3 y:4];
     STAssertEquals(3.0f, point.x, @"wrong x value");
     STAssertEquals(4.0f, point.y, @"wrong y value");
-    [point release];
 }
 
 - (void)testLength
@@ -69,7 +61,6 @@
     point.x = 0;
     point.y = 0;
     STAssertEquals(0.0f, point.length, @"wrong length");
-    [point release];    
 }
 
 - (void)testLengthSquared
@@ -96,19 +87,18 @@
     STAssertTrue(SP_IS_FLOAT_EQUAL(-PI/2.0f, point.angle), @"wrong angle: %f", point.angle);
     point.x = 10;
     STAssertTrue(SP_IS_FLOAT_EQUAL(-PI/4.0f, point.angle), @"wrong angle: %f", point.angle);
-    [point release];    
 }
 
 - (void)testAddPoint
 {
-    SPPoint *result = [mP1 addPoint:mP2];
+    SPPoint *result = [_p1 addPoint:_p2];
     STAssertTrue(SP_IS_FLOAT_EQUAL(6.0f, result.x), @"wrong x value");
     STAssertTrue(SP_IS_FLOAT_EQUAL(4.0f, result.y), @"wrong y value");
 }
 
 - (void)testSubtractPoint
 {
-    SPPoint *result = [mP1 subtractPoint:mP2];
+    SPPoint *result = [_p1 subtractPoint:_p2];
     STAssertTrue(SP_IS_FLOAT_EQUAL(-2.0f, result.x), @"wrong x value");
     STAssertTrue(SP_IS_FLOAT_EQUAL(2.0f, result.y), @"wrong y value");
 }
@@ -131,24 +121,23 @@
 
 - (void)testNormalize
 {
-    SPPoint *result = [mP1 normalize];
+    SPPoint *result = [_p1 normalize];
     STAssertTrue(SP_IS_FLOAT_EQUAL(1.0f, result.length), @"wrong length");
-    STAssertTrue(SP_IS_FLOAT_EQUAL(mP1.angle, result.angle), @"wrong angle");
+    STAssertTrue(SP_IS_FLOAT_EQUAL(_p1.angle, result.angle), @"wrong angle");
     SPPoint *origin = [[SPPoint alloc] init];
     STAssertThrows([origin normalize], @"origin cannot be normalized!");
-    [origin release];
 }
 
 - (void)testInvert
 {
-    SPPoint *point = [mP1 invert];
-    STAssertEqualsWithAccuracy(-mP1.x, point.x, E, @"wrong x value");
-    STAssertEqualsWithAccuracy(-mP1.y, point.y, E, @"wrong y value");
+    SPPoint *point = [_p1 invert];
+    STAssertEqualsWithAccuracy(-_p1.x, point.x, E, @"wrong x value");
+    STAssertEqualsWithAccuracy(-_p1.y, point.y, E, @"wrong y value");
 }
 
 - (void)testDotProduct
 {
-    STAssertEqualsWithAccuracy(11.0f, [mP1 dot:mP2], E, @"wrong dot product");
+    STAssertEqualsWithAccuracy(11.0f, [_p1 dot:_p2], E, @"wrong dot product");
 }
 
 - (void)testRotate
@@ -165,29 +154,27 @@
 
 - (void)testClone
 {
-    SPPoint *result = [mP1 copy];
-    STAssertEquals(mP1.x, result.x, @"wrong x value");
-    STAssertEquals(mP1.y, result.y, @"wrong y value");
-    STAssertFalse(result == mP1, @"object should not be identical");
-    STAssertTrue([mP1 isEquivalent:result], @"objects should be equal");
-    [result release];
+    SPPoint *result = [_p1 copy];
+    STAssertEquals(_p1.x, result.x, @"wrong x value");
+    STAssertEquals(_p1.y, result.y, @"wrong y value");
+    STAssertFalse(result == _p1, @"object should not be identical");
+    STAssertTrue([_p1 isEquivalent:result], @"objects should be equal");
 }
 
 - (void)testIsEqual
 {
-    STAssertFalse([mP1 isEqual:mP2], @"should not be equal");    
-    SPPoint *p3 = [[SPPoint alloc] initWithX:mP1.x y:mP1.y];
-    STAssertTrue([mP1 isEquivalent:p3], @"should be equal");
+    STAssertFalse([_p1 isEqual:_p2], @"should not be equal");    
+    SPPoint *p3 = [[SPPoint alloc] initWithX:_p1.x y:_p1.y];
+    STAssertTrue([_p1 isEquivalent:p3], @"should be equal");
     p3.x += 0.0000001;
     p3.y -= 0.0000001;
-    STAssertTrue([mP1 isEquivalent:p3], @"should be equal, as difference is smaller than epsilon");
-    [p3 release];
+    STAssertTrue([_p1 isEquivalent:p3], @"should be equal, as difference is smaller than epsilon");
 }
 
 - (void)testIsOrigin
 {
     SPPoint *point = [SPPoint point];
-    STAssertTrue([SPPoint point].isOrigin, @"point not indicated as being in the origin");
+    STAssertTrue(point.isOrigin, @"point not indicated as being in the origin");
     
     point.x = 1.0f;
     STAssertFalse(point.isOrigin, @"point wrongly indicated as being in the origin");
@@ -206,8 +193,6 @@
     p3.y = -5;
     distance = [SPPoint distanceFromPoint:p3 toPoint:p4];
     STAssertTrue(SP_IS_FLOAT_EQUAL(10.0f, distance), @"wrong distance");
-    [p3 release];
-    [p4 release];
 }
 
 - (void)testAngleBetweenPoints
@@ -238,15 +223,15 @@
 {
     SPPoint *interpolation;
     
-    interpolation = [SPPoint interpolateFromPoint:mP1 toPoint:mP2 ratio:0.25f];
+    interpolation = [SPPoint interpolateFromPoint:_p1 toPoint:_p2 ratio:0.25f];
     STAssertEqualsWithAccuracy(interpolation.x, 2.5f, E, @"wrong interpolated x");
     STAssertEqualsWithAccuracy(interpolation.y, 2.5f, E, @"wrong interpolated y");
 
-    interpolation = [SPPoint interpolateFromPoint:mP1 toPoint:mP2 ratio:-0.25f];
+    interpolation = [SPPoint interpolateFromPoint:_p1 toPoint:_p2 ratio:-0.25f];
     STAssertEqualsWithAccuracy(interpolation.x, 1.5f, E, @"wrong interpolated x");
     STAssertEqualsWithAccuracy(interpolation.y, 3.5f, E, @"wrong interpolated y");
 
-    interpolation = [SPPoint interpolateFromPoint:mP1 toPoint:mP2 ratio:1.25f];
+    interpolation = [SPPoint interpolateFromPoint:_p1 toPoint:_p2 ratio:1.25f];
     STAssertEqualsWithAccuracy(interpolation.x, 4.5f, E, @"wrong interpolated x");
     STAssertEqualsWithAccuracy(interpolation.y, 0.5f, E, @"wrong interpolated y");
     

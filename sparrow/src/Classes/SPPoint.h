@@ -10,16 +10,12 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <GLKit/GLKit.h>
 #import "SPPoolObject.h"
 
 /** The SPPoint class describes a two dimensional point or vector. */
 
 @interface SPPoint : SPPoolObject <NSCopying>
-{
-  @private
-    float mX;
-    float mY;
-}
 
 /// ------------------
 /// @name Initializers
@@ -32,13 +28,13 @@
 - (id)initWithPolarLength:(float)length angle:(float)angle;
 
 /// Factory method.
-+ (SPPoint *)pointWithPolarLength:(float)length angle:(float)angle;
++ (id)pointWithPolarLength:(float)length angle:(float)angle;
 
 /// Factory method.
-+ (SPPoint *)pointWithX:(float)x y:(float)y;
++ (id)pointWithX:(float)x y:(float)y;
 
 /// Factory method.
-+ (SPPoint *)point;
++ (id)point;
 
 /// -------------
 /// @name Methods
@@ -62,11 +58,20 @@
 /// Returns a point that is the inverse (negation) of this point.
 - (SPPoint *)invert;
 
-/// Returns the dot-product of this and the given point.
+/// Returns the dot-product of self and the given point.
 - (float)dot:(SPPoint *)other;
 
 /// Compares two points.
 - (BOOL)isEquivalent:(SPPoint *)other;
+
+/// Copies the values from another point into the current point.
+- (void)copyFromPoint:(SPPoint *)point;
+
+/// Sets the members of the point to the specified values.
+- (void)setX:(float)x y:(float)y;
+
+/// Creates a GLKit vector that is equivalent to this instance.
+- (GLKVector2)convertToGLKVector;
 
 /// Calculates the distance between two points.
 + (float)distanceFromPoint:(SPPoint *)p1 toPoint:(SPPoint *)p2;

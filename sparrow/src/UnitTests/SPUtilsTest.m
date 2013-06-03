@@ -61,7 +61,7 @@
     }    
 }
 
-- (void)testFileExistsAtPath
+- (void)testFileExistsAtPath_Absolute
 {
     NSString *absolutePath = [[NSBundle appBundle] pathForResource:@"pvrtc_image.pvr"];
     
@@ -76,9 +76,27 @@
     STAssertTrue(folderExists, @"folder not found");
 }
 
+- (void)testFileExistsAtPath_Relative
+{
+    BOOL fileExists = [SPUtils fileExistsAtPath:@"pvrtc_image@2x.pvr"];
+    STAssertTrue(fileExists, @"resource file not found");
+
+    fileExists = [SPUtils fileExistsAtPath:@"pvrtc_image.pvr"];
+    STAssertTrue(fileExists, @"resource file not found");
+
+    fileExists = [SPUtils fileExistsAtPath:@"some_non_existing_file.foo"];
+    STAssertFalse(fileExists, @"found non-existing file");
+}
+
+- (void)testFileExistsAtPath_Null
+{
+    BOOL fileExists = [SPUtils fileExistsAtPath:nil];
+    STAssertFalse(fileExists, @"nil path mistakenly accepted");
+}
+
 - (void)testAbsolutePathToFile
 {
-    NSString *absolutePath1x = [SPUtils absolutePathToFile:@"pvrtc_image.pvr"];
+    NSString *absolutePath1x = [SPUtils absolutePathToFile:@"pvrtc_image.pvr" withScaleFactor:1.0f];
     NSString *absolutePath2x = [SPUtils absolutePathToFile:@"pvrtc_image.pvr" withScaleFactor:2.0f];
     
     STAssertNotNil(absolutePath1x, @"resource not found (1x)");

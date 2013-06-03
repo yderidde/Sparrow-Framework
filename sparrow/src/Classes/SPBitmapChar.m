@@ -13,24 +13,32 @@
 #import "SPTexture.h"
 
 @implementation SPBitmapChar
+{
+    SPTexture *_texture;
+    int _charID;
+    float _xOffset;
+    float _yOffset;
+    float _xAdvance;
+    NSMutableDictionary *_kernings;
+}
 
-@synthesize charID = mCharID;
-@synthesize xOffset = mXOffset;
-@synthesize yOffset = mYOffset;
-@synthesize xAdvance = mXAdvance;
-@synthesize texture = mTexture;
+@synthesize charID = _charID;
+@synthesize xOffset = _xOffset;
+@synthesize yOffset = _yOffset;
+@synthesize xAdvance = _xAdvance;
+@synthesize texture = _texture;
 
 - (id)initWithID:(int)charID texture:(SPTexture *)texture
          xOffset:(float)xOffset yOffset:(float)yOffset xAdvance:(float)xAdvance;
 {
     if ((self = [super init]))
     {
-        mTexture = [texture retain];
-        mCharID = charID;
-        mXOffset = xOffset;
-        mYOffset = yOffset;
-        mXAdvance = xAdvance;
-		mKernings = nil;
+        _texture = texture;
+        _charID = charID;
+        _xOffset = xOffset;
+        _yOffset = yOffset;
+        _xAdvance = xAdvance;
+		_kernings = nil;
     }
     return self;
 }
@@ -42,35 +50,36 @@
 
 - (id)init
 {
-    [self release];
     return nil;
 }
 
 - (void)addKerning:(float)amount toChar:(int)charID
 {
-    if (!mKernings)
-        mKernings = [[NSMutableDictionary alloc] init];    
+    if (!_kernings)
+        _kernings = [[NSMutableDictionary alloc] init];    
 
-	[mKernings setObject:[NSNumber numberWithFloat:amount] 
-                  forKey:[NSNumber numberWithInt:charID]];
+	_kernings[@(charID)] = @(amount);
 }
 
 - (float)kerningToChar:(int)charID
 {
-	NSNumber *amount = (NSNumber *)[mKernings objectForKey:[NSNumber numberWithInt:charID]];
+	NSNumber *amount = (NSNumber *)_kernings[@(charID)];
 	return [amount floatValue];
 }
 
 - (SPImage *)createImage
 {
-    return [SPImage imageWithTexture:mTexture];
+    return [SPImage imageWithTexture:_texture];
 }
 
-- (void)dealloc
+- (float)width
 {
-    [mKernings release];
-    [mTexture release];
-    [super dealloc];
+    return _texture.width;
+}
+
+- (float)height
+{
+    return _texture.height;
 }
 
 @end

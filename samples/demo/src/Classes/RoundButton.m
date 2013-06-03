@@ -11,16 +11,15 @@
 
 @implementation RoundButton
 
-- (SPDisplayObject*)hitTestPoint:(SPPoint*)localPoint forTouch:(BOOL)isTouch
+- (SPDisplayObject*)hitTestPoint:(SPPoint*)localPoint
 {
     // when the user touches the screen, this method is used to find out if it hit an object.
     // by default, this method uses the bounding box. 
     // by overriding this method, we can change the box (rectangle) to a circle (or whatever
     // necessary).
     
-    // when the hit test is done to check if a touch is hitting the object, invisible or
-    // untouchable objects must cause the hit test to fail.
-    if (isTouch && (!self.visible || !self.touchable)) 
+    // invisible or untouchable objects must cause the hit test to fail.
+    if (!self.visible || !self.touchable)
         return nil; 
    
     // get center of button

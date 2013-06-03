@@ -11,77 +11,105 @@
 
 #import "SPEventDispatcher.h"
 #import "SPDisplayObject.h"
+#import "SPDisplayObjectContainer.h"
 #import "SPEvent_Internal.h"
 #import "SPMacros.h"
 #import "SPNSExtensions.h"
+#import "SPEventListener.h"
 
 @implementation SPEventDispatcher
-
-- (void)addEventListener:(SEL)listener atObject:(id)object forType:(NSString*)eventType 
-            retainObject:(BOOL)doRetain
 {
-    if (!mEventListeners)
-        mEventListeners = [[NSMutableDictionary alloc] init];
+    NSMutableDictionary *_eventListeners;
+}
+
+- (void)addEventListener:(SPEventListener *)listener forType:(NSString *)eventType
+{
+    if (!_eventListeners)
+        _eventListeners = [[NSMutableDictionary alloc] init];
     
-    NSInvocation *invocation = [NSInvocation invocationWithTarget:object selector:listener];
-    if (doRetain) [invocation retainArguments];    
+    // When an event listener is added or removed, a new NSArray object is created, instead of
+    // changing the array. The reason for this is that we can avoid creating a copy of the NSArray
+    // in the "dispatchEvent"-method, which is called far more often than
+    // "add"- and "removeEventListener".
     
-    // When an event listener is added or removed, a new NSArray object is created, instead of 
-    // changing the array. The reason for this is that we can avoid creating a copy of the NSArray 
-    // in the "dispatchEvent"-method, which is called far more often than 
-    // "add"- and "removeEventListener".    
-    
-    NSArray *listeners = [mEventListeners objectForKey:eventType];
+    NSArray *listeners = _eventListeners[eventType];
     if (!listeners)
     {
-        listeners = [[NSArray alloc] initWithObjects:invocation, nil];
-        [mEventListeners setObject:listeners forKey:eventType];
-        [listeners release];
+        listeners = @[listener];
+        _eventListeners[eventType] = listeners;
     }
-    else 
+    else
     {
-        listeners = [listeners arrayByAddingObject:invocation];
-        [mEventListeners setObject:listeners forKey:eventType];
-    }    
+        listeners = [listeners arrayByAddingObject:listener];
+        _eventListeners[eventType] = listeners;
+    }
 }
 
-- (void)addEventListener:(SEL)listener atObject:(id)object forType:(NSString*)eventType
+- (void)addEventListenerForType:(NSString *)eventType block:(SPEventBlock)block
 {
-    [self addEventListener:listener atObject:object forType:eventType retainObject:NO];
+    SPEventListener *listener = [[SPEventListener alloc] initWithBlock:block];
+    [self addEventListener:listener forType:eventType];
 }
 
-- (void)removeEventListener:(SEL)listener atObject:(id)object forType:(NSString*)eventType
+- (void)addEventListener:(SEL)selector atObject:(id)object forType:(NSString*)eventType
 {
-    NSArray *listeners = [mEventListeners objectForKey:eventType];
+    SPEventListener *listener = [[SPEventListener alloc] initWithTarget:object selector:selector];
+    [self addEventListener:listener forType:eventType];
+}
+
+- (void)removeEventListenersForType:(NSString *)eventType withTarget:(id)object
+                        andSelector:(SEL)selector orBlock:(SPEventBlock)block
+{
+    NSArray *listeners = _eventListeners[eventType];
     if (listeners)
     {
         NSMutableArray *remainingListeners = [[NSMutableArray alloc] init];
-        for (NSInvocation *inv in listeners)
+        for (SPEventListener *listener in listeners)
         {
-            if (inv.target != object || (listener != nil && inv.selector != listener))
-                [remainingListeners addObject:inv];
+            if (![listener fitsTarget:object andSelector:selector orBlock:block])
+                [remainingListeners addObject:listener];
         }
-                
-        if (remainingListeners.count == 0) [mEventListeners removeObjectForKey:eventType];
-        else [mEventListeners setObject:remainingListeners forKey:eventType];
         
-        [remainingListeners release];
+        if (remainingListeners.count == 0) [_eventListeners removeObjectForKey:eventType];
+        else _eventListeners[eventType] = remainingListeners;
     }
+}
+
+- (void)removeEventListener:(SEL)selector atObject:(id)object forType:(NSString*)eventType
+{
+    [self removeEventListenersForType:eventType withTarget:object andSelector:selector orBlock:nil];
 }
 
 - (void)removeEventListenersAtObject:(id)object forType:(NSString*)eventType
 {
-    [self removeEventListener:nil atObject:object forType:eventType];
+    [self removeEventListenersForType:eventType withTarget:object andSelector:nil orBlock:nil];
+}
+
+- (void)removeEventListenerForType:(NSString *)eventType block:(SPEventBlock)block;
+{
+    [self removeEventListenersForType:eventType withTarget:nil andSelector:nil orBlock:block];
 }
 
 - (BOOL)hasEventListenerForType:(NSString*)eventType
 {
-    return [mEventListeners objectForKey:eventType] != nil;
+    return _eventListeners[eventType] != nil;
+}
+
+- (void)dispatchEventWithType:(NSString *)type
+{
+    if ([self hasEventListenerForType:type])
+        [self dispatchEvent:[[SPEvent alloc] initWithType:type bubbles:NO]];
+}
+
+- (void)dispatchEventWithType:(NSString *)type bubbles:(BOOL)bubbles
+{
+    if (bubbles || [self hasEventListenerForType:type])
+        [self dispatchEvent:[[SPEvent alloc] initWithType:type bubbles:bubbles]];
 }
 
 - (void)dispatchEvent:(SPEvent*)event
 {
-    NSMutableArray *listeners = [mEventListeners objectForKey:event.type];   
+    NSMutableArray *listeners = _eventListeners[event.type];   
     if (!event.bubbles && !listeners) return; // no need to do anything.
     
     // if the event already has a current target, it was re-dispatched by user -> we change the
@@ -90,28 +118,23 @@
     SPEventDispatcher *previousTarget = event.target;
     if (!previousTarget || event.currentTarget) event.target = self;
     
-    [self retain]; // the event listener could release 'self', so we have to make sure that it 
-                   // stays valid while we're here.
-    
-    BOOL stopImmediatePropagation = NO;    
+    BOOL stopImmediatePropagation = NO;
     if (listeners.count != 0)
-    {    
+    {
         event.currentTarget = self;
         
         // we can enumerate directly over the array, since "add"- and "removeEventListener" won't
         // change it, but instead always create a new array.
-        [listeners retain];
-        for (NSInvocation *inv in listeners)
+        for (SPEventListener *listener in listeners)
         {
-            [inv setArgument:&event atIndex:2];
-            [inv invoke];
-            if (event.stopsImmediatePropagation) 
+            [listener invokeWithEvent:event];
+            
+            if (event.stopsImmediatePropagation)
             {
                 stopImmediatePropagation = YES;
                 break;
             }
         }
-        [listeners release];
     }
     
     if (!stopImmediatePropagation && event.bubbles && !event.stopsPropagation && 
@@ -123,17 +146,6 @@
     }
     
     if (previousTarget) event.target = previousTarget;
-    
-    // we use autorelease instead of release to avoid having to make additional "retain"-calls
-    // in calling methods (like "dispatchEventsOnChildren"). Those methods might be called very
-    // often, so we save some time by avoiding that.
-    [self autorelease];
-}
-
-- (void)dealloc
-{
-    [mEventListeners release];
-    [super dealloc];
 }
 
 @end

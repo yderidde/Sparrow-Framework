@@ -18,27 +18,9 @@
 
 // -------------------------------------------------------------------------------------------------
 
-static int dummyDeallocCount = 0;
-
-@interface DummyClass : NSObject
-
-@end
-
-@implementation DummyClass
-
-- (void)dealloc
-{
-    ++dummyDeallocCount;
-    [super dealloc];
-}
-
-@end
-
-// -------------------------------------------------------------------------------------------------
-
 @interface SPDelayedInvocationTest : SenTestCase 
 {
-    int mCallCount;
+    int _callCount;
 }
 
 @end
@@ -49,71 +31,60 @@ static int dummyDeallocCount = 0;
 
 - (void)setUp
 {
-    mCallCount = 0;
-    dummyDeallocCount = 0;
+    _callCount = 0;
 }
 
 - (void)simpleMethod
 {
-    ++mCallCount;
-}
-
-- (void)methodWithArgument:(DummyClass *)dummy
-{
-    [dummy description]; // just to check that dummy has not been released
-    ++mCallCount;    
+    ++_callCount;
 }
 
 - (void)testSimpleDelay
-{    
+{
     id delayedInv = [[SPDelayedInvocation alloc] initWithTarget:self delay:1.0f];
     [delayedInv simpleMethod];
     
-    STAssertEquals(0, mCallCount, @"Delayed Invocation triggered too soon");
+    STAssertEquals(0, _callCount, @"Delayed Invocation triggered too soon");
     [delayedInv advanceTime:0.5f];
     
-    STAssertEquals(0, mCallCount, @"Delayed Invocation triggered too soon");
+    STAssertEquals(0, _callCount, @"Delayed Invocation triggered too soon");
     [delayedInv advanceTime:0.49f];
     
-    STAssertEquals(0, mCallCount, @"Delayed Invocation triggered too soon");
+    STAssertEquals(0, _callCount, @"Delayed Invocation triggered too soon");
+    STAssertFalse([delayedInv isComplete], @"isComplete property wrong");
     
     [delayedInv advanceTime:0.1f];
-    STAssertEquals(1, mCallCount, @"Delayed Invocation did not trigger");
+    STAssertEquals(1, _callCount, @"Delayed Invocation did not trigger");
+    STAssertTrue([delayedInv isComplete], @"isComplete property wrong");
     
     [delayedInv advanceTime:0.1f];
-    STAssertEquals(1, mCallCount, @"Delayed Invocation triggered too often");
-    
-    [delayedInv release];
+    STAssertEquals(1, _callCount, @"Delayed Invocation triggered too often");
 }
 
-- (void)testDelayWithArguments
+- (void)testBlock
 {
-    SP_CREATE_POOL(pool);
+    __block int callCount = 0;
     
-    // test dummy mechanism
+    SPDelayedInvocation *delayedInv = [[SPDelayedInvocation alloc] initWithDelay:1.0f block:^
+    {
+        ++callCount;
+    }];
     
-    DummyClass *dummy = [[DummyClass alloc] init];
-    [dummy release];
-    STAssertEquals(1, dummyDeallocCount, @"dummy release not counted");
+    STAssertEquals(0, callCount, @"Delayed block triggered too soon");
+
+    [delayedInv advanceTime:0.5f];
+    STAssertEquals(0, callCount, @"Delayed block triggered too soon");
     
-    // now test if retain/release cycle of delayed invocation works
+    [delayedInv advanceTime:0.49f];
+    STAssertEquals(0, callCount, @"Delayed block triggered too soon");
+    STAssertFalse(delayedInv.isComplete, @"isComplete property wrong");
+
+    [delayedInv advanceTime:0.1f];
+    STAssertEquals(1, callCount, @"Delayed block did not trigger");
+    STAssertTrue(delayedInv.isComplete, @"isComplete property wrong");
     
-    dummy = [[DummyClass alloc] init];
-    id delayedInv = [[SPDelayedInvocation alloc] initWithTarget:self delay:1.0f];
-    [delayedInv methodWithArgument:dummy];
-    
-    STAssertEquals(0, mCallCount, @"Delayed Invocation triggered too soon");
-    
-    [dummy release];
-    STAssertEquals(1, dummyDeallocCount, @"Argument not retained");
-    
-    [delayedInv advanceTime:1.0f];
-    STAssertEquals(1, mCallCount, @"Delayed Invocation did not trigger");
-    
-    SP_RELEASE_POOL(pool);
-    
-    [delayedInv release];
-    STAssertEquals(2, dummyDeallocCount, @"Argument not released");
+    [delayedInv advanceTime:0.1f];
+    STAssertEquals(1, callCount, @"Delayed block triggered too often");
 }
 
 @end

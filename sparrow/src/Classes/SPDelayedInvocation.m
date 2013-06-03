@@ -13,81 +13,100 @@
 
 
 @implementation SPDelayedInvocation
-
-@synthesize totalTime = mTotalTime;
-@synthesize currentTime = mCurrentTime;
-@synthesize target = mTarget;
-
-- (id)initWithTarget:(id)target delay:(double)time
 {
-    if (!target)
-    {
-        [self release];
-        return nil;
-    }    
+    id _target;
+    double _totalTime;
+    double _currentTime;
     
+    SPCallbackBlock _block;
+    NSMutableArray *_invocations;
+}
+
+@synthesize totalTime = _totalTime;
+@synthesize currentTime = _currentTime;
+@synthesize target = _target;
+
+- (id)initWithTarget:(id)target delay:(double)time block:(SPCallbackBlock)block
+{
     if ((self = [super init]))
     {
-        mTotalTime = MAX(0.0001, time); // zero is not allowed
-        mCurrentTime = 0;
-        mTarget = [target retain];
-        mInvocations = [[NSMutableSet alloc] init];
+        _totalTime = MAX(0.0001, time); // zero is not allowed
+        _currentTime = 0;
+        _block = block;
+        
+        if (target)
+        {
+            _target = target;
+            _invocations = [[NSMutableArray alloc] init];
+        }
     }
     return self;
 }
 
+- (id)initWithTarget:(id)target delay:(double)time
+{
+    return [self initWithTarget:target delay:time block:NULL];
+}
+
+- (id)initWithDelay:(double)time block:(SPCallbackBlock)block
+{
+    return [self initWithTarget:nil delay:time block:block];
+}
+
 - (id)init
 {
-    [self release];
     return nil;
 }
 
 - (NSMethodSignature*)methodSignatureForSelector:(SEL)aSelector
 {
     NSMethodSignature *sig = [[self class] instanceMethodSignatureForSelector:aSelector];
-    if (!sig) sig = [mTarget methodSignatureForSelector:aSelector];
+    if (!sig) sig = [_target methodSignatureForSelector:aSelector];
     return sig;
 }
 
 - (void)forwardInvocation:(NSInvocation*)anInvocation
 {
-    if ([mTarget respondsToSelector:[anInvocation selector]])
+    if ([_target respondsToSelector:[anInvocation selector]])
     {
-        anInvocation.target = mTarget;
+        anInvocation.target = _target;
         [anInvocation retainArguments];
-        [mInvocations addObject:anInvocation];
+        [_invocations addObject:anInvocation];
     }
 }
 
 - (void)advanceTime:(double)seconds
 {
-    self.currentTime = mCurrentTime + seconds;
+    self.currentTime = _currentTime + seconds;
 }
 
 - (void)setCurrentTime:(double)currentTime
 {
-    double previousTime = mCurrentTime;    
-    mCurrentTime = MIN(mTotalTime, currentTime);
+    double previousTime = _currentTime;    
+    _currentTime = MIN(_totalTime, currentTime);
     
-    if (previousTime < mTotalTime && mCurrentTime >= mTotalTime)    
-        [mInvocations makeObjectsPerformSelector:@selector(invoke)];        
+    if (previousTime < _totalTime && _currentTime >= _totalTime)
+    {
+        if (_invocations) [_invocations makeObjectsPerformSelector:@selector(invoke)];
+        if (_block) _block();
+        
+        [self dispatchEventWithType:SP_EVENT_TYPE_REMOVE_FROM_JUGGLER];
+    }
 }
 
 - (BOOL)isComplete
 {
-    return mCurrentTime >= mTotalTime;
+    return _currentTime >= _totalTime;
 }
 
-+ (SPDelayedInvocation*)invocationWithTarget:(id)target delay:(double)time
++ (id)invocationWithTarget:(id)target delay:(double)time
 {
-    return [[[SPDelayedInvocation alloc] initWithTarget:target delay:time] autorelease];
+    return [[self alloc] initWithTarget:target delay:time];
 }
 
-- (void)dealloc
++ (id)invocationWithDelay:(double)time block:(SPCallbackBlock)block
 {
-    [mTarget release];
-    [mInvocations release];
-    [super dealloc];
+    return [[self alloc] initWithDelay:time block:block];
 }
 
 @end

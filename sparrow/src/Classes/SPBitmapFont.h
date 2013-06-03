@@ -13,9 +13,12 @@
 #import "SPBitmapChar.h"
 #import "SPTextField.h"
 #import "SPMacros.h"
+#import "SPTexture.h"
 
-@class SPTexture;
-@class SPDisplayObject;
+@class SPSprite;
+@class SPQuadBatch;
+
+#define SP_BITMAP_FONT_MINI @"mini"
 
 /** ------------------------------------------------------------------------------------------------
 
@@ -44,30 +47,27 @@
  
 ------------------------------------------------------------------------------------------------- */
 
-#ifdef __IPHONE_4_0
-@interface SPBitmapFont : NSObject <NSXMLParserDelegate>
-#else
 @interface SPBitmapFont : NSObject
-#endif
-{
-  @private
-    SPTexture *mFontTexture;
-    NSString *mName;
-    NSString *mPath;
-    NSMutableDictionary *mChars;    
-    float mSize;
-    float mLineHeight;
-}
 
 /// ------------------
 /// @name Initializers
 /// ------------------
 
-/// Initializes a bitmap font by parsing an XML file and uses the specified texture.
+/// Initializes a bitmap font by parsing the XML data and using the specified texture.
+/// _Designated Initializer_.
+- (id)initWithContentsOfData:(NSData *)data texture:(SPTexture *)texture;
+
+/// Initializes a bitmap font by parsing the XML data and loading the texture that is specified there.
+- (id)initWithContentsOfData:(NSData *)data;
+
+/// Initializes a bitmap font by parsing an XML file and using the specified texture.
 - (id)initWithContentsOfFile:(NSString *)path texture:(SPTexture *)texture;
 
-/// Initializes a bitmap font by parsing an XML file and loads the texture that is specified there.
+/// Initializes a bitmap font by parsing an XML file and loading the texture that is specified there.
 - (id)initWithContentsOfFile:(NSString *)path;
+
+/// Initializes a bitmap font with an integrated, very small font, which is useful for debug output.
+- (id)initWithMiniFont;
 
 /// -------------
 /// @name Methods
@@ -76,11 +76,17 @@
 /// Returns a single bitmap char with a certain character ID.
 - (SPBitmapChar *)charByID:(int)charID;
 
-/// Creates a display object that contains the given text by arranging individual chars.
-- (SPDisplayObject *)createDisplayObjectWithWidth:(float)width height:(float)height
-                                             text:(NSString *)text fontSize:(float)size color:(uint)color 
-                                           hAlign:(SPHAlign)hAlign vAlign:(SPVAlign)vAlign
-                                           border:(BOOL)border kerning:(BOOL)kerning;
+/// Creates a sprite that contains the given text by arranging individual chars.
+- (SPSprite *)createSpriteWithWidth:(float)width height:(float)height
+                               text:(NSString *)text fontSize:(float)size color:(uint)color
+                             hAlign:(SPHAlign)hAlign vAlign:(SPVAlign)vAlign
+                          autoScale:(BOOL)autoScale kerning:(BOOL)kerning;
+
+/// Draws text into a quad batch.
+- (void)fillQuadBatch:(SPQuadBatch *)quadBatch withWidth:(float)width height:(float)height
+                 text:(NSString *)text fontSize:(float)size color:(uint)color
+               hAlign:(SPHAlign)hAlign vAlign:(SPVAlign)vAlign
+            autoScale:(BOOL)autoScale kerning:(BOOL)kerning;
 
 /// ----------------
 /// @name Properties
@@ -94,5 +100,11 @@
 
 /// The height of one line in pixels.
 @property (nonatomic, assign)   float lineHeight;
+
+/// The smoothing filter used for the texture.
+@property (nonatomic, assign) SPTextureSmoothing smoothing;
+
+/// The baseline of the font.
+@property (nonatomic, readonly) float baseline;
 
 @end

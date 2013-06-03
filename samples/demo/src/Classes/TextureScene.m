@@ -20,7 +20,7 @@
         // ./generate_atlas.rb input/*.png atlas.xml
         
         SPTextureAtlas *atlas = [SPTextureAtlas atlasWithContentsOfFile:@"atlas.xml"];
-        NSLog(@"found %d textures.", atlas.count);
+        NSLog(@"found %d textures.", atlas.numTextures);
         
         SPImage *image1 = [SPImage imageWithTexture:[atlas textureByName:@"walk_00"]];
         image1.x = 30;

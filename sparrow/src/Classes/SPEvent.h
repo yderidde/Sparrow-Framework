@@ -15,6 +15,10 @@
 #define SP_EVENT_TYPE_ADDED_TO_STAGE @"addedToStage"
 #define SP_EVENT_TYPE_REMOVED @"removed"
 #define SP_EVENT_TYPE_REMOVED_FROM_STAGE @"removedFromStage"
+#define SP_EVENT_TYPE_REMOVE_FROM_JUGGLER @"removeFromJuggler"
+#define SP_EVENT_TYPE_COMPLETED @"completed"
+#define SP_EVENT_TYPE_TRIGGERED @"triggered"
+#define SP_EVENT_TYPE_FLATTEN @"flatten"
 
 @class SPEventDispatcher;
 
@@ -38,15 +42,6 @@
 ------------------------------------------------------------------------------------------------- */
 
 @interface SPEvent : NSObject
-{
-  @private
-    SPEventDispatcher *mTarget;
-    SPEventDispatcher *mCurrentTarget;
-    NSString *mType;
-    BOOL mStopsImmediatePropagation;
-    BOOL mStopsPropagation;
-    BOOL mBubbles;
-}
 
 /// ------------------
 /// @name Initializers
@@ -59,10 +54,10 @@
 - (id)initWithType:(NSString*)type;
 
 /// Factory method.
-+ (SPEvent*)eventWithType:(NSString*)type bubbles:(BOOL)bubbles;
++ (id)eventWithType:(NSString*)type bubbles:(BOOL)bubbles;
 
 /// Factory method.
-+ (SPEvent*)eventWithType:(NSString*)type;
++ (id)eventWithType:(NSString*)type;
 
 /// -------------
 /// @name Methods
@@ -85,9 +80,9 @@
 @property (nonatomic, readonly) BOOL bubbles; 
 
 /// The object that dispatched the event.
-@property (nonatomic, readonly) SPEventDispatcher *target; 
+@property (weak, nonatomic, readonly) SPEventDispatcher *target; 
 
 /// The object the event is currently bubbling at.
-@property (nonatomic, readonly) SPEventDispatcher *currentTarget; 
+@property (weak, nonatomic, readonly) SPEventDispatcher *currentTarget; 
 
 @end

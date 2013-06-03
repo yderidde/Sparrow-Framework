@@ -14,10 +14,15 @@
 #import "SPMacros.h"
 
 @implementation SPAVSoundChannel
+{
+    SPAVSound *_sound;
+    AVAudioPlayer *_player;
+    BOOL _paused;
+    float _volume;
+}
 
 - (id)init
 {
-    [self release];
     return nil;
 }
 
@@ -25,11 +30,11 @@
 {
     if ((self = [super init]))
     {
-        mVolume = 1.0f;
-        mSound = [sound retain];
-        mPlayer = [[sound createPlayer] retain];
-        mPlayer.delegate = self;                
-        [mPlayer prepareToPlay];
+        _volume = 1.0f;
+        _sound = sound;
+        _player = [sound createPlayer];
+        _player.delegate = self;                
+        [_player prepareToPlay];
 
         [[NSNotificationCenter defaultCenter] addObserver:self 
             selector:@selector(onMasterVolumeChanged:)
@@ -41,82 +46,79 @@
 - (void)dealloc
 {
     [[NSNotificationCenter defaultCenter] removeObserver:self];    
-    mPlayer.delegate = nil;
-    [mPlayer release];
-    [mSound release];
-    [super dealloc];
+    _player.delegate = nil;
 }
 
 - (void)play
 {
-    mPaused = NO;
-    [mPlayer play];
+    _paused = NO;
+    [_player play];
 }
 
 - (void)pause
 {
-    mPaused = YES;
-    [mPlayer pause];
+    _paused = YES;
+    [_player pause];
 }
 
 - (void)stop
 {
-    mPaused = NO;
-    [mPlayer stop];
-    mPlayer.currentTime = 0;
+    _paused = NO;
+    [_player stop];
+    _player.currentTime = 0;
 }
 
 - (BOOL)isPlaying
 {
-    return mPlayer.playing;
+    return _player.playing;
 }
 
 - (BOOL)isPaused
 {
-    return mPaused && !mPlayer.playing;
+    return _paused && !_player.playing;
 }
 
 - (BOOL)isStopped
 {
-    return !mPaused && !mPlayer.playing;
+    return !_paused && !_player.playing;
 }
 
 - (BOOL)loop
 {
-    return mPlayer.numberOfLoops < 0;
+    return _player.numberOfLoops < 0;
 }
 
 - (void)setLoop:(BOOL)value
 {
-    mPlayer.numberOfLoops = value ? -1 : 0;
+    _player.numberOfLoops = value ? -1 : 0;
 }
 
 - (float)volume
 {
-    return mVolume;
+    return _volume;
 }
 
 - (void)setVolume:(float)value
 {
-    mVolume = value;
-    mPlayer.volume = value * [SPAudioEngine masterVolume];
+    _volume = value;
+    _player.volume = value * [SPAudioEngine masterVolume];
 }
 
 - (double)duration
 {
-    return mPlayer.duration;
+    return _player.duration;
 }
 
 - (void)onMasterVolumeChanged:(NSNotification *)notification
 {    
-    self.volume = mVolume;    
+    self.volume = _volume;    
 }
 
 #pragma mark AVAudioPlayerDelegate
 
 - (void)audioPlayerDidFinishPlaying:(AVAudioPlayer *)player successfully:(BOOL)flag
 {    
-    [self dispatchEvent:[SPEvent eventWithType:SP_EVENT_TYPE_SOUND_COMPLETED]];
+    [self dispatchEventWithType:SP_EVENT_TYPE_COMPLETED];
 }
 
 - (void)audioPlayerDecodeErrorDidOccur:(AVAudioPlayer *)player error:(NSError *)error

@@ -12,39 +12,65 @@
 #import "SPTween.h"
 #import "SPTransitions.h"
 #import "SPTweenedProperty.h"
-#import "SPMacros.h"
 
 #define TRANS_SUFFIX  @":"
 
 typedef float (*FnPtrTransition) (id, SEL, float);
 
 @implementation SPTween
+{
+    id _target;
+    SEL _transition;
+    IMP _transitionFunc;
+    NSMutableArray *_properties;
+    
+    double _totalTime;
+    double _currentTime;
+    double _delay;
+    
+    int _repeatCount;
+    double _repeatDelay;
+    BOOL _reverse;
+    int _currentCycle;
+    
+    SPCallbackBlock _onStart;
+    SPCallbackBlock _onUpdate;
+    SPCallbackBlock _onRepeat;
+    SPCallbackBlock _onComplete;
+}
 
-@synthesize time = mTotalTime;
-@synthesize currentTime = mCurrentTime;
-@synthesize delay = mDelay;
-@synthesize target = mTarget;
-@synthesize loop = mLoop;
+@synthesize totalTime = _totalTime;
+@synthesize currentTime = _currentTime;
+@synthesize delay = _delay;
+@synthesize target = _target;
+@synthesize repeatCount = _repeatCount;
+@synthesize repeatDelay = _repeatDelay;
+@synthesize reverse = _reverse;
+@synthesize onStart = _onStart;
+@synthesize onUpdate = _onUpdate;
+@synthesize onRepeat = _onRepeat;
+@synthesize onComplete = _onComplete;
 
 - (id)initWithTarget:(id)target time:(double)time transition:(NSString*)transition
 {
     if ((self = [super init]))
     {
-        mTarget = [target retain];
-        mTotalTime = MAX(0.0001, time); // zero is not allowed
-        mCurrentTime = 0;
-        mDelay = 0;
-        mProperties = [[NSMutableArray alloc] init];        
-        mLoop = SPLoopTypeNone;
-        mLoopCount = 0;
-        
+        _target = target;
+        _totalTime = MAX(0.0001, time); // zero is not allowed
+        _currentTime = 0;
+        _delay = 0;
+        _properties = [[NSMutableArray alloc] init];
+        _repeatCount = 1;
+        _currentCycle = -1;
+        _reverse = NO;
+
         // create function pointer for transition
         NSString *transMethod = [transition stringByAppendingString:TRANS_SUFFIX];
-        mTransition = NSSelectorFromString(transMethod);    
-        if (![SPTransitions respondsToSelector:mTransition])
+        _transition = NSSelectorFromString(transMethod);    
+        if (![SPTransitions respondsToSelector:_transition])
             [NSException raise:SP_EXC_INVALID_OPERATION 
                         format:@"transition not found: '%@'", transition];
-        mTransitionFunc = [SPTransitions methodForSelector:mTransition];
+        _transitionFunc = [SPTransitions methodForSelector:_transition];
     }
     return self;
 }
@@ -56,12 +82,11 @@ typedef float (*FnPtrTransition) (id, SEL, float);
 
 - (void)animateProperty:(NSString*)property targetValue:(float)value
 {    
-    if (!mTarget) return; // tweening nil just does nothing.
+    if (!_target) return; // tweening nil just does nothing.
     
     SPTweenedProperty *tweenedProp = [[SPTweenedProperty alloc] 
-        initWithTarget:mTarget name:property endValue:value];
-    [mProperties addObject:tweenedProp];
-    [tweenedProp release];
+        initWithTarget:_target name:property endValue:value];
+    [_properties addObject:tweenedProp];
 }
 
 - (void)moveToX:(float)x y:(float)y
@@ -81,116 +106,87 @@ typedef float (*FnPtrTransition) (id, SEL, float);
     [self animateProperty:@"alpha" targetValue:alpha];
 }
 
-- (void)advanceTime:(double)seconds
+- (void)advanceTime:(double)time
 {
-    if (seconds == 0.0 || (mLoop == SPLoopTypeNone && mCurrentTime == mTotalTime))
+    if (time == 0.0 || (_repeatCount == 1 && _currentTime == _totalTime))
         return; // nothing to do
+    else if ((_repeatCount == 0 || _repeatCount > 1) && _currentTime == _totalTime)
+        _currentTime = 0.0;
     
-    if (mCurrentTime == mTotalTime)
+    double previousTime = _currentTime;
+    double restTime = _totalTime - _currentTime;
+    double carryOverTime = time > restTime ? time - restTime : 0.0;    
+    _currentTime = MIN(_totalTime, _currentTime + time);
+    BOOL isStarting = _currentCycle < 0 && previousTime <= 0 && _currentTime > 0;
+
+    if (_currentTime <= 0) return; // the delay is not over yet
+
+    if (isStarting)
     {
-        mCurrentTime = 0.0;    
-        mLoopCount++;
+        _currentCycle++;
+        if (_onStart) _onStart();
     }
     
-    double previousTime = mCurrentTime;
-    double restTime = mTotalTime - mCurrentTime;
-    double carryOverTime = seconds > restTime ? seconds - restTime : 0.0;    
-    mCurrentTime = MIN(mTotalTime, mCurrentTime + seconds);
-
-    if (mCurrentTime <= 0) return; // the delay is not over yet
-
-    if (previousTime <= 0 && mCurrentTime > 0 && mLoopCount == 0 &&
-        [self hasEventListenerForType:SP_EVENT_TYPE_TWEEN_STARTED])
-    {
-        SPEvent *event = [[SPEvent alloc] initWithType:SP_EVENT_TYPE_TWEEN_STARTED];        
-        [self dispatchEvent:event];
-        [event release];        
-    }   
-    
-    float ratio = mCurrentTime / mTotalTime;
-    FnPtrTransition transFunc = (FnPtrTransition) mTransitionFunc;
+    float ratio = _currentTime / _totalTime;
+    BOOL reversed = _reverse && (_currentCycle % 2 == 1);
+    FnPtrTransition transFunc = (FnPtrTransition) _transitionFunc;
     Class transClass = [SPTransitions class];
-    BOOL mInvertTransition = (mLoop == SPLoopTypeReverse && mLoopCount % 2 == 1);
     
-    for (SPTweenedProperty *prop in mProperties)
-    {        
-        if (previousTime <= 0 && mCurrentTime > 0) 
-            prop.startValue = prop.currentValue;
-
-        float transitionValue = mInvertTransition ? 
-            1.0f - transFunc(transClass, mTransition, 1.0f - ratio) :
-            transFunc(transClass, mTransition, ratio);        
-        
+    for (SPTweenedProperty *prop in _properties)
+    {
+        if (isStarting) prop.startValue = prop.currentValue;
+        float transitionValue = reversed ? transFunc(transClass, _transition, 1.0 - ratio) :
+                                           transFunc(transClass, _transition, ratio);
         prop.currentValue = prop.startValue + prop.delta * transitionValue;
     }
-   
-    if ([self hasEventListenerForType:SP_EVENT_TYPE_TWEEN_UPDATED])
-    {
-        SPEvent *event = [[SPEvent alloc] initWithType:SP_EVENT_TYPE_TWEEN_UPDATED];
-        [self dispatchEvent:event];    
-        [event release];
-    }
     
-    if (previousTime < mTotalTime && mCurrentTime == mTotalTime)
+    if (_onUpdate) _onUpdate();
+    
+    if (previousTime < _totalTime && _currentTime >= _totalTime)
     {
-		if (mLoop == SPLoopTypeRepeat)
-		{
-			for (SPTweenedProperty *prop in mProperties)
-				prop.currentValue = prop.startValue;
-		}
-		else if (mLoop == SPLoopTypeReverse)
-		{
-			for (SPTweenedProperty *prop in mProperties)
-            {
-                prop.currentValue = prop.endValue; // since tweens not necessarily end with endValue
-                prop.endValue = prop.startValue;
-                mInvertTransition = !mInvertTransition;
-            }
-		}
-        
-        if ([self hasEventListenerForType:SP_EVENT_TYPE_TWEEN_COMPLETED])
+        if (_repeatCount == 0 || _repeatCount > 1)
         {
-            SPEvent *event = [[SPEvent alloc] initWithType:SP_EVENT_TYPE_TWEEN_COMPLETED];
-            [self dispatchEvent:event];
-            [event release];
+            _currentTime = -_repeatDelay;
+            _currentCycle++;
+            if (_repeatCount > 1) _repeatCount--;
+            if (_onRepeat) _onRepeat();
+        }
+        else
+        {
+            [self dispatchEventWithType:SP_EVENT_TYPE_REMOVE_FROM_JUGGLER];
+            if (_onComplete) _onComplete();
         }
     }
     
-    [self advanceTime:carryOverTime];
+    if (carryOverTime)
+        [self advanceTime:carryOverTime];
 }
 
 - (NSString*)transition
 {
-    NSString *selectorName = NSStringFromSelector(mTransition);
+    NSString *selectorName = NSStringFromSelector(_transition);
     return [selectorName substringToIndex:selectorName.length - [TRANS_SUFFIX length]];
 }
 
 - (BOOL)isComplete
 {
-    return mCurrentTime >= mTotalTime && mLoop == SPLoopTypeNone;
+    return _currentTime >= _totalTime && _repeatCount == 1;
 }
 
 - (void)setDelay:(double)delay
 {
-    mCurrentTime = mCurrentTime + mDelay - delay;
-    mDelay = delay;
+    _currentTime = _currentTime + _delay - delay;
+    _delay = delay;
 }
 
-+ (SPTween*)tweenWithTarget:(id)target time:(double)time transition:(NSString*)transition
++ (id)tweenWithTarget:(id)target time:(double)time transition:(NSString*)transition
 {
-    return [[[SPTween alloc] initWithTarget:target time:time transition:transition] autorelease];
+    return [[self alloc] initWithTarget:target time:time transition:transition];
 }
 
-+ (SPTween*)tweenWithTarget:(id)target time:(double)time
++ (id)tweenWithTarget:(id)target time:(double)time
 {
-    return [[[SPTween alloc] initWithTarget:target time:time] autorelease];
-}
-
-- (void)dealloc
-{
-    [mTarget release];
-    [mProperties release];
-    [super dealloc];
+    return [[self alloc] initWithTarget:target time:time];
 }
 
 @end

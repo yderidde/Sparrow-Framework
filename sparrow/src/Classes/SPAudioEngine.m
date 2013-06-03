@@ -14,6 +14,7 @@
 #import <AudioToolbox/AudioToolbox.h> 
 #import <OpenAL/al.h>
 #import <OpenAL/alc.h>
+#import <UIKit/UIKit.h>
 
 @interface SPAudioEngine ()
 
@@ -44,12 +45,12 @@ static void interruptionCallback (void *inUserData, UInt32 interruptionState)
 static ALCdevice  *device  = NULL;
 static ALCcontext *context = NULL;
 static float masterVolume = 1.0f;
+static BOOL interrupted = NO;
 
 // ---
 
 - (id)init
 {
-    [self release];
     [NSException raise:NSGenericException format:@"Static class - do not initialize!"];        
     return nil;
 }
@@ -59,7 +60,15 @@ static float masterVolume = 1.0f;
     if (!device)
     {
         if ([SPAudioEngine initAudioSession:category])
-            [SPAudioEngine initOpenAL];        
+            [SPAudioEngine initOpenAL];
+        
+        // A bug introduced in iOS 4 may lead to 'endInterruption' NOT being called in some
+        // situations. Thus, we're resuming the audio session manually via the 'DidBecomeActive'
+        // notification. Find more information here: http://goo.gl/mr9KS
+        
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onAppActivated:)
+                                                     name:UIApplicationDidBecomeActiveNotification
+                                                   object:nil];
     }
 }
 
@@ -70,14 +79,16 @@ static float masterVolume = 1.0f;
 
 + (void)stop
 {
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    
     alcMakeContextCurrent(NULL);
     alcDestroyContext(context);
     alcCloseDevice(device);
+    AudioSessionSetActive(NO);
     
     device = NULL;
     context = NULL;
-    
-    AudioSessionSetActive(NO);
+    interrupted = NO;
 }
 
 + (BOOL)initAudioSession:(SPAudioSessionCategory)category
@@ -139,18 +150,25 @@ static float masterVolume = 1.0f;
 }
 
 + (void)beginInterruption
-{    
+{
     [SPAudioEngine postNotification:SP_NOTIFICATION_AUDIO_INTERRUPTION_BEGAN object:nil];
     alcMakeContextCurrent(NULL);
-    AudioSessionSetActive(NO);     
+    AudioSessionSetActive(NO);
+    interrupted = YES;
 }
 
 + (void)endInterruption
-{    
-    AudioSessionSetActive(YES);    
+{
+    interrupted = NO;
+    AudioSessionSetActive(YES);
     alcMakeContextCurrent(context);
     alcProcessContext(context);
     [SPAudioEngine postNotification:SP_NOTIFICATION_AUDIO_INTERRUPTION_ENDED object:nil];
+}
+
++ (void)onAppActivated:(NSNotification *)notification
+{
+    if (interrupted) [self endInterruption];
 }
 
 + (float)masterVolume

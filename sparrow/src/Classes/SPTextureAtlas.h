@@ -21,9 +21,8 @@
  
  Using a texture atlas for your textures solves two problems:
  
- - In OpenGL, there's always one texture active at a given moment. Whenever you change the active 
-   texture, a "texture-switch" has to be executed, and that switch takes time.
- - To use a texture in OpenGL, its height and width must each be a power of 2. Sparrow hides this 
+ - Whenever you switch between textures, the batching of image objects is disrupted.
+ - Some OpenGL textures need to have side lengths that are powers of two. Sparrow hides this
    limitation from you, but you will nevertheless use more memory if you do not follow that rule.
  
  By using a texture atlas, you avoid both texture switches and the power-of-two limitation. All 
@@ -56,18 +55,7 @@
  
 ------------------------------------------------------------------------------------------------- */
 
-#ifdef __IPHONE_4_0
-@interface SPTextureAtlas : NSObject <NSXMLParserDelegate>
-#else
 @interface SPTextureAtlas : NSObject
-#endif
-{
-  @private
-    SPTexture *mAtlasTexture;
-    NSString *mPath;
-    NSMutableDictionary *mTextureRegions;
-    NSMutableDictionary *mTextureFrames;
-}
 
 /// ------------------
 /// @name Initializers
@@ -83,7 +71,7 @@
 - (id)initWithTexture:(SPTexture *)texture;
 
 /// Factory Method.
-+ (SPTextureAtlas *)atlasWithContentsOfFile:(NSString *)path;
++ (id)atlasWithContentsOfFile:(NSString *)path;
 
 /// -------------
 /// @name Methods
@@ -94,7 +82,10 @@
 
 /// Returns all textures that start with a certain string, sorted alphabetically
 /// (especially useful for `SPMovieClip`).
-- (NSArray *)texturesStartingWith:(NSString *)name;
+- (NSArray *)texturesStartingWith:(NSString *)prefix;
+
+/// Returns all texture names that start with a certain string, sorted alphabetically.
+- (NSArray *)namesStartingWith:(NSString *)prefix;
 
 /// Creates a region for a subtexture and gives it a name.
 - (void)addRegion:(SPRectangle *)region withName:(NSString *)name;
@@ -110,6 +101,12 @@
 /// ----------------
 
 /// The number of available subtextures.
-@property (nonatomic, readonly) int count;
+@property (nonatomic, readonly) int numTextures;
+
+/// All texture names of the atlas, sorted alphabetically.
+@property (nonatomic, readonly) NSArray *names;
+
+/// All textures of the atlas, sorted alphabetically.
+@property (nonatomic, readonly) NSArray *textures;
 
 @end

@@ -12,6 +12,10 @@
 #import <Foundation/Foundation.h>
 #import <math.h>
 
+// typedefs
+
+typedef void (^SPCallbackBlock)();
+
 // constants
 
 #define PI       3.14159265359f
@@ -38,7 +42,7 @@
 #define SP_PURPLE    0x800080
 
 #define SP_NOT_FOUND -1
-#define SP_MAX_DISPLAY_TREE_DEPTH 16
+#define SP_MAX_DISPLAY_TREE_DEPTH 32
 
 // exceptions
 
@@ -49,11 +53,10 @@
 #define SP_EXC_INVALID_OPERATION    @"InvalidOperation"
 #define SP_EXC_FILE_NOT_FOUND       @"FileNotFound"
 #define SP_EXC_FILE_INVALID         @"FileInvalid"
+#define SP_EXC_DATA_INVALID         @"DataInvalid"
+#define SP_EXC_OPERATION_FAILED     @"OperationFailed"
 
 // macros
-
-#define SP_CREATE_POOL(pool)        NSAutoreleasePool *(pool) = [[NSAutoreleasePool alloc] init];
-#define SP_RELEASE_POOL(pool)       [(pool) release];
 
 #define SP_R2D(rad)                 ((rad) / PI * 180.0f)
 #define SP_D2R(deg)                 ((deg) / 180.0f * PI)
@@ -64,6 +67,7 @@
 #define SP_COLOR_PART_BLUE(color)   ( (color)        & 0xff)
 
 #define SP_COLOR(r, g, b)			(((int)(r) << 16) | ((int)(g) << 8) | (int)(b))
+#define SP_COLOR_ARGB(a, r, g, b)   (((int)(a) << 24) | ((int)(r) << 16) | ((int)(g) << 8) | (int)(b))
 
 #define SP_IS_FLOAT_EQUAL(f1, f2)   (fabsf((f1)-(f2)) < SP_FLOAT_EPSILON)
 

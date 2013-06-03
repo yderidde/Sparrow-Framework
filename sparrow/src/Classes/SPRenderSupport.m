@@ -11,72 +11,116 @@
 
 #import "SPRenderSupport.h"
 #import "SPDisplayObject.h"
+#import "SPVertexData.h"
+#import "SPQuadBatch.h"
 #import "SPTexture.h"
 #import "SPMacros.h"
+#import "SPQuad.h"
+#import "SPBlendMode.h"
 
-#import <OpenGLES/EAGL.h>
-#import <OpenGLES/ES1/gl.h>
-#import <OpenGLES/ES1/glext.h>
+#import <GLKit/GLKit.h>
 
-@implementation SPRenderSupport
+// --- helper macros -------------------------------------------------------------------------------
 
-@synthesize usingPremultipliedAlpha = mPremultipliedAlpha;
+#define CURRENT_STATE()  ((SPRenderState *)(_stateStack[_stateStackIndex]))
+#define CURRENT_BATCH()  ((SPQuadBatch *)(_quadBatches[_quadBatchIndex]))
+
+// --- helper class --------------------------------------------------------------------------------
+
+@interface SPRenderState : NSObject
+
+@property (nonatomic, readonly) SPMatrix *modelviewMatrix;
+@property (nonatomic, readonly) float alpha;
+@property (nonatomic, readonly) uint blendMode;
+
+- (void)setupDerivedFromState:(SPRenderState *)state withModelviewMatrix:(SPMatrix *)matrix
+                        alpha:(float)alpha blendMode:(uint)blendMode;
+
+@end
+
+@implementation SPRenderState
+
+@synthesize modelviewMatrix = _modelviewMatrix;
+@synthesize alpha = _alpha;
+@synthesize blendMode = _blendMode;
 
 - (id)init
 {
     if ((self = [super init]))
     {
-        [self reset];
+        _modelviewMatrix = [SPMatrix matrixWithIdentity];
+        _alpha = 1.0f;
+        _blendMode = SP_BLEND_MODE_NORMAL;
     }
     return self;
 }
 
-- (void)reset
+- (void)setupDerivedFromState:(SPRenderState *)state withModelviewMatrix:(SPMatrix *)matrix
+                        alpha:(float)alpha blendMode:(uint)blendMode
 {
-    mBoundTextureID = UINT_MAX;
-    mPremultipliedAlpha = YES;
-    [self bindTexture:nil];
+    _alpha = alpha * state->_alpha;
+    _blendMode = blendMode == SP_BLEND_MODE_AUTO ? state->_blendMode : blendMode;
+    
+    [_modelviewMatrix copyFromMatrix:state->_modelviewMatrix];
+    [_modelviewMatrix prependMatrix:matrix];
 }
 
-- (void)bindTexture:(SPTexture *)texture
+@end
+
+// --- class implementation ------------------------------------------------------------------------
+
+@implementation SPRenderSupport
 {
-    uint newTextureID = texture.textureID;
-    BOOL newPMA = texture.hasPremultipliedAlpha;
+    SPMatrix *_projectionMatrix;
+    SPMatrix *_mvpMatrix;
+    int _numDrawCalls;
     
-    if (newTextureID != mBoundTextureID)
-        glBindTexture(GL_TEXTURE_2D, newTextureID);        
+    NSMutableArray *_stateStack;
+    int _stateStackIndex;
+    int _stateStackSize;
     
-    if (newPMA != mPremultipliedAlpha || !mBoundTextureID)
-    {
-        if (newPMA) glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-        else        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    }
-    
-    mBoundTextureID = newTextureID;
-    mPremultipliedAlpha = newPMA;
+    NSMutableArray *_quadBatches;
+    int _quadBatchIndex;
+    int _quadBatchSize;
 }
 
-- (uint)convertColor:(uint)color alpha:(float)alpha
+@synthesize projectionMatrix = _projectionMatrix;
+@synthesize mvpMatrix = _mvpMatrix;
+@synthesize numDrawCalls = _numDrawCalls;
+
+- (id)init
 {
-    return [SPRenderSupport convertColor:color alpha:alpha premultiplyAlpha:mPremultipliedAlpha];
+    if ((self = [super init]))
+    {
+        _projectionMatrix = [[SPMatrix alloc] init];
+        _mvpMatrix        = [[SPMatrix alloc] init];
+        
+        _stateStack = [[NSMutableArray alloc] initWithObjects:[[SPRenderState alloc] init], nil];
+        _stateStackIndex = 0;
+        _stateStackSize = 1;
+        
+        _quadBatches = [[NSMutableArray alloc] initWithObjects:[[SPQuadBatch alloc] init], nil];
+        _quadBatchIndex = 0;
+        _quadBatchSize = 1;
+        
+        [self setupOrthographicProjectionWithLeft:0 right:320 top:0 bottom:480];
+    }
+    return self;
 }
 
-+ (uint)convertColor:(uint)color alpha:(float)alpha premultiplyAlpha:(BOOL)pma
+- (void)nextFrame
 {
-    if (pma)
-    {
-        return (GLubyte)(SP_COLOR_PART_RED(color) * alpha) |
-               (GLubyte)(SP_COLOR_PART_GREEN(color) * alpha) << 8 |
-               (GLubyte)(SP_COLOR_PART_BLUE(color) * alpha) << 16 |
-               (GLubyte)(alpha * 255) << 24;
-    }
-    else
-    {
-        return (GLubyte)SP_COLOR_PART_RED(color) |
-               (GLubyte)SP_COLOR_PART_GREEN(color) << 8 |
-               (GLubyte)SP_COLOR_PART_BLUE(color) << 16 |
-               (GLubyte)(alpha * 255) << 24;
-    }
+    _stateStackIndex = 0;
+    _quadBatchIndex = 0;
+    _numDrawCalls = 0;
+}
+
+- (void)purgeBuffers
+{
+    [_quadBatches removeAllObjects];
+    [_quadBatches addObject:[[SPQuadBatch alloc] init]];
+     _quadBatchIndex = 0;
+     _quadBatchSize = 1;
 }
 
 + (void)clearWithColor:(uint)color alpha:(float)alpha;
@@ -89,45 +133,120 @@
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
-+ (void)transformMatrixForObject:(SPDisplayObject *)object
-{
-    float x = object.x;
-    float y = object.y;
-    float rotation = object.rotation;
-    float scaleX = object.scaleX;
-    float scaleY = object.scaleY;
-    float pivotX = object.pivotX;
-    float pivotY = object.pivotY;
-    
-    if (x != 0.0f || y != 0.0f)           glTranslatef(x, y, 0.0f);
-    if (rotation != 0.0f)                 glRotatef(SP_R2D(rotation), 0.0f, 0.0f, 1.0f);
-    if (scaleX != 1.0f || scaleY != 1.0f) glScalef(scaleX, scaleY, 1.0f);
-    if (pivotX != 0.0f || pivotY != 0.0f) glTranslatef(-pivotX, -pivotY, 0.0f);    
-}
-
-+ (void)setupOrthographicRenderingWithLeft:(float)left right:(float)right 
-                                    bottom:(float)bottom top:(float)top
-{
-    glDisable(GL_CULL_FACE);
-    glDisable(GL_LIGHTING);
-    glDisable(GL_DEPTH_TEST);
-    
-    glEnable(GL_TEXTURE_2D);
-    glEnable(GL_BLEND);
-    
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrthof(left, right, bottom, top, -1.0f, 1.0f);
-    
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();  
-}
-
 + (uint)checkForOpenGLError
 {
     GLenum error = glGetError();
-    if (error != 0) NSLog(@"Warning: There was an OpenGL error: #%d", error);
+    if (error != 0) NSLog(@"There was an OpenGL error: 0x%x", error);
     return error;
 }
 
+- (void)addDrawCalls:(int)count
+{
+    _numDrawCalls += count;
+}
+
+- (void)setupOrthographicProjectionWithLeft:(float)left right:(float)right
+                                        top:(float)top bottom:(float)bottom;
+{
+    [_projectionMatrix setA:2.0f/(right-left) b:0.0f c:0.0f d:2.0f/(top-bottom)
+                         tx:-(right+left) / (right-left)
+                         ty:-(top+bottom) / (top-bottom)];
+}
+
+#pragma mark - state stack
+
+- (void)pushStateWithMatrix:(SPMatrix *)matrix alpha:(float)alpha blendMode:(uint)blendMode
+{
+    SPRenderState *previousState = CURRENT_STATE();
+    
+    if (_stateStackSize == _stateStackIndex + 1)
+    {
+        [_stateStack addObject:[[SPRenderState alloc] init]];
+        ++_stateStackSize;
+    }
+    
+    ++_stateStackIndex;
+    
+    [CURRENT_STATE() setupDerivedFromState:previousState withModelviewMatrix:matrix
+                                     alpha:alpha blendMode:blendMode];
+}
+
+- (void)popState
+{
+    if (_stateStackIndex == 0)
+        [NSException raise:SP_EXC_INVALID_OPERATION format:@"The state stack must not be empty"];
+        
+    --_stateStackIndex;
+}
+
+- (float)alpha
+{
+    return CURRENT_STATE().alpha;
+}
+
+- (uint)blendMode
+{
+    return CURRENT_STATE().blendMode;
+}
+
+- (SPMatrix *)modelviewMatrix
+{
+    return CURRENT_STATE().modelviewMatrix;
+}
+
+- (SPMatrix *)mvpMatrix
+{
+    [_mvpMatrix copyFromMatrix:CURRENT_STATE().modelviewMatrix];
+    [_mvpMatrix appendMatrix:_projectionMatrix];
+    return _mvpMatrix;
+}
+
+- (void)applyBlendModeForPremultipliedAlpha:(BOOL)pma
+{
+    [SPBlendMode applyBlendFactorsForBlendMode:CURRENT_STATE().blendMode premultipliedAlpha:pma];
+}
+
+#pragma mark - rendering
+
+- (void)batchQuad:(SPQuad *)quad
+{
+    SPRenderState *currentState = CURRENT_STATE();
+    SPQuadBatch *currentBatch = CURRENT_BATCH();
+    
+    float alpha = currentState.alpha;
+    uint blendMode = currentState.blendMode;
+    SPMatrix *modelviewMatrix = currentState.modelviewMatrix;
+    
+    if ([currentBatch isStateChangeWithTinted:quad.tinted texture:quad.texture alpha:alpha
+                           premultipliedAlpha:quad.premultipliedAlpha blendMode:blendMode
+                                     numQuads:1])
+    {
+        [self finishQuadBatch];
+        currentBatch = CURRENT_BATCH();
+    }
+    
+    [currentBatch addQuad:quad alpha:alpha blendMode:blendMode matrix:modelviewMatrix];
+}
+
+- (void)finishQuadBatch
+{
+    SPQuadBatch *currentBatch = CURRENT_BATCH();
+    
+    if (currentBatch.numQuads)
+    {
+        [currentBatch renderWithMvpMatrix:_projectionMatrix];
+        [currentBatch reset];
+        
+        ++_quadBatchIndex;
+        ++_numDrawCalls;
+        
+        if (_quadBatchSize <= _quadBatchIndex)
+        {
+            [_quadBatches addObject:[[SPQuadBatch alloc] init]];
+            ++_quadBatchSize;
+        }
+    }
+}
+
 @end
+

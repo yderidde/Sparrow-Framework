@@ -12,13 +12,7 @@
 #import "SPPoolObject.h"
 #import <malloc/malloc.h>
 
-#define COMPLAIN_MISSING_IMP @"Class %@ needs this code:\n\
-+ (SPPoolInfo *) poolInfo\n\
-{\n\
-  static SPPoolInfo *poolInfo = nil;\n\
-  if (!poolInfo) poolInfo = [[SPPoolInfo alloc] init];\n\
-  return poolInfo;\n\
-}"
+#define COMPLAIN_MISSING_IMP @"Class %@ needs this code:\nSP_IMPLEMENT_MEMORY_POOL();" 
 
 @implementation SPPoolInfo
 // empty
@@ -27,69 +21,81 @@
 #ifndef DISABLE_MEMORY_POOLING
 
 @implementation SPPoolObject
+{
+    SPPoolObject *_poolPredecessor;
+    uint _retainCount;
+}
 
 + (id)allocWithZone:(NSZone *)zone
 {
+  #if DEBUG
+    // make sure that people don't use pooling from multiple threads
+    static id thread = nil;
+    if (thread) NSAssert(thread == [NSThread currentThread], @"SPPoolObject is NOT thread safe!");
+    else thread = [NSThread currentThread];
+  #endif
+
     SPPoolInfo *poolInfo = [self poolInfo];
-    if (!poolInfo->poolClass) // first allocation
-    {
-        poolInfo->poolClass = self;
-        poolInfo->lastElement = NULL;
-    }
-    else 
-    {
-        if (poolInfo->poolClass != self)
-            [NSException raise:NSGenericException format:COMPLAIN_MISSING_IMP, self];
-    }
     
-    if (!poolInfo->lastElement) 
+    if (poolInfo->lastElement)
     {
-        // pool is empty -> allocate
-        SPPoolObject *object = NSAllocateObject(self, 0, NULL);
-        object->mRetainCount = 1;
+        // recycle element, update poolInfo
+        SPPoolObject *object = poolInfo->lastElement;
+        poolInfo->lastElement = object->_poolPredecessor;
+        
+        // zero out memory. (do not overwrite isa & _poolPredecessor, thus the offset)
+        static uint offset = sizeof(Class) + sizeof(SPPoolObject *);
+        memset((char *)(id)object + offset, 0, malloc_size(object) - offset);
+        object->_retainCount = 1;
         return object;
     }
     else 
     {
-        // recycle element, update poolInfo
-        SPPoolObject *object = poolInfo->lastElement;
-        poolInfo->lastElement = object->mPoolPredecessor;
-
-        // zero out memory. (do not overwrite isa & mPoolPredecessor, thus the offset)
-        unsigned int sizeOfFields = sizeof(Class) + sizeof(SPPoolObject *);
-        memset((char*)(id)object + sizeOfFields, 0, malloc_size(object) - sizeOfFields);
-        object->mRetainCount = 1;
+        // first allocation
+        if (!poolInfo->poolClass)
+        {
+            poolInfo->poolClass = self;
+            poolInfo->lastElement = NULL;
+        }
+        else if (poolInfo->poolClass != self)
+        {
+            [NSException raise:NSGenericException format:COMPLAIN_MISSING_IMP, self];
+            return nil;
+        }
+        
+        // pool is empty -> allocate
+        SPPoolObject *object = NSAllocateObject(self, 0, NULL);
+        object->_retainCount = 1;
         return object;
     }
 }
 
 - (uint)retainCount
 {
-    return mRetainCount;
+    return _retainCount;
 }
 
 - (id)retain
 {
-    ++mRetainCount;
+    ++_retainCount;
     return self;
 }
 
 - (oneway void)release
 {
-    --mRetainCount;
+    --_retainCount;
     
-    if (!mRetainCount)
+    if (!_retainCount)
     {
         SPPoolInfo *poolInfo = [isa poolInfo];
-        self->mPoolPredecessor = poolInfo->lastElement;
+        self->_poolPredecessor = poolInfo->lastElement;
         poolInfo->lastElement = self;
     }
 }
 
 - (void)purge
 {
-    // will call 'dealloc' internally --
-    // which should not be called directly.
+    // will call 'dealloc' internally -- which should not be called directly.
     [super release];
 }
 
@@ -102,7 +108,7 @@
     while ((lastElement = poolInfo->lastElement))
     {
         ++count;        
-        poolInfo->lastElement = lastElement->mPoolPredecessor;
+        poolInfo->lastElement = lastElement->_poolPredecessor;
         [lastElement purge];
     }
     
@@ -112,7 +118,7 @@
 + (SPPoolInfo *)poolInfo
 {
     [NSException raise:NSGenericException format:COMPLAIN_MISSING_IMP, self];
-    return 0;
+    return NULL;
 }
 
 @end
@@ -132,6 +138,5 @@
 }
 
 @end
-
 
 #endif

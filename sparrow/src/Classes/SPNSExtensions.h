@@ -11,6 +11,9 @@
 
 #import <Foundation/Foundation.h>
 
+typedef void (^SPXMLElementHandler)(NSString *elementName, NSDictionary *attributes);
+
+
 /** Sparrow extensions for the NSInvocation class. */
 @interface NSInvocation (SPNSExtensions)
 
@@ -33,8 +36,20 @@
 /// Creates a string by appending a suffix to a filename in front of its extension.
 - (NSString *)stringByAppendingSuffixToFilename:(NSString *)suffix;
 
+/// Creates a string by appending a scale suffix (e.g. `@2x`) to a filename in front of its extension.
+- (NSString *)stringByAppendingScaleSuffixToFilename:(float)scale;
+
 /// Expects the string to be a filename/path and returns the scale factor ('@2x' -> 2).
 - (float)contentScaleFactor;
+
+@end
+
+
+/** Sparrow extensions for the NSMutableString class. */
+@interface NSMutableString (SPNSExtensions)
+
+/// Appends another string and starts a new line.
+- (void)appendLine:(NSString *)line;
 
 @end
 
@@ -56,3 +71,60 @@
 + (NSBundle *)appBundle;
 
 @end
+
+
+/** ------------------------------------------------------------------------------------------------
+ 
+ Additions to the NSData class supporting Base64 and GZip en- and decoding. These methods are based
+ on work of other authors; links to the origins are provided.
+ 
+ ------------------------------------------------------------------------------------------------- */
+
+/** Sparrow extensions for the NSData class. */
+@interface NSData (SPNSExtensions)
+
+// -------------------------------------------------------------------------------------------------
+// Base64 code copyright 2008 Kaliware, LLC. All rights reserved.
+// Found here: http://idevkit.com/forums/tutorials-code-samples-sdk/8-nsdata-base64-extension.html
+// -------------------------------------------------------------------------------------------------
+
+/// Creates an NSData object by parsing a Base64 encoded String.
++ (NSData *)dataWithBase64EncodedString:(NSString *)string;
+
+/// Creates an NSData object by parsing a Base64 encoded String.
+- (id)initWithBase64EncodedString:(NSString *)string;
+
+/// Returns the Base64 representation of the NSData object.
+- (NSString *)base64Encoding;
+
+/// Returns the Base64 representation of the NSData object, separated into lines.
+- (NSString *)base64EncodingWithLineLength:(uint)lineLength;
+
+// -------------------------------------------------------------------------------------------------
+// Gzip code copyright 2007 theidiotproject. All rights reserved.
+// Found here: http://code.google.com/p/drop-osx/source/browse/trunk/Source/NSData%2Bgzip.h
+// Also Check: http://deusty.blogspot.com/2007/07/gzip-compressiondecompression.html
+// -------------------------------------------------------------------------------------------------
+
+/// If the file has the extension '.gz', returns the uncompressed contents of the GZip-compressed
+/// file; otherwise, returns the unprocessed contents.
++ (NSData *)dataWithUncompressedContentsOfFile:(NSString *)file;
+
+/// Gzip-compresses the contents of this NSData object into a new NSData instance.
+- (NSData *)gzipDeflate;
+
+/// Uncompresses the GZip-compressed contents of this NSData object into a new NSData instance.
+- (NSData *)gzipInflate;
+
+@end
+
+
+/** Sparrow extensions for the NSXMLParser class */
+@interface NSXMLParser (SPNSExtensions)
+
+/// Makes XML parsing a whole lot easier by forwarding each element and its attributes to a block,
+/// which is totally sufficient for Sparrow's file formats. Note that the delegate is not used.
+- (BOOL)parseElementsWithBlock:(SPXMLElementHandler)elementHandler;
+
+@end
+

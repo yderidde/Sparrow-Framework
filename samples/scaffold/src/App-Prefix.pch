@@ -4,12 +4,10 @@
 
 #ifdef __OBJC__
 
-    #import <Foundation/Foundation.h>
-    #import <UIKit/UIKit.h>
-    
-    #import "Sparrow.h" 
-    #import "Media.h"
-    #import "SPOverlayView.h"
-    #import "SPResizeEvent.h"
+#import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
+
+#import "Sparrow.h"
+#import "Media.h"
 
 #endif

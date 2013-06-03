@@ -10,16 +10,17 @@
 //
 
 #import "SPTextField.h"
-#import "SPTextField_Internal.h"
 #import "SPImage.h"
 #import "SPTexture.h"
 #import "SPSubTexture.h"
 #import "SPGLTexture.h"
 #import "SPEnterFrameEvent.h"
 #import "SPQuad.h"
+#import "SPQuadBatch.h"
 #import "SPBitmapFont.h"
 #import "SPStage.h"
-#import "SPCompiledSprite.h"
+#import "SPSprite.h"
+#import "SparrowClass.h"
 
 #import <UIKit/UIKit.h>
 
@@ -28,42 +29,58 @@ static NSMutableDictionary *bitmapFonts = nil;
 // --- class implementation ------------------------------------------------------------------------
 
 @implementation SPTextField
+{
+    float _fontSize;
+    uint _color;
+    NSString *_text;
+    NSString *_fontName;
+    SPHAlign _hAlign;
+    SPVAlign _vAlign;
+    BOOL _autoScale;
+    BOOL _kerning;
+    BOOL _requiresRedraw;
+    BOOL _isRenderedText;
+	
+    SPQuadBatch *_contents;
+    SPRectangle *_textBounds;
+    SPQuad *_hitArea;
+    SPSprite *_border;
+}
 
-@synthesize text = mText;
-@synthesize fontName = mFontName;
-@synthesize fontSize = mFontSize;
-@synthesize hAlign = mHAlign;
-@synthesize vAlign = mVAlign;
-@synthesize border = mBorder;
-@synthesize color = mColor;
-@synthesize kerning = mKerning;
+@synthesize text = _text;
+@synthesize fontName = _fontName;
+@synthesize fontSize = _fontSize;
+@synthesize hAlign = _hAlign;
+@synthesize vAlign = _vAlign;
+@synthesize color = _color;
+@synthesize kerning = _kerning;
+@synthesize autoScale = _autoScale;
 
 - (id)initWithWidth:(float)width height:(float)height text:(NSString*)text fontName:(NSString*)name 
           fontSize:(float)size color:(uint)color 
 {
     if ((self = [super init]))
     {        
-        mText = [text copy];
-        mFontSize = size;
-        mColor = color;
-        mHAlign = SPHAlignCenter;
-        mVAlign = SPVAlignCenter;
-        mBorder = NO;        
-		mKerning = YES;
+        _text = [text copy];
+        _fontSize = size;
+        _color = color;
+        _hAlign = SPHAlignCenter;
+        _vAlign = SPVAlignCenter;
+        _autoScale = NO;
+        _border = NO;        
+		_kerning = YES;
+        _requiresRedraw = YES;
         self.fontName = name;
         
-        mHitArea = [[SPQuad alloc] initWithWidth:width height:height];
-        mHitArea.alpha = 0.0f;
-        [self addChild:mHitArea];
-        [mHitArea release];
+        _hitArea = [[SPQuad alloc] initWithWidth:width height:height];
+        _hitArea.alpha = 0.0f;
+        [self addChild:_hitArea];
         
-        mTextArea = [[SPQuad alloc] initWithWidth:width height:height];
-        mTextArea.visible = NO;        
-        [self addChild:mTextArea];
-        [mTextArea release];
+        _contents = [[SPQuadBatch alloc] init];
+        _contents.touchable = NO;
+        [self addChild:_contents];
         
-        mRequiresRedraw = YES;
-        [self addEventListener:@selector(onCompile:) atObject:self forType:SP_EVENT_TYPE_COMPILE];
+        [self addEventListener:@selector(onFlatten:) atObject:self forType:SP_EVENT_TYPE_FLATTEN];
     }
     return self;
 } 
@@ -89,26 +106,27 @@ static NSMutableDictionary *bitmapFonts = nil;
     return [self initWithText:@""];
 }
 
-- (void)onCompile:(SPEvent *)event
+- (void)onFlatten:(SPEvent *)event
 {
-    if (mRequiresRedraw) [self redrawContents];
+    if (_requiresRedraw) [self redraw];
 }
 
 - (void)render:(SPRenderSupport *)support
 {
-    if (mRequiresRedraw) [self redrawContents];    
+    if (_requiresRedraw) [self redraw];    
     [super render:support];
 }
 
 - (SPRectangle *)textBounds
 {
-    if (mRequiresRedraw) [self redrawContents];    
-    return [mTextArea boundsInSpace:self.parent];
+    if (_requiresRedraw) [self redraw];
+    if (!_textBounds) _textBounds = [_contents boundsInSpace:_contents];
+    return [_textBounds copy];
 }
 
-- (SPRectangle *)boundsInSpace:(SPDisplayObject *)targetCoordinateSpace
+- (SPRectangle *)boundsInSpace:(SPDisplayObject *)targetSpace
 {
-    return [mHitArea boundsInSpace:targetCoordinateSpace];
+    return [_hitArea boundsInSpace:targetSpace];
 }
 
 - (void)setWidth:(float)width
@@ -117,246 +135,287 @@ static NSMutableDictionary *bitmapFonts = nil;
     // changing the size should just make the texture bigger/smaller, 
     // keeping the size of the text/font unchanged. (this applies to setHeight:, as well.)
     
-    mHitArea.width = width;
-    mRequiresRedraw = YES;
+    _hitArea.width = width;
+    _requiresRedraw = YES;
+    [self updateBorder];
 }
 
 - (void)setHeight:(float)height
 {
-    mHitArea.height = height;
-    mRequiresRedraw = YES;
+    _hitArea.height = height;
+    _requiresRedraw = YES;
+    [self updateBorder];
 }
 
 - (void)setText:(NSString *)text
 {
-    if (![text isEqualToString:mText])
+    if (![text isEqualToString:_text])
     {
-        [mText release];
-        mText = [text copy];
-        mRequiresRedraw = YES;
+        _text = [text copy];
+        _requiresRedraw = YES;
     }
 }
 
 - (void)setFontName:(NSString *)fontName
 {
-    if (![fontName isEqualToString:mFontName])
+    if (![fontName isEqualToString:_fontName])
     {
-        [mFontName release];
-        mFontName = [fontName copy];
-        mRequiresRedraw = YES;        
-        mIsRenderedText = ![bitmapFonts objectForKey:mFontName];
+        if ([fontName isEqualToString:SP_BITMAP_FONT_MINI] && ![bitmapFonts objectForKey:fontName])
+            [SPTextField registerBitmapFont:[[SPBitmapFont alloc] initWithMiniFont]];
+        
+        _fontName = [fontName copy];
+        _requiresRedraw = YES;        
+        _isRenderedText = !bitmapFonts[_fontName];
     }
 }
 
 - (void)setFontSize:(float)fontSize
 {
-    if (fontSize != mFontSize)
+    if (fontSize != _fontSize)
     {
-        mFontSize = fontSize;
-        mRequiresRedraw = YES;
-    }
-}
- 
-- (void)setBorder:(BOOL)border
-{
-    if (border != mBorder)
-    {
-        mBorder = border;
-        mRequiresRedraw = YES;
+        _fontSize = fontSize;
+        _requiresRedraw = YES;
     }
 }
  
 - (void)setHAlign:(SPHAlign)hAlign
 {
-    if (hAlign != mHAlign)
+    if (hAlign != _hAlign)
     {
-        mHAlign = hAlign;
-        mRequiresRedraw = YES;
+        _hAlign = hAlign;
+        _requiresRedraw = YES;
     }
 }
 
 - (void)setVAlign:(SPVAlign)vAlign
 {
-    if (vAlign != mVAlign)
+    if (vAlign != _vAlign)
     {
-        mVAlign = vAlign;
-        mRequiresRedraw = YES;
+        _vAlign = vAlign;
+        _requiresRedraw = YES;
     }
 }
 
 - (void)setColor:(uint)color
 {
-    if (color != mColor)
+    if (color != _color)
     {
-        mColor = color;
-        if (mIsRenderedText) 
-            [(SPImage *)mContents setColor:color];
-        else 
-            mRequiresRedraw = YES;
+        _color = color;
+        _requiresRedraw = YES;
+        [self updateBorder];
     }
 }
 
 - (void)setKerning:(BOOL)kerning
 {
-	if (kerning != mKerning)
+	if (kerning != _kerning)
 	{
-		mKerning = kerning;
-		mRequiresRedraw = YES;
+		_kerning = kerning;
+		_requiresRedraw = YES;
 	}
 }
 
-+ (SPTextField*)textFieldWithWidth:(float)width height:(float)height text:(NSString*)text 
+- (void)setAutoScale:(BOOL)autoScale
+{
+    if (_autoScale != autoScale)
+    {
+        _autoScale = autoScale;
+        _requiresRedraw = YES;
+    }
+}
+
++ (id)textFieldWithWidth:(float)width height:(float)height text:(NSString*)text
                           fontName:(NSString*)name fontSize:(float)size color:(uint)color
 {
-    return [[[SPTextField alloc] initWithWidth:width height:height text:text fontName:name 
-                                     fontSize:size color:color] autorelease];
+    return [[self alloc] initWithWidth:width height:height text:text fontName:name
+                                     fontSize:size color:color];
 }
 
-+ (SPTextField*)textFieldWithWidth:(float)width height:(float)height text:(NSString*)text
++ (id)textFieldWithWidth:(float)width height:(float)height text:(NSString*)text
 {
-    return [[[SPTextField alloc] initWithWidth:width height:height text:text] autorelease];
+    return [[self alloc] initWithWidth:width height:height text:text];
 }
 
-+ (SPTextField*)textFieldWithText:(NSString*)text
++ (id)textFieldWithText:(NSString*)text
 {
-    return [[[SPTextField alloc] initWithText:text] autorelease];
+    return [[self alloc] initWithText:text];
 }
 
-+ (NSString *)registerBitmapFontFromFile:(NSString*)path texture:(SPTexture *)texture name:(NSString *)fontName
++ (NSString *)registerBitmapFont:(SPBitmapFont *)font name:(NSString *)fontName
 {
     if (!bitmapFonts) bitmapFonts = [[NSMutableDictionary alloc] init];
-    
-    SPBitmapFont *bitmapFont = [[SPBitmapFont alloc] initWithContentsOfFile:path texture:texture];
-    if (!fontName) fontName = bitmapFont.name;
-    [bitmapFonts setObject:bitmapFont forKey:fontName];
-    [bitmapFont release];
-    
+    if (!fontName) fontName = font.name;
+    bitmapFonts[fontName] = font;
     return fontName;
+}
+
++ (NSString *)registerBitmapFont:(SPBitmapFont *)font
+{
+    return [self registerBitmapFont:font name:nil];
+}
+
++ (NSString *)registerBitmapFontFromFile:(NSString *)path texture:(SPTexture *)texture
+                                    name:(NSString *)fontName
+{
+    SPBitmapFont *font = [[SPBitmapFont alloc] initWithContentsOfFile:path texture:texture];
+    return [self registerBitmapFont:font name:fontName];
 }
 
 + (NSString *)registerBitmapFontFromFile:(NSString *)path texture:(SPTexture *)texture
 {
-    return [SPTextField registerBitmapFontFromFile:path texture:texture name:nil];
-}
-
-+ (NSString *)registerBitmapFontFromFile:(NSString *)path name:(NSString *)fontName
-{
-    return [SPTextField registerBitmapFontFromFile:path texture:nil name:fontName];
+    SPBitmapFont *font = [[SPBitmapFont alloc] initWithContentsOfFile:path texture:texture];
+    return [self registerBitmapFont:font];
 }
 
 + (NSString *)registerBitmapFontFromFile:(NSString *)path
 {
-    return [SPTextField registerBitmapFontFromFile:path texture:nil name:nil];
+    SPBitmapFont *font = [[SPBitmapFont alloc] initWithContentsOfFile:path];
+    return [self registerBitmapFont:font];
 }
 
 + (void)unregisterBitmapFont:(NSString *)name
 {
     [bitmapFonts removeObjectForKey:name];
-    
-    if (bitmapFonts.count == 0)
+}
+
++ (SPBitmapFont *)registeredBitmapFont:(NSString *)name
+{
+    return bitmapFonts[name];
+}
+
+- (void)redraw
+{
+    if (_requiresRedraw)
     {
-        [bitmapFonts release];
-        bitmapFonts = nil;
+        [_contents reset];
+        
+        if (_isRenderedText) [self createRenderedContents];
+        else                 [self createComposedContents];
+        
+        _requiresRedraw = NO;
     }
 }
 
-+ (SPBitmapFont *)getRegisteredBitmapFont:(NSString *)name
+- (void)createRenderedContents
 {
-    return [bitmapFonts objectForKey:name];
-}
-
-- (void)dealloc
-{
-    [self removeEventListenersAtObject:self forType:SP_EVENT_TYPE_COMPILE];
-    [mText release];
-    [mFontName release];
-    [super dealloc];
-}
-
-@end
-
-@implementation SPTextField (Internal)
-
-- (void)redrawContents
-{
-    [mContents removeFromParent];
+    float width  = _hitArea.width;
+    float height = _hitArea.height;    
+    float fontSize = _fontSize == SP_NATIVE_FONT_SIZE ? SP_DEFAULT_FONT_SIZE : _fontSize;
     
-    mContents = mIsRenderedText ? [self createRenderedContents] : [self createComposedContents];
-    mContents.touchable = NO;    
-    mRequiresRedraw = NO;
-    
-    [self addChild:mContents];
-}
-
-- (SPDisplayObject *)createRenderedContents
-{
-    float width = mHitArea.width;
-    float height = mHitArea.height;    
-    float fontSize = mFontSize == SP_NATIVE_FONT_SIZE ? SP_DEFAULT_FONT_SIZE : mFontSize;
-    
-#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 60000
+  #if __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_6_0
     NSLineBreakMode lbm = NSLineBreakByTruncatingTail;
-#else
+  #else
     UILineBreakMode lbm = UILineBreakModeTailTruncation;
-#endif
-    CGSize textSize = [mText sizeWithFont:[UIFont fontWithName:mFontName size:fontSize]
-                        constrainedToSize:CGSizeMake(width, height) lineBreakMode:lbm];
+  #endif
+
+    CGSize textSize;
+    
+    if (_autoScale)
+    {
+        CGSize maxSize = CGSizeMake(width, FLT_MAX);
+        fontSize += 1.0f;
+        
+        do
+        {
+            fontSize -= 1.0f;
+            textSize = [_text sizeWithFont:[UIFont fontWithName:_fontName size:fontSize]
+                         constrainedToSize:maxSize lineBreakMode:lbm];
+        } while (textSize.height > height);
+    }
+    else
+    {
+        textSize = [_text sizeWithFont:[UIFont fontWithName:_fontName size:fontSize]
+                     constrainedToSize:CGSizeMake(width, height) lineBreakMode:lbm];
+    }
     
     float xOffset = 0;
-    if (mHAlign == SPHAlignCenter)      xOffset = (width - textSize.width) / 2.0f;
-    else if (mHAlign == SPHAlignRight)  xOffset =  width - textSize.width;
+    if (_hAlign == SPHAlignCenter)      xOffset = (width - textSize.width) / 2.0f;
+    else if (_hAlign == SPHAlignRight)  xOffset =  width - textSize.width;
     
     float yOffset = 0;
-    if (mVAlign == SPVAlignCenter)      yOffset = (height - textSize.height) / 2.0f;
-    else if (mVAlign == SPVAlignBottom) yOffset =  height - textSize.height;
+    if (_vAlign == SPVAlignCenter)      yOffset = (height - textSize.height) / 2.0f;
+    else if (_vAlign == SPVAlignBottom) yOffset =  height - textSize.height;
     
-    mTextArea.x = xOffset; 
-    mTextArea.y = yOffset;
-    mTextArea.width = textSize.width; 
-    mTextArea.height = textSize.height;
+    if (!_textBounds) _textBounds = [[SPRectangle alloc] init];
+    [_textBounds setX:xOffset y:yOffset width:textSize.width height:textSize.height];
     
-    SPTexture *texture = [[SPTexture alloc] initWithWidth:width height:height
-                                                    scale:[SPStage contentScaleFactor]
-                                               colorSpace:SPColorSpaceAlpha
+    SPTexture *texture = [[SPTexture alloc] initWithWidth:width height:height generateMipmaps:YES
                                                      draw:^(CGContextRef context)
-                          {
-                              if (mBorder)
-                              {
-                                  CGContextSetGrayStrokeColor(context, 1.0f, 1.0f);
-                                  CGContextSetLineWidth(context, 1.0f);
-                                  CGContextStrokeRect(context, CGRectMake(0.5f, 0.5f, width-1, height-1));
-                              }
-                              
-                              CGContextSetGrayFillColor(context, 1.0f, 1.0f);        
-                              
-                              [mText drawInRect:CGRectMake(0, yOffset, width, height)
-                                       withFont:[UIFont fontWithName:mFontName size:fontSize] 
-                                  lineBreakMode:lbm alignment:(UITextAlignment)mHAlign];
-                          }];
+      {
+          float red   = SP_COLOR_PART_RED(_color)   / 255.0f;
+          float green = SP_COLOR_PART_GREEN(_color) / 255.0f;
+          float blue  = SP_COLOR_PART_BLUE(_color)  / 255.0f;
+          
+          CGContextSetRGBFillColor(context, red, green, blue, 1.0f);
+          
+          [_text drawInRect:CGRectMake(0, yOffset, width, height)
+                   withFont:[UIFont fontWithName:_fontName size:fontSize] 
+              lineBreakMode:lbm alignment:(UITextAlignment)_hAlign];
+      }];
     
-    SPImage *image = [SPImage imageWithTexture:texture];
-    image.color = mColor;
-    [texture release];
-    
-    return image;
+    SPImage *image = [[SPImage alloc] initWithTexture:texture];
+    [_contents addQuad:image];
 }
 
-- (SPDisplayObject *)createComposedContents
+- (void)createComposedContents
 {
-    SPBitmapFont *bitmapFont = [bitmapFonts objectForKey:mFontName];
-    if (!bitmapFont)     
+    SPBitmapFont *bitmapFont = bitmapFonts[_fontName];
+    if (!bitmapFont)
         [NSException raise:SP_EXC_INVALID_OPERATION 
-                    format:@"bitmap font %@ not registered!", mFontName];       
+                    format:@"bitmap font %@ not registered!", _fontName];
     
-    SPDisplayObject *contents = [bitmapFont createDisplayObjectWithWidth:mHitArea.width 
-                                                                  height:mHitArea.height text:mText fontSize:mFontSize color:mColor
-                                                                  hAlign:mHAlign vAlign:mVAlign border:mBorder kerning:mKerning];    
+    [bitmapFont fillQuadBatch:_contents withWidth:_hitArea.width height:_hitArea.height
+                         text:_text fontSize:_fontSize color:_color hAlign:_hAlign vAlign:_vAlign
+                    autoScale:_autoScale kerning:_kerning];
     
-    SPRectangle *textBounds = [(SPDisplayObjectContainer *)contents childAtIndex:0].bounds;
-    mTextArea.x = textBounds.x; mTextArea.y = textBounds.y;
-    mTextArea.width = textBounds.width; mTextArea.height = textBounds.height;    
+    _textBounds = nil; // will be created on demand
+}
+
+- (BOOL)border
+{
+    return _border != nil;
+}
+
+- (void)setBorder:(BOOL)value
+{
+    if (value && !_border)
+    {
+        _border = [SPSprite sprite];
+        
+        for (int i=0; i<4; ++i)
+            [_border addChild:[[SPQuad alloc] initWithWidth:1.0f height:1.0f]];
+        
+        [self addChild:_border];
+        [self updateBorder];
+    }
+    else if (!value && _border)
+    {
+        [_border removeFromParent];
+        _border = nil;
+    }
+}
+
+- (void)updateBorder
+{
+    if (!_border) return;
     
-    return contents;    
+    float width  = _hitArea.width;
+    float height = _hitArea.height;
+    
+    SPQuad *topLine    = (SPQuad *)[_border childAtIndex:0];
+    SPQuad *rightLine  = (SPQuad *)[_border childAtIndex:1];
+    SPQuad *bottomLine = (SPQuad *)[_border childAtIndex:2];
+    SPQuad *leftLine   = (SPQuad *)[_border childAtIndex:3];
+    
+    topLine.width = width; topLine.height = 1;
+    bottomLine.width = width; bottomLine.height = 1;
+    leftLine.width = 1; leftLine.height = height;
+    rightLine.width = 1; rightLine.height = height;
+    rightLine.x = width - 1;
+    bottomLine.y = height - 1;
+    topLine.color = rightLine.color = bottomLine.color = leftLine.color = _color;
+    
+    [_border flatten];
 }
 
 @end

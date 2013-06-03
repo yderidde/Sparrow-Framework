@@ -22,59 +22,40 @@ void onUncaughtException(NSException *exception)
 // ---
 
 @implementation DemoAppDelegate
-
-@synthesize window = mWindow;
-@synthesize sparrowView = mSparrowView;
+{
+    UIWindow *_window;
+    SPViewController *_viewController;
+}
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions 
 {
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-    NSSetUncaughtExceptionHandler(&onUncaughtException);     
+    NSSetUncaughtExceptionHandler(&onUncaughtException);
     
     CGRect screenBounds = [UIScreen mainScreen].bounds;
-    mWindow = [[UIWindow alloc] initWithFrame:screenBounds];
+    _window = [[UIWindow alloc] initWithFrame:screenBounds];
     
     [SPAudioEngine start];
-    [SPStage setSupportHighResolutions:YES]; // use @2x textures on suitable hardware
     
-    mSparrowView = [[SPView alloc] initWithFrame:screenBounds];
-    mSparrowView.multipleTouchEnabled = YES;
-    mSparrowView.frameRate = 30;
-    [mWindow addSubview:mSparrowView];
+    _viewController = [[SPViewController alloc] init];
+    _viewController.multitouchEnabled = YES;
+    [_viewController startWithRoot:[Game class] supportHighResolutions:YES doubleOnPad:YES];
     
-    Game *game = [[Game alloc] init];
-    mSparrowView.stage = game;
+    [_window setRootViewController:_viewController];
+    [_window makeKeyAndVisible];
     
-    [mWindow makeKeyAndVisible];
+    // What follows is a very simply approach to support the iPad:
+    // we just center the stage on the screen!
+    //
+    // (Beware: to support autorotation, this would need a little more work.)
     
-    [game release];
-    [pool release];
+    if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad)
+    {
+        _viewController.view.frame = CGRectMake(64, 32, 640, 960);
+        _viewController.stage.width = 320;
+        _viewController.stage.height = 480;
+    }
     
     return YES;
-}
-
-- (void)applicationWillResignActive:(UIApplication *)application 
-{    
-    [mSparrowView stop];
-}
-
-- (void)applicationDidBecomeActive:(UIApplication *)application 
-{
-	[mSparrowView start];
-}
-
-- (void)dealloc 
-{
-    [SPAudioEngine stop];
-    [mWindow release];
-    [super dealloc];
-}
-
-- (void)applicationDidReceiveMemoryWarning:(UIApplication *)application
-{
-    [SPPoint purgePool];
-    [SPRectangle purgePool];
-    [SPMatrix purgePool];    
 }
 
 @end

@@ -14,12 +14,15 @@
 #import "SPUtils.h"
 
 @implementation SPAVSound
+{
+    NSData *_soundData;
+    double _duration;
+}
 
-@synthesize duration = mDuration;
+@synthesize duration = _duration;
 
 - (id)init
 {
-    [self release];
     return nil;
 }
 
@@ -28,29 +31,23 @@
     if ((self = [super init]))
     {
         NSString *fullPath = [SPUtils absolutePathToFile:path];
-        mSoundData = [[NSData alloc] initWithContentsOfMappedFile:fullPath];
-        mDuration = duration;
+        _soundData = [[NSData alloc] initWithContentsOfMappedFile:fullPath];
+        _duration = duration;
     }
     return self;
 }
 
-- (void)dealloc
-{
-    [mSoundData release];
-    [super dealloc];
-}
-
 - (SPSoundChannel *)createChannel
 {
-    return [[[SPAVSoundChannel alloc] initWithSound:self] autorelease];    
+    return [[SPAVSoundChannel alloc] initWithSound:self];    
 }
 
 - (AVAudioPlayer *)createPlayer
 {
     NSError *error = nil;    
-    AVAudioPlayer *player = [[AVAudioPlayer alloc] initWithData:mSoundData error:&error];
+    AVAudioPlayer *player = [[AVAudioPlayer alloc] initWithData:_soundData error:&error];
     if (error) NSLog(@"Could not create AVAudioPlayer: %@", [error description]);    
-    return [player autorelease];	
+    return player;	
 }
 
 @end

@@ -15,15 +15,25 @@
 #import "SPPoint.h"
 
 @implementation SPTouch
+{
+    double _timestamp;
+    float _globalX;
+    float _globalY;
+    float _previousGlobalX;
+    float _previousGlobalY;
+    int _tapCount;
+    SPTouchPhase _phase;
+    SPDisplayObject *__weak _target;
+}
 
-@synthesize timestamp = mTimestamp;
-@synthesize globalX = mGlobalX;
-@synthesize globalY = mGlobalY;
-@synthesize previousGlobalX = mPreviousGlobalX;
-@synthesize previousGlobalY = mPreviousGlobalY;
-@synthesize tapCount = mTapCount;
-@synthesize phase = mPhase;
-@synthesize target = mTarget;
+@synthesize timestamp = _timestamp;
+@synthesize globalX = _globalX;
+@synthesize globalY = _globalY;
+@synthesize previousGlobalX = _previousGlobalX;
+@synthesize previousGlobalY = _previousGlobalY;
+@synthesize tapCount = _tapCount;
+@synthesize phase = _phase;
+@synthesize target = _target;
 
 - (id)init
 {
@@ -32,22 +42,28 @@
 
 - (SPPoint*)locationInSpace:(SPDisplayObject*)space
 {
-    SPPoint *point = [SPPoint pointWithX:mGlobalX y:mGlobalY];
-    SPMatrix *transformationMatrix = [mTarget.root transformationMatrixToSpace:space];
-    return [transformationMatrix transformPoint:point];
+    SPMatrix *transformationMatrix = [_target.root transformationMatrixToSpace:space];
+    return [transformationMatrix transformPointWithX:_globalX y:_globalY];
 }
 
 - (SPPoint*)previousLocationInSpace:(SPDisplayObject*)space
 {
-    SPPoint *point = [SPPoint pointWithX:mPreviousGlobalX y:mPreviousGlobalY];
-    SPMatrix *transformationMatrix = [mTarget.root transformationMatrixToSpace:space];
-    return [transformationMatrix transformPoint:point];
+    SPMatrix *transformationMatrix = [_target.root transformationMatrixToSpace:space];
+    return [transformationMatrix transformPointWithX:_previousGlobalX y:_previousGlobalY];
 }
 
-- (void)dealloc
+- (SPPoint *)movementInSpace:(SPDisplayObject *)space
 {
-    [mTarget release];
-    [super dealloc];
+    SPMatrix *transformationMatrix = [_target.root transformationMatrixToSpace:space];
+    SPPoint *curLoc = [transformationMatrix transformPointWithX:_globalX y:_globalY];
+    SPPoint *preLoc = [transformationMatrix transformPointWithX:_previousGlobalX y:_previousGlobalY];
+    return [curLoc subtractPoint:preLoc];
+}
+
+- (NSString *)description
+{
+    return [NSString stringWithFormat:@"[SPTouch: globalX=%.1f, globalY=%.1f, phase=%d, tapCount=%d]",
+            _globalX, _globalY, _phase, _tapCount];
 }
 
 @end
@@ -56,53 +72,52 @@
 
 @implementation SPTouch (Internal)
 
+// TODO: why not synthesize these properties?
+
 - (void)setTimestamp:(double)timestamp
 {
-    mTimestamp = timestamp;
+    _timestamp = timestamp;
 }
 
 - (void)setGlobalX:(float)x
 {
-    mGlobalX = x;
+    _globalX = x;
 }
 
 - (void)setGlobalY:(float)y
 {
-    mGlobalY = y;
+    _globalY = y;
 }
 
 - (void)setPreviousGlobalX:(float)x
 {
-    mPreviousGlobalX = x;
+    _previousGlobalX = x;
 }
 
 - (void)setPreviousGlobalY:(float)y
 {
-    mPreviousGlobalY = y;
+    _previousGlobalY = y;
 }
 
 - (void)setTapCount:(int)tapCount
 {
-    mTapCount = tapCount;
+    _tapCount = tapCount;
 }
 
 - (void)setPhase:(SPTouchPhase)phase
 {
-    mPhase = phase;
+    _phase = phase;
 }
 
 - (void)setTarget:(SPDisplayObject*)target
 {
-    if (target != mTarget)
-    {    
-        [mTarget release];
-        mTarget = [target retain];
-    }
+    if (_target != target)
+        _target = target;
 }
 
 + (SPTouch*)touch
 {
-    return [[[SPTouch alloc] init] autorelease];
+    return [[SPTouch alloc] init];
 }
 
 @end

@@ -19,33 +19,43 @@
 #define WAIT_TIME 0.1f
 
 @implementation BenchmarkScene
+{
+    SPButton *_startButton;
+    SPTextField *_resultText;
+    SPTexture *_texture;
+    
+    SPSprite *_container;
+    int _frameCount;
+    double _elapsed;
+    BOOL _started;
+    int _failCount;
+    int _waitFrames;
+}
 
 - (id)init
 {
     if ((self = [super init]))
     {
-        mTexture = [[SPTexture alloc] initWithContentsOfFile:@"benchmark_object.png"];
+        _texture = [[SPTexture alloc] initWithContentsOfFile:@"benchmark_object.png"];
         
         // the container will hold all test objects
-        mContainer = [[SPSprite alloc] init];
-        mContainer.touchable = NO; // we do not need touch events on the test objects -- thus, 
+        _container = [[SPSprite alloc] init];
+        _container.touchable = NO; // we do not need touch events on the test objects -- thus, 
                                    // it is more efficient to disable them.
-        [self addChild:mContainer atIndex:0];        
-        [mContainer release];
+        [self addChild:_container atIndex:0];        
         
         SPTexture *buttonTexture = [SPTexture textureWithContentsOfFile:@"button_normal.png"];
         
         // we create a button that is used to start the benchmark.
-        mStartButton = [[SPButton alloc] initWithUpState:buttonTexture
+        _startButton = [[SPButton alloc] initWithUpState:buttonTexture
                                                     text:@"Start benchmark"];
-        [mStartButton addEventListener:@selector(onStartButtonPressed:) atObject:self
+        [_startButton addEventListener:@selector(onStartButtonPressed:) atObject:self
                                forType:SP_EVENT_TYPE_TRIGGERED];
-        mStartButton.x = 160 - (int)(mStartButton.width / 2);
-        mStartButton.y = 20;
-        [self addChild:mStartButton];
-        [mStartButton release];        
+        _startButton.x = 160 - (int)(_startButton.width / 2);
+        _startButton.y = 20;
+        [self addChild:_startButton];
         
-        mStarted = NO;
+        _started = NO;
         
         [self addEventListener:@selector(onEnterFrame:) atObject:self forType:SP_EVENT_TYPE_ENTER_FRAME];
     }
@@ -54,37 +64,37 @@
 
 - (void)onEnterFrame:(SPEnterFrameEvent *)event
 {    
-    if (!mStarted) return;
+    if (!_started) return;
     
-    mElapsed += event.passedTime;
-    ++mFrameCount;
+    _elapsed += event.passedTime;
+    ++_frameCount;
     
-    if (mFrameCount % mWaitFrames == 0)
+    if (_frameCount % _waitFrames == 0)
     {
-        float targetFPS = self.stage.frameRate;
-        float realFPS = mWaitFrames / mElapsed;
+        float targetFPS = Sparrow.currentController.framesPerSecond;
+        float realFPS = _waitFrames / _elapsed;
         
         if (ceilf(realFPS) >= targetFPS)
         {
-            mFailCount = 0;
+            _failCount = 0;
             [self addTestObjects];
         }
         else
         {
-            ++mFailCount;
+            ++_failCount;
             
-            if (mFailCount > 15)
-                mWaitFrames = 5; // slow down creation process to be more exact
-            if (mFailCount > 20)
-                mWaitFrames = 10;
-            if (mFailCount == 25)
+            if (_failCount > 15)
+                _waitFrames = 5; // slow down creation process to be more exact
+            if (_failCount > 20)
+                _waitFrames = 10;
+            if (_failCount == 25)
                 [self benchmarkComplete]; // target fps not reached for a while
         }
         
-        mElapsed = mFrameCount = 0;
+        _elapsed = _frameCount = 0;
     }
     
-    for (SPDisplayObject *child in mContainer)    
+    for (SPDisplayObject *child in _container)    
         child.rotation += 0.05f;    
 }
 
@@ -92,62 +102,60 @@
 {
     NSLog(@"starting benchmark");
     
-    mStartButton.visible = NO;
-    mStarted = YES;
-    mFailCount = 0;
-    mWaitFrames = 3;
+    _startButton.visible = NO;
+    _started = YES;
+    _failCount = 0;
+    _waitFrames = 3;
     
-    [mResultText removeFromParent];
-    mResultText = nil;
+    [_resultText removeFromParent];
+    _resultText = nil;
     
-    mFrameCount = 0;
+    _frameCount = 0;
     [self addTestObjects];
 }
 
 - (void)benchmarkComplete
 {
-    mStarted = NO;
-    mStartButton.visible = YES;
+    _started = NO;
+    _startButton.visible = YES;
+    
+    int frameRate = Sparrow.currentController.framesPerSecond;
     
     NSLog(@"benchmark complete!");
-    NSLog(@"fps: %.1f", self.stage.frameRate);
-    NSLog(@"number of objects: %d", mContainer.numChildren);
+    NSLog(@"fps: %d", frameRate);
+    NSLog(@"number of objects: %d", _container.numChildren);
     
-    NSString *resultString = [NSString stringWithFormat:@"Result:\n%d objects\nwith %.0f fps", 
-                              mContainer.numChildren, self.stage.frameRate]; 
+    NSString *resultString = [NSString stringWithFormat:@"Result:\n%d objects\nwith %d fps", 
+                              _container.numChildren, frameRate];
     
-    mResultText = [SPTextField textFieldWithWidth:250 height:200 text:resultString];
-    mResultText.fontSize = 30;
-    mResultText.color = 0x0;
-    mResultText.x = (320 - mResultText.width) / 2;
-    mResultText.y = (480 - mResultText.height) / 2;
+    _resultText = [SPTextField textFieldWithWidth:250 height:200 text:resultString];
+    _resultText.fontSize = 30;
+    _resultText.color = 0x0;
+    _resultText.x = (320 - _resultText.width) / 2;
+    _resultText.y = (480 - _resultText.height) / 2;
     
-    [self addChild:mResultText];
-    [mContainer removeAllChildren];
+    [self addChild:_resultText];
+    [_container removeAllChildren];
 }
 
 - (void)addTestObjects
 {
     int border = 15;
-    int numObjects = mFailCount > 20 ? 2 : 5;
+    int numObjects = _failCount > 20 ? 2 : 5;
     
     for (int i=0; i<numObjects; ++i)
     {   
-        SPImage *egg = [[SPImage alloc] initWithTexture:mTexture];
+        SPImage *egg = [[SPImage alloc] initWithTexture:_texture];
         egg.x = [SPUtils randomIntBetweenMin:border andMax:GAME_WIDTH  - border];
         egg.y = [SPUtils randomIntBetweenMin:border andMax:GAME_HEIGHT - border];
-        [mContainer addChild:egg];
-        [egg release];
+        [_container addChild:egg];
     }
 }
 
 - (void)dealloc
 {
     [self removeEventListenersAtObject:self forType:SP_EVENT_TYPE_ENTER_FRAME];
-    [mStartButton removeEventListenersAtObject:self forType:SP_EVENT_TYPE_TRIGGERED];
-
-    [mTexture release];
-    [super dealloc];
+    [_startButton removeEventListenersAtObject:self forType:SP_EVENT_TYPE_TRIGGERED];
 }
 
 @end

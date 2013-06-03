@@ -14,42 +14,33 @@
 #import "SPMacros.h"
 #import "SPUtils.h"
 #import "SPStage.h"
-
-@interface SPRenderTexture ()
-
-- (void)createFramebuffer;
-- (void)destroyFramebuffer;
-- (void)renderToFramebuffer:(SPDrawingBlock)block;
-
-@end
+#import "SparrowClass.h"
 
 @implementation SPRenderTexture
+{
+    GLuint _framebuffer;
+    BOOL   _framebufferIsActive;
+    SPRenderSupport *_renderSupport;
+}
 
 - (id)initWithWidth:(float)width height:(float)height fillColor:(uint)argb scale:(float)scale
 {
-    if ((self = [super init]))
+    int legalWidth  = [SPUtils nextPowerOfTwo:width  * scale];
+    int legalHeight = [SPUtils nextPowerOfTwo:height * scale];
+    
+    SPRectangle *region = [SPRectangle rectangleWithX:0 y:0 width:width height:height];
+    SPGLTexture *glTexture = [[SPGLTexture alloc] initWithData:NULL
+                                                         width:legalWidth
+                                                        height:legalHeight
+                                               generateMipmaps:NO
+                                                         scale:scale
+                                            premultipliedAlpha:YES];
+
+    if ((self = [super initWithRegion:region ofTexture:glTexture]))
     {
-        int legalWidth  = [SPUtils nextPowerOfTwo:width  * scale];
-        int legalHeight = [SPUtils nextPowerOfTwo:height * scale];
+        _renderSupport = [[SPRenderSupport alloc] init];
         
-        SPTextureProperties properties = {    
-            .format = SPTextureFormatRGBA,
-            .width  = legalWidth,
-            .height = legalHeight,
-            .generateMipmaps = NO,
-            .premultipliedAlpha = NO
-        };        
-        
-        SPGLTexture *glTexture = [[SPGLTexture alloc] initWithData:NULL properties:properties];    
-        glTexture.scale = scale;
-        
-        SPRectangle *region = [SPRectangle rectangleWithX:0 y:0 width:width height:height];
-        mTexture = [[SPTexture alloc] initWithRegion:region ofTexture:glTexture];
-        [glTexture release];        
-        
-        mRenderSupport = [[SPRenderSupport alloc] init];
-        
-        [self createFramebuffer];        
+        [self createFramebuffer];
         [self clearWithColor:argb alpha:SP_COLOR_PART_ALPHA(argb)];
     }
     return self;
@@ -57,7 +48,7 @@
 
 - (id)initWithWidth:(float)width height:(float)height fillColor:(uint)argb
 {
-    return [self initWithWidth:width height:height fillColor:argb scale:[SPStage contentScaleFactor]];
+    return [self initWithWidth:width height:height fillColor:argb scale:Sparrow.contentScaleFactor];
 }
 
 - (id)initWithWidth:(float)width height:(float)height
@@ -72,21 +63,18 @@
 
 - (void)dealloc
 {
-    [mTexture release];
-    [mRenderSupport release];
     [self destroyFramebuffer];
-    [super dealloc];
 }
 
 - (void)createFramebuffer 
 {
     // create framebuffer
-    glGenFramebuffersOES(1, &mFramebuffer);
-    glBindFramebufferOES(GL_FRAMEBUFFER_OES, mFramebuffer);
+    glGenFramebuffersOES(1, &_framebuffer);
+    glBindFramebufferOES(GL_FRAMEBUFFER_OES, _framebuffer);
     
     // attach renderbuffer
     glFramebufferTexture2DOES(GL_FRAMEBUFFER_OES, GL_COLOR_ATTACHMENT0_OES, GL_TEXTURE_2D, 
-                              mTexture.textureID, 0);
+                              self.baseTexture.name, 0);
     
     if (glCheckFramebufferStatusOES(GL_FRAMEBUFFER_OES) != GL_FRAMEBUFFER_COMPLETE_OES)
         NSLog(@"failed to create frame buffer for render texture");
@@ -97,8 +85,8 @@
 
 - (void)destroyFramebuffer 
 {
-    glDeleteFramebuffersOES(1, &mFramebuffer);
-    mFramebuffer = 0;
+    glDeleteFramebuffersOES(1, &_framebuffer);
+    _framebuffer = 0;
 }
 
 - (void)renderToFramebuffer:(SPDrawingBlock)block
@@ -110,30 +98,34 @@
     
     int stdFramebuffer = -1;
     
-    if (!mFramebufferIsActive)
+    if (!_framebufferIsActive)
     {
-        mFramebufferIsActive = YES;
+        _framebufferIsActive = YES;
         
-        // remember standard frame buffer        
+        // remember standard frame buffer
         glGetIntegerv(GL_FRAMEBUFFER_BINDING_OES, &stdFramebuffer);
         
         // switch to the texture's framebuffer for rendering
-        glBindFramebufferOES(GL_FRAMEBUFFER_OES, mFramebuffer);
+        glBindFramebufferOES(GL_FRAMEBUFFER_OES, _framebuffer);
+        
+        SPTexture *baseTexture = self.baseTexture;
+        float width  = baseTexture.width;
+        float height = baseTexture.height;
+        float scale  = baseTexture.scale;
         
         // prepare viewport and OpenGL matrices
-        glViewport(0, 0, mTexture.width * mTexture.scale, mTexture.height * mTexture.scale);
-        [SPRenderSupport setupOrthographicRenderingWithLeft:0 right:mTexture.width
-                                                     bottom:0 top:mTexture.height];
-        
-        // reset texture binding
-        [mRenderSupport reset];
-    }    
-   
+        glViewport(0, 0, width * scale, height * scale);
+        [_renderSupport setupOrthographicProjectionWithLeft:0 right:width top:height bottom:0];
+    }
+    
     block();
     
     if (stdFramebuffer != -1)
     {
-        mFramebufferIsActive = NO;
+        _framebufferIsActive = NO;
+        
+        [_renderSupport finishQuadBatch];
+        [_renderSupport nextFrame];
         
         // return to standard frame buffer
         glBindFramebufferOES(GL_FRAMEBUFFER_OES, stdFramebuffer);
@@ -144,16 +136,17 @@
 {
     [self renderToFramebuffer:^
      {
-         glPushMatrix();
+         [_renderSupport pushStateWithMatrix:object.transformationMatrix
+                                       alpha:object.alpha
+                                   blendMode:object.blendMode];
          
-         [SPRenderSupport transformMatrixForObject:object];         
-         [object render:mRenderSupport];
+         [object render:_renderSupport];
          
-         glPopMatrix();
+         [_renderSupport popState];
      }];
 }
 
-- (void)bundleDrawCalls:(SPDrawingBlock)block
+- (void)drawBundled:(SPDrawingBlock)block
 {
     [self renderToFramebuffer:block];
 }
@@ -166,65 +159,14 @@
      }];
 }
 
-- (void)adjustTextureCoordinates:(const float *)texCoords saveAtTarget:(float *)targetTexCoords 
-                     numVertices:(int)numVertices
++ (id)textureWithWidth:(float)width height:(float)height
 {
-    [mTexture adjustTextureCoordinates:texCoords saveAtTarget:targetTexCoords numVertices:numVertices];
+    return [[self alloc] initWithWidth:width height:height];    
 }
 
-- (float)width
++ (id)textureWithWidth:(float)width height:(float)height fillColor:(uint)argb
 {
-    return mTexture.width;
-}
-
-- (float)height
-{
-    return mTexture.height;
-}
-
-- (void)setRepeat:(BOOL)value
-{
-    mTexture.repeat = value;
-}
-
-- (BOOL)repeat
-{
-    return mTexture.repeat;
-}
-
-- (SPTextureFilter)filter
-{
-    return mTexture.filter;
-}
-
-- (void)setFilter:(SPTextureFilter)value
-{
-    mTexture.filter = value;
-}
-
-- (uint)textureID
-{
-    return mTexture.textureID;
-}
-
-- (BOOL)hasPremultipliedAlpha
-{
-    return mTexture.hasPremultipliedAlpha;
-}
-
-- (float)scale
-{
-    return mTexture.scale;
-}
-
-+ (SPRenderTexture *)textureWithWidth:(float)width height:(float)height
-{
-    return [[[SPRenderTexture alloc] initWithWidth:width height:height] autorelease];    
-}
-
-+ (SPRenderTexture *)textureWithWidth:(float)width height:(float)height fillColor:(uint)argb
-{
-    return [[[SPRenderTexture alloc] initWithWidth:width height:height fillColor:argb] autorelease];
+    return [[self alloc] initWithWidth:width height:height fillColor:argb];
 }
 
 @end

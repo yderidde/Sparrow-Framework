@@ -36,7 +36,6 @@
     STAssertTrue([[SPPoint pointWithX:1 y:0] isEquivalent:[image texCoordsOfVertex:1]], @"wrong tex coords!");
     STAssertTrue([[SPPoint pointWithX:0 y:1] isEquivalent:[image texCoordsOfVertex:2]], @"wrong tex coords!");
     STAssertTrue([[SPPoint pointWithX:1 y:1] isEquivalent:[image texCoordsOfVertex:3]], @"wrong tex coords!");
-    [image release];    
 }
 
 - (void)testSetTexCoords
@@ -44,14 +43,13 @@
     SPImage *image = [[SPImage alloc] init];
     [image setTexCoords:[SPPoint pointWithX:1 y:2] ofVertex:0];
     [image setTexCoords:[SPPoint pointWithX:3 y:4] ofVertex:1];
-    [image setTexCoords:[SPPoint pointWithX:5 y:6] ofVertex:2];
-    [image setTexCoords:[SPPoint pointWithX:7 y:8] ofVertex:3];    
+    [image setTexCoordsWithX:5 y:6 ofVertex:2];
+    [image setTexCoordsWithX:7 y:8 ofVertex:3];
     
     STAssertTrue([[SPPoint pointWithX:1 y:2] isEquivalent:[image texCoordsOfVertex:0]], @"wrong tex coords!");
     STAssertTrue([[SPPoint pointWithX:3 y:4] isEquivalent:[image texCoordsOfVertex:1]], @"wrong tex coords!");
     STAssertTrue([[SPPoint pointWithX:5 y:6] isEquivalent:[image texCoordsOfVertex:2]], @"wrong tex coords!");
     STAssertTrue([[SPPoint pointWithX:7 y:8] isEquivalent:[image texCoordsOfVertex:3]], @"wrong tex coords!");
-    [image release];    
 }
 
 - (void)testChangeTexture
@@ -69,10 +67,6 @@
     STAssertEqualObjects(image.texture, texture2, @"wrong texture");
     STAssertEquals(texture1.width, image.width, @"wrong texture width");
     STAssertEquals(texture1.height, image.height, @"wrong texture height");
-    
-    [texture1 release];
-    [texture2 release];
-    [image release];
 }
 
 @end

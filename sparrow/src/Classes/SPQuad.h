@@ -12,6 +12,9 @@
 #import <Foundation/Foundation.h>
 #import "SPDisplayObject.h"
 
+@class SPVertexData;
+@class SPTexture;
+
 /** ------------------------------------------------------------------------------------------------
 
  An SPQuad represents a rectangle with a uniform color or a color gradient. 
@@ -49,23 +52,25 @@
  If you're not comfortable with that, there is also a utility macro available that takes the
  values for R, G and B separately:
  
-	uint red = SP_COLOR(255, 0, 0)
+	uint red = SP_COLOR(255, 0, 0);
  
 ------------------------------------------------------------------------------------------------- */
 
-@interface SPQuad : SPDisplayObject 
+@interface SPQuad : SPDisplayObject
 {
-  @protected
-    float mVertexCoords[8];
-    uint mVertexColors[4];
+    SPVertexData *_vertexData;
 }
 
 /// --------------------
 /// @name Initialization
 /// --------------------
 
-/// Initializes a quad with a certain size and color. _Designated Initializer_.
-- (id)initWithWidth:(float)width height:(float)height color:(uint)color; 
+/// Initializes a quad with a certain size and color. The `pma` parameter indicates how the colors
+/// of the object are stored. _Designated Initializer_.
+- (id)initWithWidth:(float)width height:(float)height color:(uint)color premultipliedAlpha:(BOOL)pma;
+
+/// Initializes a quad with a certain size and color, using premultiplied alpha values.
+- (id)initWithWidth:(float)width height:(float)height color:(uint)color;
 
 /// Initializes a white quad with a certain size.
 - (id)initWithWidth:(float)width height:(float)height; 
@@ -80,14 +85,26 @@
 /// Returns the color of a vertex.
 - (uint)colorOfVertex:(int)vertexID;
 
-/// Factory method.
-+ (SPQuad*)quadWithWidth:(float)width height:(float)height;
+/// Sets the alpha value of a vertex.
+- (void)setAlpha:(float)alpha ofVertex:(int)vertexID;
+
+/// Returns the alpha value of a vertex.
+- (float)alphaOfVertex:(int)vertexID;
+
+/// Copies the raw vertex data to a VertexData instance.
+- (void)copyVertexDataTo:(SPVertexData *)targetData atIndex:(int)targetIndex;
+
+/// Call this method after manually changing the contents of '_vertexData'.
+- (void)vertexDataDidChange;
 
 /// Factory method.
-+ (SPQuad*)quadWithWidth:(float)width height:(float)height color:(uint)color;
++ (id)quadWithWidth:(float)width height:(float)height;
+
+/// Factory method.
++ (id)quadWithWidth:(float)width height:(float)height color:(uint)color;
 
 /// Factory method. Creates a 32x32 quad.
-+ (SPQuad*)quad;
++ (id)quad;
 
 /// ----------------
 /// @name Properties
@@ -95,5 +112,16 @@
 
 /// Sets the colors of all vertices simultaneously. Returns the color of vertex '0'.
 @property (nonatomic, assign) uint color;
+
+/// Indicates if the rgb values are stored premultiplied with the alpha value. This can have
+/// effect on the rendering. (Most developers don't have to care, though.)
+@property (nonatomic, assign) BOOL premultipliedAlpha;
+
+/// Indicates if any vertices have a non-white color or are not fully opaque. Any alpha value
+/// other than '1' will also cause tinting.
+@property (nonatomic, readonly) BOOL tinted;
+
+/// The texture that is displayed on the quad. For pure quads (no subclasses), this is always nil.
+@property (nonatomic, readonly) SPTexture *texture;
 
 @end

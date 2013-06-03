@@ -9,22 +9,31 @@
 //  it under the terms of the Simplified BSD License.
 //
 
+#import "SPEventDispatcher.h"
 #import "SPEvent.h"
 #import "SPEvent_Internal.h"
 
 @implementation SPEvent
+{
+    SPEventDispatcher *__weak _target;
+    SPEventDispatcher *__weak _currentTarget;
+    NSString *_type;
+    BOOL _stopsImmediatePropagation;
+    BOOL _stopsPropagation;
+    BOOL _bubbles;
+}
 
-@synthesize target = mTarget;
-@synthesize currentTarget = mCurrentTarget;
-@synthesize type = mType;
-@synthesize bubbles = mBubbles;
+@synthesize target = _target;
+@synthesize currentTarget = _currentTarget;
+@synthesize type = _type;
+@synthesize bubbles = _bubbles;
 
 - (id)initWithType:(NSString*)type bubbles:(BOOL)bubbles
 {    
     if ((self = [super init]))
     {        
-        mType = [[NSString alloc] initWithString:type];
-        mBubbles = bubbles;
+        _type = [[NSString alloc] initWithString:type];
+        _bubbles = bubbles;
     }
     return self;
 }
@@ -41,31 +50,30 @@
 
 - (void)stopImmediatePropagation
 {
-    mStopsImmediatePropagation = YES;
+    _stopsImmediatePropagation = YES;
 }
 
 - (void)stopPropagation
 {
-    mStopsPropagation = YES;
+    _stopsPropagation = YES;
 }
 
-+ (SPEvent*)eventWithType:(NSString*)type bubbles:(BOOL)bubbles
+- (NSString *)description
 {
-    return [[[SPEvent alloc] initWithType:type bubbles:bubbles] autorelease];
+    return [NSString stringWithFormat:@"[%@: type=\"%@\", bubbles=%@]",
+            NSStringFromClass([self class]), _type, _bubbles ? @"YES" : @"NO"];
 }
 
-+ (SPEvent*)eventWithType:(NSString*)type
++ (id)eventWithType:(NSString*)type bubbles:(BOOL)bubbles
 {
-    return [[[SPEvent alloc] initWithType:type] autorelease];
+    return [[self alloc] initWithType:type bubbles:bubbles];
 }
 
-- (void)dealloc
++ (id)eventWithType:(NSString*)type
 {
-    [mType release];
-    [mTarget release];
-    [mCurrentTarget release];
-    [super dealloc];
+    return [[self alloc] initWithType:type];
 }
+
 
 @end
 
@@ -75,30 +83,24 @@
 
 - (BOOL)stopsImmediatePropagation
 { 
-    return mStopsImmediatePropagation;
+    return _stopsImmediatePropagation;
 }
 
 - (BOOL)stopsPropagation
 { 
-    return mStopsPropagation;
+    return _stopsPropagation;
 }
 
 - (void)setTarget:(SPEventDispatcher*)target
 {
-    if (target != mTarget)
-    {
-        [mTarget release];
-        mTarget = [target retain];
-    }        
+    if (_target != target)
+        _target = target;
 }
 
 - (void)setCurrentTarget:(SPEventDispatcher*)currentTarget
 {
-    if (currentTarget != mCurrentTarget)
-    {
-        [mCurrentTarget release];
-        mCurrentTarget = [currentTarget retain];
-    }
+    if (_currentTarget != currentTarget)
+        _currentTarget = currentTarget;
 }
 
 @end

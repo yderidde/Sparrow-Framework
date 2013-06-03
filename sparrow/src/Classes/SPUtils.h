@@ -16,8 +16,15 @@
 
 @interface SPUtils : NSObject 
 
+/// ----------------
+/// @name Math Utils
+/// ----------------
+
 /// Finds the next power of two equal to or above the specified number.
 + (int)nextPowerOfTwo:(int)number;
+
+/// Checks if a number is a power of two.
++ (BOOL)isPowerOfTwo:(int)number;
 
 /// Returns a random integer number between `minValue` (inclusive) and `maxValue` (exclusive).
 + (int)randomIntBetweenMin:(int)minValue andMax:(int)maxValue;
@@ -25,24 +32,28 @@
 /// Returns a random float number between 0.0 and 1.0
 + (float)randomFloat;
 
+/// ----------------
+/// @name File Utils
+/// ----------------
+
 /// Returns a Boolean value that indicates whether a file or directory exists at a specified path.
+/// If you pass a relative path, the resource folder of the application bundle will be searched.
 + (BOOL)fileExistsAtPath:(NSString *)path;
 
-/// Finds the full path for a file with a certain scale factor (a file with a suffix like '@2x')
-/// and user interface idiom ('~ipad' or '~iphone'). Relative paths are searched in the application
-/// bundle.
-/// 
-/// @return The path to the scaled resource with idiom suffix; if that does not exist, the path
-/// to the scaled resource without idiom suffix; if that does not exist either, the path
-/// to the unscaled resource (first with, then without idiom). If none of those exist, nil.
-+ (NSString *)absolutePathToFile:(NSString *)path withScaleFactor:(float)factor 
+/// Finds the full path for a file, favoring those with the given scale factor and
+/// device idiom. Relative paths are searched in the application bundle. If no suitable file can
+/// be found, the method returns nil.
++ (NSString *)absolutePathToFile:(NSString *)path withScaleFactor:(float)factor
                            idiom:(UIUserInterfaceIdiom)idiom;
 
-/// Finds the full path for a file with a certain scale factor (a file with a suffix like '@2x'),
-/// adhering the current user interface idiom. Relative paths are searched in the application bundle.
+/// Finds the full path for a file, favoring those with the given scale factor and the current
+/// device idiom. Relative paths are searched in the application bundle. If no suitable file can
+/// be found, the method returns nil.
 + (NSString *)absolutePathToFile:(NSString *)path withScaleFactor:(float)factor;
 
-/// Returns the absolute path to a file, or nil if it does not exist.
+/// Finds the full path for a file, favoring those with the current content scale factor and
+/// device idiom. Relative paths are searched in the application bundle. If no suitable file can
+/// be found, the method returns nil.
 + (NSString *)absolutePathToFile:(NSString *)path;
 
 @end

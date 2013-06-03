@@ -34,9 +34,7 @@
 
 @interface SPImage : SPQuad 
 {
-  @protected
-    SPTexture *mTexture;
-    float mTexCoords[8];
+    SPTexture *_texture;
 }
 
 /// --------------------
@@ -46,14 +44,17 @@
 /// Initialize a quad with a texture mapped onto it. _Designated Initializer_.
 - (id)initWithTexture:(SPTexture*)texture;
 
-/// Initialize a quad with a texture loaded from a file.
+/// Initialize a quad with a texture loaded from a file. No mipmaps will be created.
 - (id)initWithContentsOfFile:(NSString*)path;
 
-/// Factory method.
-+ (SPImage*)imageWithTexture:(SPTexture*)texture;
+/// Initialize a quad with a texture loaded from a file.
+- (id)initWithContentsOfFile:(NSString *)path generateMipmaps:(BOOL)mipmaps;
 
 /// Factory method.
-+ (SPImage*)imageWithContentsOfFile:(NSString*)path;
++ (id)imageWithTexture:(SPTexture*)texture;
+
+/// Factory method.
++ (id)imageWithContentsOfFile:(NSString*)path;
 
 /// -------------
 /// @name Methods
@@ -61,6 +62,9 @@
 
 /// Sets the texture coordinates of a vertex. Coordinates are in the range [0, 1].
 - (void)setTexCoords:(SPPoint*)coords ofVertex:(int)vertexID;
+
+/// Sets the texture coordinates of a vertex. Coordinates are in the range [0, 1].
+- (void)setTexCoordsWithX:(float)x y:(float)y ofVertex:(int)vertexID;
 
 /// Gets the texture coordinates of a vertex.
 - (SPPoint*)texCoordsOfVertex:(int)vertexID;
@@ -74,6 +78,6 @@
 /// ----------------
 
 /// The texture that is displayed on the quad.
-@property (nonatomic, retain) SPTexture *texture;
+@property (nonatomic, strong) SPTexture *texture;
 
 @end

@@ -23,10 +23,34 @@
 
 @end
 
+#ifndef DISABLE_MEMORY_POOLING
+
+  #define SP_IMPLEMENT_MEMORY_POOL()                         \
+    + (SPPoolInfo *)poolInfo                                 \
+    {                                                        \
+        static SPPoolInfo *poolInfo = nil;                   \
+        if (!poolInfo) poolInfo = [[SPPoolInfo alloc] init]; \
+        return poolInfo;                                     \
+    }                                                        \
+
+#else
+
+  #define SP_IMPLEMENT_MEMORY_POOL()                         \
+    + (SPPoolInfo *)poolInfo                                 \
+    {                                                        \
+        return nil;                                          \
+    }                                                        \
+
+#endif
+
 /** ------------------------------------------------------------------------------------------------
  
  The SPPoolObject class is an alternative to the base class `NSObject` that manages a pool of 
  objects.
+ 
+ **ATTENTION:** Pooling is NOT thread-safe! If you use any Sparrow objects across multiple threads,
+ you should not use SPPoolObject. To disable memory pooling completely, define 
+ `DISABLE_MEMORY_POOLING` in the Sparrow project.
  
  Subclasses of SPPoolObject do not deallocate object instances when the retain counter reaches
  zero. Instead, the objects stay in memory and will be re-used when a new instance of the object
@@ -36,26 +60,16 @@
  Sparrow uses this class for `SPPoint`, `SPRectangle` and `SPMatrix`, as they are created very often 
  as helper objects.
  
- To use memory pooling for another class, you just have to inherit from SPPoolObject and implement
- the following method:
+ To use memory pooling for another class, you just have to inherit from SPPoolObject and put
+ the following macro somewhere in your implementation:
+
+  	SP_IMPLEMENT_MEMORY_POOL();
  
- 	+ (SPPoolInfo *)poolInfo
- 	{
- 	    static SPPoolInfo *poolInfo = nil;
- 	    if (!poolInfo) poolInfo = [[SPPoolInfo alloc] init];
- 	    return poolInfo;
- 	}
- 
- ------------------------------------------------------------------------------------------------- */
+------------------------------------------------------------------------------------------------- */
 
 #ifndef DISABLE_MEMORY_POOLING
 
 @interface SPPoolObject : NSObject 
-{
-  @private
-    SPPoolObject *mPoolPredecessor;
-    uint mRetainCount;
-}
 
 /// The pool info structure needed to access the pool. Needs to be implemented in any inheriting class.
 + (SPPoolInfo *)poolInfo;

@@ -13,21 +13,42 @@
 #import "SPRectangle.h"
 #import "SPMacros.h"
 #import "SPPoint.h"
+#import "SPRenderSupport.h"
+#import "SPVertexData.h"
+
+#define MIN_SIZE 0.01f
 
 @implementation SPQuad
+{
+    BOOL _tinted;
+}
 
-- (id)initWithWidth:(float)width height:(float)height color:(uint)color
+- (id)initWithWidth:(float)width height:(float)height color:(uint)color premultipliedAlpha:(BOOL)pma;
 {
     if ((self = [super init]))
     {
-        mVertexCoords[2] = width; 
-        mVertexCoords[5] = height; 
-        mVertexCoords[6] = width;
-        mVertexCoords[7] = height;
+        if (width  <= MIN_SIZE) width  = MIN_SIZE;
+        if (height <= MIN_SIZE) height = MIN_SIZE;
         
-        self.color = color;
+        _tinted = color != 0xffffff;
+        
+        _vertexData = [[SPVertexData alloc] initWithSize:4 premultipliedAlpha:pma];
+        _vertexData.vertices[1].position.x = width;
+        _vertexData.vertices[2].position.y = height;
+        _vertexData.vertices[3].position.x = width;
+        _vertexData.vertices[3].position.y = height;
+        
+        for (int i=0; i<4; ++i)
+            _vertexData.vertices[i].color = SPVertexColorMakeWithColorAndAlpha(color, 1.0f);
+        
+        [self vertexDataDidChange];
     }
-    return self;    
+    return self;
+}
+
+- (id)initWithWidth:(float)width height:(float)height color:(uint)color
+{
+    return [self initWithWidth:width height:height color:color premultipliedAlpha:YES];
 }
 
 - (id)initWithWidth:(float)width height:(float)height
@@ -40,65 +61,59 @@
     return [self initWithWidth:32 height:32];
 }
 
-- (SPRectangle*)boundsInSpace:(SPDisplayObject*)targetCoordinateSpace
+- (SPRectangle*)boundsInSpace:(SPDisplayObject*)targetSpace
 {
-    float minX = FLT_MAX, maxX = -FLT_MAX, minY = FLT_MAX, maxY = -FLT_MAX;
-    
-    if (targetCoordinateSpace == self) // optimization
+    if (targetSpace == self) // optimization
     {
-        for (int i=0; i<4; ++i)
-        {
-            float x = mVertexCoords[2*i];
-            float y = mVertexCoords[2*i+1];
-            minX = MIN(minX, x);
-            maxX = MAX(maxX, x);
-            minY = MIN(minY, y);
-            maxY = MAX(maxY, y);
-        }        
+        SPPoint *bottomRight = [_vertexData positionAtIndex:3];
+        return [[SPRectangle alloc] initWithX:0.0f y:0.0f width:bottomRight.x height:bottomRight.y];
+    }
+    else if ((id)targetSpace == (id)self.parent && self.rotation == 0.0f) // optimization
+    {
+        float scaleX = self.scaleX;
+        float scaleY = self.scaleY;
+        
+        SPPoint *bottomRight = [_vertexData positionAtIndex:3];
+        SPRectangle *resultRect = [[SPRectangle alloc] initWithX:self.x - self.pivotX * scaleX
+                                                               y:self.y - self.pivotY * scaleY
+                                                           width:bottomRight.x * scaleX
+                                                          height:bottomRight.y * scaleY];
+        
+        if (scaleX < 0.0f) { resultRect.width  *= -1.0f; resultRect.x -= resultRect.width;  }
+        if (scaleY < 0.0f) { resultRect.height *= -1.0f; resultRect.y -= resultRect.height; }
+        
+        return resultRect;
     }
     else
     {
-        SPMatrix *transformationMatrix = [self transformationMatrixToSpace:targetCoordinateSpace];
-        SPPoint *point = [[SPPoint alloc] init];
-            
-        for (int i=0; i<4; ++i)
-        {
-            point.x = mVertexCoords[2*i];
-            point.y = mVertexCoords[2*i+1];
-            SPPoint *transformedPoint = [transformationMatrix transformPoint:point];
-            float tfX = transformedPoint.x; 
-            float tfY = transformedPoint.y;
-            minX = MIN(minX, tfX);
-            maxX = MAX(maxX, tfX);
-            minY = MIN(minY, tfY);
-            maxY = MAX(maxY, tfY);
-        }
-        
-        [point release];
+        SPMatrix *transformationMatrix = [self transformationMatrixToSpace:targetSpace];
+        return [_vertexData boundsAfterTransformation:transformationMatrix atIndex:0 numVertices:4];
     }
-    
-    return [SPRectangle rectangleWithX:minX y:minY width:maxX-minX height:maxY-minY];    
 }
 
 - (void)setColor:(uint)color ofVertex:(int)vertexID
 {
-    if (vertexID < 0 || vertexID > 3)
-        [NSException raise:SP_EXC_INDEX_OUT_OF_BOUNDS format:@"invalid vertex id"];
+    [_vertexData setColor:color atIndex:vertexID];
+    [self vertexDataDidChange];
     
-    mVertexColors[vertexID] = color;
+    if (color != 0xffffff) _tinted = YES;
+    else _tinted = (self.alpha != 1.0f) || _vertexData.tinted;
 }
 
 - (uint)colorOfVertex:(int)vertexID
 {
-    if (vertexID < 0 || vertexID > 3)
-        [NSException raise:SP_EXC_INDEX_OUT_OF_BOUNDS format:@"invalid vertex id"];
-    
-    return mVertexColors[vertexID];    
+    return [_vertexData colorAtIndex:vertexID];
 }
 
 - (void)setColor:(uint)color
 {
-    for (int i=0; i<4; ++i) [self setColor:color ofVertex:i];
+    for (int i=0; i<4; ++i)
+        [_vertexData setColor:color atIndex:i];
+
+    [self vertexDataDidChange];
+    
+    if (color != 0xffffff) _tinted = YES;
+    else _tinted = (self.alpha != 1.0f) || _vertexData.tinted;
 }
 
 - (uint)color
@@ -106,19 +121,77 @@
     return [self colorOfVertex:0];
 }
 
-+ (SPQuad*)quadWithWidth:(float)width height:(float)height
+- (void)setAlpha:(float)alpha ofVertex:(int)vertexID
 {
-    return [[[SPQuad alloc] initWithWidth:width height:height] autorelease];
+    [_vertexData setAlpha:alpha atIndex:vertexID];
+    [self vertexDataDidChange];
+    
+    if (alpha != 1.0) _tinted = true;
+    else _tinted = (self.alpha != 1.0f) || _vertexData.tinted;
 }
 
-+ (SPQuad*)quadWithWidth:(float)width height:(float)height color:(uint)color
+- (float)alphaOfVertex:(int)vertexID
 {
-    return [[[SPQuad alloc] initWithWidth:width height:height color:color] autorelease];
+    return [_vertexData alphaAtIndex:vertexID];
 }
 
-+ (SPQuad*)quad
+- (void)setAlpha:(float)alpha
 {
-    return [[[SPQuad alloc] init] autorelease];
+    super.alpha = alpha;
+    
+    if (self.alpha != 1.0f) _tinted = true;
+    else _tinted = _vertexData.tinted;
+}
+
+- (void)vertexDataDidChange
+{
+    // override in subclass
+}
+
+- (void)copyVertexDataTo:(SPVertexData *)targetData atIndex:(int)targetIndex
+{
+    [_vertexData copyToVertexData:targetData atIndex:targetIndex];
+}
+
+- (BOOL)premultipliedAlpha
+{
+    return _vertexData.premultipliedAlpha;
+}
+
+- (void)setPremultipliedAlpha:(BOOL)premultipliedAlpha
+{
+    if (premultipliedAlpha != self.premultipliedAlpha)
+        _vertexData.premultipliedAlpha = premultipliedAlpha;
+}
+
+- (BOOL)tinted
+{
+    return _tinted;
+}
+
+- (SPTexture *)texture
+{
+    return nil;
+}
+
+- (void)render:(SPRenderSupport *)support
+{
+    [support batchQuad:self];
+}
+
++ (id)quadWithWidth:(float)width height:(float)height
+{
+    return [[self alloc] initWithWidth:width height:height];
+}
+
++ (id)quadWithWidth:(float)width height:(float)height color:(uint)color
+{
+    return [[self alloc] initWithWidth:width height:height color:color];
+}
+
++ (id)quad
+{
+    return [[self alloc] init];
 }
 
 @end

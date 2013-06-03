@@ -28,19 +28,14 @@
  memory. Then call play or create a channel when you want to play the sound. 
  
  Your sounds will automatically be paused when the application 
- is disrupted (e.g. by a phone call), and will continue playback where they stopped.
+ is interrupted (e.g. by a phone call) and will continue playback where they stopped.
  
  Behind the scenes, the SPSound class will choose the appropriate technology for playback: 
  uncompressed files will use OpenAL, compressed sound will be handled by Apple's AVAudioPlayer. 
- You don't have to care. 
  
 ------------------------------------------------------------------------------------------------- */
 
 @interface SPSound : NSObject 
-{
-  @private
-    NSMutableSet *mPlayingChannels;
-}
 
 /// ------------------
 /// @name Initializers
@@ -59,7 +54,8 @@
 /// Starts playback of the sound.
 - (void)play;
 
-/// Creates an audio channel that gives you more control over playback. Don't forget to retain it!
+/// Creates an audio channel that gives you more control over playback. Make sure to save
+/// a reference to the returned object, because the sound will immediately stop when it's released.
 - (SPSoundChannel *)createChannel;
 
 /// ----------------
