@@ -131,7 +131,7 @@ float square(float value) { return value * value; }
     // Instead of using an NSSet or NSArray (which would make the code much cleaner), we 
     // use a C array here to save the ancestors.
     
-    static SPDisplayObject *__weak ancestors[SP_MAX_DISPLAY_TREE_DEPTH];
+    static SPDisplayObject *__unsafe_unretained ancestors[SP_MAX_DISPLAY_TREE_DEPTH];
     
     int count = 0;
     SPDisplayObject *commonParent = nil;
