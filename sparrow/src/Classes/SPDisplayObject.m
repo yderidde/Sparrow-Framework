@@ -395,20 +395,47 @@ float square(float value) { return value * value; }
     if (_orientationChanged)
     {
         _orientationChanged = NO;
-        [_transformationMatrix identity];
-    
-        if (_scaleX != 1.0f || _scaleY != 1.0f) [_transformationMatrix scaleXBy:_scaleX yBy:_scaleY];
-        if (_skewX  != 0.0f || _skewY  != 0.0f) [_transformationMatrix skewXBy:_skewX yBy:_skewY];
-        if (_rotation != 0.0f)                  [_transformationMatrix rotateBy:_rotation];
-        if (_x != 0.0f || _y != 0.0f)           [_transformationMatrix translateXBy:_x yBy:_y];
         
-        if (_pivotX != 0.0 || _pivotY != 0.0)
+        if (_skewX == 0.0f && _skewY == 0.0f)
         {
-            // prepend pivot transformation
-            _transformationMatrix.tx = _x - _transformationMatrix.a * _pivotX
-                                          - _transformationMatrix.c * _pivotY;
-            _transformationMatrix.ty = _y - _transformationMatrix.b * _pivotX
-                                          - _transformationMatrix.d * _pivotY;
+            // optimization: no skewing / rotation simplifies the matrix math
+            
+            if (_rotation == 0.0f)
+            {
+                [_transformationMatrix setA:_scaleX b:0.0f c:0.0f d:_scaleY
+                                         tx:_x - _pivotX * _scaleX
+                                         ty:_y - _pivotY * _scaleY];
+            }
+            else
+            {
+                float cos = cosf(_rotation);
+                float sin = sinf(_rotation);
+                float a = _scaleX *  cos;
+                float b = _scaleX *  sin;
+                float c = _scaleY * -sin;
+                float d = _scaleY *  cos;
+                float tx = _x - _pivotX * a - _pivotY * c;
+                float ty = _y - _pivotX * b - _pivotY * d;
+                
+                [_transformationMatrix setA:a b:b c:c d:d tx:tx ty:ty];
+            }
+        }
+        else
+        {
+            [_transformationMatrix identity];
+            [_transformationMatrix scaleXBy:_scaleX yBy:_scaleY];
+            [_transformationMatrix skewXBy:_skewX yBy:_skewY];
+            [_transformationMatrix rotateBy:_rotation];
+            [_transformationMatrix translateXBy:_x yBy:_y];
+            
+            if (_pivotX != 0.0 || _pivotY != 0.0)
+            {
+                // prepend pivot transformation
+                _transformationMatrix.tx = _x - _transformationMatrix.a * _pivotX
+                                              - _transformationMatrix.c * _pivotY;
+                _transformationMatrix.ty = _y - _transformationMatrix.b * _pivotX
+                                              - _transformationMatrix.d * _pivotY;
+            }
         }
     }
     

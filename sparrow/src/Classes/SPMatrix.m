@@ -89,12 +89,19 @@ static inline void setValues(SPMatrix *matrix, float a, float b, float c, float 
 
 - (void)scaleXBy:(float)sx yBy:(float)sy
 {
-    _a *= sx;
-    _b *= sy;
-    _c *= sx;
-    _d *= sy;
-    _tx *= sx;
-    _ty *= sy;
+    if (sx != 1.0f)
+    {
+        _a  *= sx;
+        _c  *= sx;
+        _tx *= sx;
+    }
+    
+    if (sy != 1.0f)
+    {
+        _b  *= sy;
+        _d  *= sy;
+        _ty *= sy;
+    }
 }
 
 - (void)scaleBy:(float)scale
@@ -104,12 +111,14 @@ static inline void setValues(SPMatrix *matrix, float a, float b, float c, float 
 
 - (void)rotateBy:(float)angle
 {
+    if (angle == 0.0f) return;
+    
     float cos = cosf(angle);
     float sin = sinf(angle);
     
-    setValues(self, _a*cos  - _b*sin,    _a*sin  + _b*cos, 
-                    _c*cos  - _d*sin,    _c*sin  + _d*cos, 
-                    _tx*cos - _ty * sin, _tx*sin + _ty*cos);
+    setValues(self,  _a * cos -  _b * sin,  _a * sin +  _b * cos,
+                     _c * cos -  _d * sin,  _c * sin +  _d * cos,
+                    _tx * cos - _ty * sin, _tx * sin + _ty * cos);
 }
 
 - (void)skewXBy:(float)sx yBy:(float)sy
