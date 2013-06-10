@@ -145,4 +145,7 @@ typedef void (^SPRootCreatedBlock)(id root);
 /// A callback block that will be executed when the root object has been created.
 @property (nonatomic, copy) SPRootCreatedBlock onRootCreated;
 
+/// A texture loader object that is initialized with the sharegroup of the current OpenGL context.
+@property (nonatomic, readonly) GLKTextureLoader *textureLoader;
+
 @end

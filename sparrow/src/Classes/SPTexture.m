@@ -336,8 +336,7 @@
         [NSException raise:SP_EXC_FILE_NOT_FOUND format:@"File '%@' not found", path];
     
     NSDictionary *options = [SPTexture optionsForPath:path mipmaps:mipmaps pma:pma];
-    EAGLSharegroup *sharegroup = Sparrow.currentController.context.sharegroup;
-    GLKTextureLoader *loader = [[GLKTextureLoader alloc] initWithSharegroup:sharegroup];
+    GLKTextureLoader *loader = Sparrow.currentController.textureLoader;
 
     [loader textureWithContentsOfFile:fullPath options:options queue:NULL
                     completionHandler:^(GLKTextureInfo *info, NSError *outError)
@@ -372,8 +371,7 @@
                     format:@"Async loading of gzip-compressed files is not supported"];
     
     NSDictionary *options = @{ GLKTextureLoaderGenerateMipmaps: @(mipmaps) };
-    EAGLSharegroup *sharegroup = Sparrow.currentController.context.sharegroup;
-    GLKTextureLoader *loader = [[GLKTextureLoader alloc] initWithSharegroup:sharegroup];
+    GLKTextureLoader *loader = Sparrow.currentController.textureLoader;
     
     [loader textureWithContentsOfURL:url options:options queue:NULL
                    completionHandler:^(GLKTextureInfo *info, NSError *outError)

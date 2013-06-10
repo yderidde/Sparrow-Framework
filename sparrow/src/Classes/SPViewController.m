@@ -43,6 +43,7 @@
     SPRootCreatedBlock _onRootCreated;
     SPStatsDisplay *_statsDisplay;
     NSMutableDictionary *_programs;
+    GLKTextureLoader *_textureLoader;
     
     double _lastTouchTimestamp;
     float _contentScaleFactor;
@@ -59,6 +60,7 @@
 @synthesize doubleOnPad = _doubleOnPad;
 @synthesize contentScaleFactor = _contentScaleFactor;
 @synthesize onRootCreated = _onRootCreated;
+@synthesize textureLoader = _textureLoader;
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
@@ -95,10 +97,12 @@
     _touchProcessor = [[SPTouchProcessor alloc] initWithRoot:_stage];
     _programs = [[NSMutableDictionary alloc] init];
     _context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
-    _support = [[SPRenderSupport alloc] init];
     
     if (!_context || ![EAGLContext setCurrentContext:_context])
         NSLog(@"Could not create render context");
+    
+    _support = [[SPRenderSupport alloc] init];
+    _textureLoader = [[GLKTextureLoader alloc] initWithSharegroup:_context.sharegroup];
     
     [Sparrow setCurrentController:self];
 }
