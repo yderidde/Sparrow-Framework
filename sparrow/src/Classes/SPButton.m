@@ -181,7 +181,6 @@
         _textField.vAlign = SPVAlignCenter;
         _textField.hAlign = SPHAlignCenter;
         _textField.touchable = NO;
-        [_contents addChild:_textField];
     }
 
     _textField.width  = _textBounds.width;
@@ -198,8 +197,17 @@
 
 - (void)setText:(NSString*)value
 {
-    [self createTextField];
-    _textField.text = value;   
+    if (value.length == 0)
+    {
+        [_textField removeFromParent];
+    }
+    else
+    {
+        [self createTextField];
+        if (!_textField.parent) [_contents addChild:_textField];
+    }
+    
+    _textField.text = value;
 }
 
 - (void)setTextBounds:(SPRectangle *)value
