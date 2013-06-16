@@ -11,6 +11,7 @@
 
 #import "SPPoolObject.h"
 #import <malloc/malloc.h>
+#import <objc/runtime.h>
 
 #define COMPLAIN_MISSING_IMP @"Class %@ needs this code:\nSP_IMPLEMENT_MEMORY_POOL();" 
 
@@ -87,7 +88,7 @@
     
     if (!_retainCount)
     {
-        SPPoolInfo *poolInfo = [isa poolInfo];
+        SPPoolInfo *poolInfo = [object_getClass(self) poolInfo];
         self->_poolPredecessor = poolInfo->lastElement;
         poolInfo->lastElement = self;
     }
