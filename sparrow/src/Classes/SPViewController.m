@@ -113,20 +113,25 @@
     [self glkView].context = _context;
 }
 
-- (void)viewDidUnload
+- (void)didReceiveMemoryWarning
 {
-    _context = nil;
-    [EAGLContext setCurrentContext:nil];
+    [self purgePools];
+    [_support purgeBuffers];
+    [super didReceiveMemoryWarning];
 }
 
-- (void)didReceiveMemoryWarning
+- (void)dealloc
+{
+    [self purgePools];
+    [EAGLContext setCurrentContext:nil];
+    [Sparrow setCurrentController:nil];
+}
+
+- (void)purgePools
 {
     [SPPoint purgePool];
     [SPRectangle purgePool];
     [SPMatrix purgePool];
-    [_support purgeBuffers];
-    
-    [super didReceiveMemoryWarning];
 }
 
 - (void)startWithRoot:(Class)rootClass
