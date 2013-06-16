@@ -54,8 +54,16 @@ static char encodingTable[64] = {
 
 - (NSString *)stringByDeletingFullPathExtension
 {
-    NSString *base = self;
-    while (![base isEqualToString:(base = [base stringByDeletingPathExtension])]) {}
+    NSString *trimmed = self;
+    NSString *base;
+    
+    do
+    {
+        base = trimmed;
+        trimmed = [base stringByDeletingPathExtension];
+    }
+    while (![trimmed isEqualToString:base]);
+    
     return base;
 }
 
