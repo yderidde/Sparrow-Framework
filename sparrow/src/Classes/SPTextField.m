@@ -67,8 +67,7 @@ static NSMutableDictionary *bitmapFonts = nil;
         _hAlign = SPHAlignCenter;
         _vAlign = SPVAlignCenter;
         _autoScale = NO;
-        _border = NO;        
-		_kerning = YES;
+        _kerning = YES;
         _requiresRedraw = YES;
         self.fontName = name;
         
