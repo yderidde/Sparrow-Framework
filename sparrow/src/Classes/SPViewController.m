@@ -267,7 +267,7 @@
     return self.view.multipleTouchEnabled;
 }
 
-- (void) touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
+- (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
 {
     [self processTouchEvent:event];
 }
@@ -313,6 +313,7 @@
                 touch.previousGlobalY = previousLocation.y * yConversion;
                 touch.tapCount = uiTouch.tapCount;
                 touch.phase = (SPTouchPhase)uiTouch.phase;
+                touch.nativeTouch = uiTouch;
                 [touches addObject:touch];
             }
             [_touchProcessor processTouches:touches];

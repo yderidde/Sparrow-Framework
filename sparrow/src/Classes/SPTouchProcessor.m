@@ -63,10 +63,7 @@
             if (existingTouch.phase == SPTouchPhaseEnded || existingTouch.phase == SPTouchPhaseCancelled)
                 continue;
             
-            if ((existingTouch.globalX == touch.previousGlobalX &&
-                 existingTouch.globalY == touch.previousGlobalY) ||
-                (existingTouch.globalX == touch.globalX &&
-                 existingTouch.globalY == touch.globalY))
+            if (existingTouch.nativeTouch == touch.nativeTouch)
             {
                 // existing touch; update values
                 existingTouch.timestamp = touch.timestamp;
