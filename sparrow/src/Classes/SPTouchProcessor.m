@@ -86,19 +86,11 @@
             }
         }
         
-        if (!currentTouch)
+        if (!currentTouch) // new touch
         {
-            // new touch!
-            currentTouch = [SPTouch touch];
-            currentTouch.timestamp = touch.timestamp;
-            currentTouch.globalX = touch.globalX;
-            currentTouch.globalY = touch.globalY;
-            currentTouch.previousGlobalX = touch.previousGlobalX;
-            currentTouch.previousGlobalY = touch.previousGlobalY;
-            currentTouch.phase = touch.phase;
-            currentTouch.tapCount = touch.tapCount;
             SPPoint *touchPosition = [SPPoint pointWithX:touch.globalX y:touch.globalY];
-            currentTouch.target = [_root hitTestPoint:touchPosition];
+            touch.target = [_root hitTestPoint:touchPosition];
+            currentTouch = touch;
         }
         
         [processedTouches addObject:currentTouch];
