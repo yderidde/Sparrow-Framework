@@ -257,14 +257,15 @@
 
 + (NSDictionary *)optionsForPath:(NSString *)path mipmaps:(BOOL)mipmaps pma:(BOOL)pma
 {
-    // This is a workaround for a nasty bug in the iOS 6 simulators :|
+    // This is a workaround for a nasty bug in the iOS simulators :|
     
     NSDictionary *options = [NSMutableDictionary dictionaryWithObjectsAndKeys:
                              @(mipmaps), GLKTextureLoaderGenerateMipmaps, nil];
     
     #if TARGET_IPHONE_SIMULATOR
     NSString *osVersion = [[UIDevice currentDevice] systemVersion];
-    if ([osVersion isEqualToString:@"6.0"] || [osVersion isEqualToString:@"6.1"])
+    
+    if ([osVersion compare:@"5.9"] == NSOrderedDescending)
     {
         BOOL usePma = pma && [self expectedPmaValueForFile:path];
         [options setValue:@(usePma) forKey:GLKTextureLoaderApplyPremultiplication];
