@@ -71,7 +71,7 @@
     }
 }
 
-- (uint)retainCount
+- (NSUInteger)retainCount
 {
     return _retainCount;
 }

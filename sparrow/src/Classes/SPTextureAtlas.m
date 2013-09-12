@@ -115,7 +115,7 @@
 
 - (int)numTextures
 {
-    return [_textureRegions count];
+    return (int)[_textureRegions count];
 }
 
 - (SPTexture *)textureByName:(NSString *)name

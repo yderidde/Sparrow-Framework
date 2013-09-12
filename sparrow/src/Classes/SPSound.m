@@ -60,7 +60,7 @@
                                   kAudioFileReadPermission, 0, &fileID);
         if (result != noErr)
         {
-            error = [NSString stringWithFormat:@"could not read audio file (%lx)", result];
+            error = [NSString stringWithFormat:@"could not read audio file (%x)", (int)result];
             break;
         }
         
@@ -69,7 +69,7 @@
         result = AudioFileGetProperty(fileID, kAudioFilePropertyDataFormat, &propertySize, &fileFormat);
         if (result != noErr)
         {
-            error = [NSString stringWithFormat:@"could not read file format info (%lx)", result];
+            error = [NSString stringWithFormat:@"could not read file format info (%x)", (int)result];
             break;
         }
         
@@ -78,7 +78,7 @@
                                       &propertySize, &soundDuration);
         if (result != noErr)
         {
-            error = [NSString stringWithFormat:@"could not read sound duration (%lx)", result];
+            error = [NSString stringWithFormat:@"could not read sound duration (%x)", (int)result];
             break;
         }  
         
@@ -112,7 +112,7 @@
                                       &propertySize, &fileSize);
         if (result != noErr)
         {
-            error = [NSString stringWithFormat:@"could not read sound file size (%lx)", result];
+            error = [NSString stringWithFormat:@"could not read sound file size (%x)", (int)result];
             break;
         }          
         
@@ -133,7 +133,7 @@
         }
         else
         { 
-            error = [NSString stringWithFormat:@"could not read sound data (%lx)", result];
+            error = [NSString stringWithFormat:@"could not read sound data (%x)", (int)result];
             break;
         }
     }
