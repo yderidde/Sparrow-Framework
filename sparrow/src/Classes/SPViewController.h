@@ -16,6 +16,7 @@
 @class SPJuggler;
 @class SPProgram;
 @class SPDisplayObject;
+@class SPRenderSupport;
 
 typedef void (^SPRootCreatedBlock)(id root);
 
@@ -32,22 +33,22 @@ typedef void (^SPRootCreatedBlock)(id root);
  an instance of that class will be created and your game will start. In this sample, `Game` is
  a subclass of `SPSprite` that sets up the display tree of your app:
  
-	[viewController startWithRoot:[Game class]];
+ [viewController startWithRoot:[Game class]];
  
- If you need to pass certain information to your game, you can make use of the `onRootCreated` 
+ If you need to pass certain information to your game, you can make use of the `onRootCreated`
  callback:
  
-	viewController.onRootCreated = ^(Game *game)
-	{
-	    // access your game instance here
-	};
+ viewController.onRootCreated = ^(Game *game)
+ {
+ // access your game instance here
+ };
  
  **Resolution Handling**
  
  Just like in other UIKit apps, the size of the visible area (in Sparrow, the stage size) is given
  in points. Those values will always equal the non-retina resolution of the current device.
  
- Per default, Sparrow is started with support for retina displays, which means that it will 
+ Per default, Sparrow is started with support for retina displays, which means that it will
  automatically use the optimal available screen resolution and will load retina versions of your
  textures (files with the `@2x` prefix) on a suitable device.
  
@@ -66,24 +67,29 @@ typedef void (^SPRootCreatedBlock)(id root);
  
  * Set the desired framerate through the `preferredFramesPerSecond` property
  * Pause or restart Sparrow through the `paused` property
-
+ 
  **Accessing the current controller**
  
  As a convenience, you can access the view controller through a static method on the `Sparrow`
  class:
  
-	SPViewController *controller = Sparrow.currentController;
+ SPViewController *controller = Sparrow.currentController;
  
  Since the view controller contains pointers to the stage, root, and juggler, you can
  easily access those objects that way.
  
-------------------------------------------------------------------------------------------------- */
+ ------------------------------------------------------------------------------------------------- */
 
 @interface SPViewController : GLKViewController
 
 /// -------------
 /// @name Startup
 /// -------------
+
+- (void)triggerFrameRendering;
+
+- (void)preFrameRenderProcessing;
+- (void)postFrameRenderProcessing;
 
 /// Sets up Sparrow by instantiating the given class, which has to be a display object.
 /// High resolutions are enabled, iPad content will keep its size (no doubling).
@@ -114,6 +120,8 @@ typedef void (^SPRootCreatedBlock)(id root);
 /// ----------------
 /// @name Properties
 /// ----------------
+
+@property (nonatomic, readonly) SPRenderSupport *support;
 
 /// The instance of the root class provided in `start:`method.
 @property (nonatomic, readonly) SPDisplayObject *root;

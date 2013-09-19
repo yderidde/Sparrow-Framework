@@ -39,7 +39,6 @@
     SPDisplayObject *_root;
     SPJuggler *_juggler;
     SPTouchProcessor *_touchProcessor;
-    SPRenderSupport *_support;
     SPRootCreatedBlock _onRootCreated;
     SPStatsDisplay *_statsDisplay;
     NSMutableDictionary *_programs;
@@ -61,6 +60,8 @@
 @synthesize contentScaleFactor = _contentScaleFactor;
 @synthesize onRootCreated = _onRootCreated;
 @synthesize textureLoader = _textureLoader;
+
+@synthesize support = _support;
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
@@ -149,7 +150,7 @@
     if (_rootClass)
         [NSException raise:SP_EXC_INVALID_OPERATION
                     format:@"Sparrow has already been started"];
-
+    
     BOOL isPad = ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad);
     
     _rootClass = rootClass;
@@ -168,11 +169,11 @@
         if ([_root isKindOfClass:[SPStage class]])
             [NSException raise:SP_EXC_INVALID_OPERATION
                         format:@"Root extends 'SPStage' but is expected to extend 'SPSprite' "
-                               @"instead (different to Sparrow 1.x)"];
+             @"instead (different to Sparrow 1.x)"];
         else
         {
             [_stage addChild:_root atIndex:0];
-
+            
             if (_onRootCreated)
             {
                 _onRootCreated(_root);
@@ -205,9 +206,7 @@
     _statsDisplay.visible = showStats;
 }
 
-#pragma mark - GLKViewDelegate
-
-- (void)glkView:(GLKView *)view drawInRect:(CGRect)rect
+- (void)triggerFrameRendering
 {
     @autoreleasepool
     {
@@ -227,17 +226,45 @@
         glDisable(GL_DEPTH_TEST);
         glEnable(GL_BLEND);
         
-        [_support nextFrame];
-        [_stage render:_support];
-        [_support finishQuadBatch];
+        [self renderWorld];
         
         if (_statsDisplay)
             _statsDisplay.numDrawCalls = _support.numDrawCalls - 2; // stats display requires 2 itself
         
-        #if DEBUG
+#if DEBUG
         [SPRenderSupport checkForOpenGLError];
-        #endif
+#endif
     }
+}
+
+#pragma mark - GLKViewDelegate
+
+- (void)glkView:(GLKView *)view drawInRect:(CGRect)rect
+{
+    [self triggerFrameRendering];
+}
+
+
+- (void)preFrameRenderProcessing
+{
+    //TO OVERRIDE
+}
+
+- (void)postFrameRenderProcessing
+{
+    //TO OVERRIDE
+}
+
+- (void)renderWorld
+{
+    [_support nextFrame];
+    
+    [self preFrameRenderProcessing];
+    
+    [_stage render:_support];
+    [_support finishQuadBatch];
+    
+    [self postFrameRenderProcessing];
 }
 
 - (void)update
@@ -367,9 +394,9 @@
     BOOL isPortrait = UIInterfaceOrientationIsPortrait(interfaceOrientation);
     
     float newWidth  = isPortrait ? MIN(_stage.width, _stage.height) :
-                                   MAX(_stage.width, _stage.height);
+    MAX(_stage.width, _stage.height);
     float newHeight = isPortrait ? MAX(_stage.width, _stage.height) :
-                                   MIN(_stage.width, _stage.height);
+    MIN(_stage.width, _stage.height);
     
     if (newWidth != _stage.width)
     {
@@ -377,7 +404,7 @@
         _stage.height = newHeight;
         
         SPEvent *resizeEvent = [[SPResizeEvent alloc] initWithType:SP_EVENT_TYPE_RESIZE
-                               width:newWidth height:newHeight animationTime:duration];
+                                                             width:newWidth height:newHeight animationTime:duration];
         [_stage broadcastEvent:resizeEvent];
     }
 }
